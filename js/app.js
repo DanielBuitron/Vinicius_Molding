@@ -213,7 +213,22 @@ async function render() {
 
 async function adminView() {
   const tab = VM.parts[1] || "resumen";
-  if (tab === "clave") return viewPassword();
+  if (tab === "clave" || tab === "wompi" || tab === "asesor" || tab === "contacto") {
+    try {
+      const settings = await api("/api/admin/settings");
+      VM.config.wompi = {
+        publicKey: settings.publicKey || "",
+        integritySecret: settings.integritySecret || "",
+        eventsSecret: settings.eventsSecret || "",
+        currency: settings.currency || "COP",
+      };
+      if (settings.whatsapp) VM.config.whatsapp = settings.whatsapp;
+      VM.config.wompiReady = Boolean(settings.wompiReady);
+      if (settings.webhookUrl) VM.config.webhookUrl = settings.webhookUrl;
+    } catch (err) { /* en el sitio publicado quedan las llaves de este navegador */ }
+    if (tab === "clave" || tab === "wompi") return viewWompi();
+    return viewContact();
+  }
   const localMetrics = () => {
     const products = (VM.products || []).map((item) => ({ ...item, views: item.views || 0, minStock: item.minStock || 6 }));
     const leads = JSON.parse(localStorage.getItem("vm_leads") || "[]");
@@ -249,11 +264,6 @@ async function adminView() {
       VM.metrics = data.metrics;
       return viewTracking(data);
     }
-    if (tab === "asesor") {
-      const [leads, dash] = await Promise.all([api("/api/leads"), api("/api/dashboard")]);
-      VM.metrics = dash;
-      return viewLeads(leads.leads || []);
-    }
     if (tab === "pedidos") {
       const [orders, dash] = await Promise.all([api("/api/orders"), api("/api/dashboard")]);
       VM.metrics = dash;
@@ -268,10 +278,42 @@ async function adminView() {
     VM.metrics = local;
     if (tab === "inventario") return viewInventory({ products: local.products });
     if (tab === "seguimiento") return viewTracking({ metrics: local, events: [] });
-    if (tab === "asesor") return viewLeads(local.leads);
     if (tab === "pedidos") return viewOrders([]);
     return viewDashboard(local);
   }
+}
+
+function applyLocalSettings() {
+  const phone = localStorage.getItem("vm_phone");
+  if (phone) VM.config.whatsapp = phone;
+  let wompi = {};
+  try { wompi = JSON.parse(localStorage.getItem("vm_wompi") || "null") || {}; } catch (err) { wompi = {}; }
+  if (wompi.publicKey || wompi.integritySecret || wompi.eventsSecret) VM.config.wompi = wompi;
+  if (wompi.publicKey && wompi.integritySecret) VM.config.wompiReady = true;
+}
+
+async function payWithWompi(customer) {
+  const wompi = VM.config.wompi || {};
+  const items = cartDetailed();
+  const total = items.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const amount = total * 100;
+  const currency = "COP";
+  const reference = "VM" + Date.now().toString(36).toUpperCase();
+  const raw = reference + amount + currency + wompi.integritySecret;
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
+  const signature = Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
+  const params = new URLSearchParams({
+    "public-key": wompi.publicKey,
+    currency,
+    "amount-in-cents": String(amount),
+    reference,
+    "signature:integrity": signature,
+    "redirect-url": location.href.split("#")[0] + "#/pedido?ref=" + encodeURIComponent(reference),
+    "customer-data:full-name": customer.name || "",
+    "customer-data:phone-number": customer.phone || "",
+  });
+  if (customer.email) params.set("customer-data:email", customer.email);
+  location.href = "https://checkout.wompi.co/p/?" + params.toString();
 }
 
 function formData(form) {
@@ -460,26 +502,55 @@ function bind() {
         }
         return;
       }
-      if (kind === "password") {
-        await api("/api/auth/password", { method: "POST", body: { current: data.current, next: data.next } });
-        toast("Clave actualizada");
-        form.reset();
+      if (kind === "contact") {
+        const phone = String(data.phone || "").replace(/\D/g, "");
+        if (phone.length < 10) {
+          toast("Escribe el celular con indicativo");
+          return;
+        }
+        localStorage.setItem("vm_phone", phone);
+        VM.config.whatsapp = phone;
+        try { await api("/api/admin/settings", { method: "POST", body: { whatsapp: phone } }); } catch (err) { /* queda en este navegador */ }
+        toast("Número actualizado");
+        render();
+        return;
+      }
+      if (kind === "wompi") {
+        const wompi = {
+          publicKey: data.publicKey || "",
+          integritySecret: data.integritySecret || "",
+          eventsSecret: data.eventsSecret || "",
+          currency: "COP",
+        };
+        localStorage.setItem("vm_wompi", JSON.stringify(wompi));
+        VM.config.wompi = wompi;
+        VM.config.wompiReady = Boolean(wompi.publicKey && wompi.integritySecret);
+        try { await api("/api/admin/settings", { method: "POST", body: wompi }); } catch (err) { /* queda en este navegador */ }
+        toast(VM.config.wompiReady ? "Wompi activo" : "Faltan llaves de Wompi");
+        render();
         return;
       }
       if (kind === "checkout") {
         const items = cartDetailed().map((item) => ({ id: item.id, qty: item.qty }));
-        const result = await api("/api/checkout", {
-          method: "POST",
-          body: { items, customer: data },
-        });
-        checkoutOrder = result.order;
-        VM.cart = [];
-        saveCart();
-        if (result.checkoutUrl) {
-          location.href = result.checkoutUrl;
+        try {
+          const result = await api("/api/checkout", {
+            method: "POST",
+            body: { items, customer: data },
+          });
+          checkoutOrder = result.order;
+          VM.cart = [];
+          saveCart();
+          if (result.checkoutUrl) {
+            location.href = result.checkoutUrl;
+            return;
+          }
+          location.hash = `#/pedido?ref=${encodeURIComponent(result.reference)}&token=${encodeURIComponent(result.order.token)}`;
           return;
+        } catch (err) {
+          if (!(VM.config.wompi && VM.config.wompi.publicKey && VM.config.wompi.integritySecret)) throw err;
         }
-        location.hash = `#/pedido?ref=${encodeURIComponent(result.reference)}&token=${encodeURIComponent(result.order.token)}`;
+        await payWithWompi(data);
+        return;
       }
     } catch (err) {
       toast(err.message);
@@ -511,9 +582,12 @@ async function boot() {
     VM.config = Object.assign({ whatsapp: SITE.whatsapp, city: SITE.city }, config);
     if (!VM.config.whatsapp) VM.config.whatsapp = SITE.whatsapp;
     VM.user = me.user;
+    applyLocalSettings();
+    if (config.whatsapp) VM.config.whatsapp = config.whatsapp;
   } catch (err) {
     VM.products = SITE.products;
     VM.config = { wompiReady: false, city: SITE.city, whatsapp: SITE.whatsapp, email: "" };
+    applyLocalSettings();
     if (VM.token === "local-admin") {
       try { VM.user = JSON.parse(localStorage.getItem("vm_user") || "null"); } catch (error) { VM.user = null; }
     } else {
