@@ -57,6 +57,7 @@ function paint(html, bodyClass) {
   const header = document.querySelector(".site-header");
   if (header) header.classList.toggle("scrolled", window.scrollY > 8);
   bindOrbits();
+  if (typeof mountVolumes === "function") mountVolumes();
 }
 
 function bindOrbits() {
@@ -71,6 +72,7 @@ function bindOrbits() {
     let lastY = 0;
     let moved = 0;
     const apply = () => {
+      if (el.dataset.solid === "1") return;
       card.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
       const shadow = el.querySelector(".orbit-shadow");
       if (shadow) shadow.style.transform = `translateX(${ry * 1.2}px) scale(${1.08 - Math.abs(ry) / 90}, ${0.82 + Math.abs(rx) / 70})`;

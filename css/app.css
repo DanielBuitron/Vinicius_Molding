@@ -216,6 +216,13 @@ button { cursor: pointer; }
   pointer-events: none;
   filter: drop-shadow(0 24px 16px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 1px rgba(255, 255, 255, 0.35));
 }
+.vol-view {
+  position: absolute;
+  inset: 0 0 8px;
+  width: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
 .orbit-hint {
   position: absolute;
   left: 0;
