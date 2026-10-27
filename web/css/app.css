@@ -190,7 +190,7 @@ button { cursor: pointer; }
   user-select: none;
 }
 .orbit.dragging { cursor: grabbing; }
-.orbit-scene { position: absolute; inset: 0 0 22px; perspective: 1200px; }
+.orbit-scene { position: absolute; inset: 0; perspective: 1200px; }
 .orbit-shadow {
   position: absolute;
   left: 18%;
@@ -305,10 +305,10 @@ button { cursor: pointer; }
 .catalog-intro h2 { font-size: 40px; letter-spacing: -0.04em; }
 .catalog-block { margin-top: 16px; scroll-margin-top: 150px; }
 .catalog-head { margin-bottom: 10px; }
-.sku-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
-.sku { background: #111113; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
-.sku-shot { display: block; }
-.sku .orbit { width: 100%; aspect-ratio: 1.2; margin: 0; background: radial-gradient(ellipse at 50% 62%, rgba(255,255,255,.14), transparent 58%); }
+.sku-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; width: 100%; }
+.sku { min-width: 0; background: #111113; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+.sku-shot { display: block; min-width: 0; }
+.sku .orbit { width: 100%; max-width: none; min-width: 0; aspect-ratio: 1; margin: 0; background: radial-gradient(ellipse at 50% 62%, rgba(255,255,255,.14), transparent 58%); }
 .sku .orbit-hint { display: none; }
 .sku .orbit-scene { inset: 0; }
 .sku-body { padding: 2px 12px 12px; }
@@ -529,7 +529,7 @@ td img { width: 72px; height: 48px; object-fit: cover; border-radius: 8px; }
   .opening, .product-view, .dial-block, .manifesto, .cart-layout, .checkout-layout, .login-wrap, .site-footer, .admin-grid { grid-template-columns: 1fr; }
   .band:nth-child(even) .orbit, .band:nth-child(even) > div:first-child { order: 0; }
   .swatches { grid-template-columns: 1fr 1fr 1fr; }
-  .sku-grid { grid-template-columns: 1fr 1fr; }
+  .sku-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .catalog-intro { position: static; }
   .nav { display: none; }
   .nav.open {

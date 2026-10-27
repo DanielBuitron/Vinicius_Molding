@@ -38,12 +38,11 @@ function cutoutSrc(src) {
 
 function orbit(src, alt, id) {
   const open = id ? ` data-open="${esc(id)}"` : "";
-  return `<div class="orbit" data-orbit${open} tabindex="0" aria-label="${esc(alt)}. Arrastra el producto">
+  return `<div class="orbit" data-orbit${open} tabindex="0" aria-label="${esc(alt)}">
     <div class="orbit-scene">
       <span class="orbit-shadow"></span>
       <div class="orbit-card"><img src="${esc(cutoutSrc(src))}" alt="${esc(alt)}" draggable="false"></div>
     </div>
-    <p class="orbit-hint">Gira solo · arrástralo para ver todos los lados</p>
   </div>`;
 }
 
