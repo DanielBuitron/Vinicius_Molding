@@ -448,13 +448,14 @@ function bind() {
         };
         try {
           const result = await api("/api/auth/login", { method: "POST", body: data });
+          if (!result.token) throw Object.assign(new Error("No se pudo completar la acción."), { status: 0 });
           VM.token = result.token;
           VM.user = result.user;
           localStorage.setItem("vm_token", result.token);
           localStorage.removeItem("vm_user");
           location.hash = "#/panel/resumen";
         } catch (err) {
-          if (username === "admin" && password === "admin123" && (!err.status || err.status === 404)) openLocal();
+          if (username === "admin" && password === "admin123") openLocal();
           else throw err;
         }
         return;
