@@ -90,7 +90,7 @@ async function createVolume(src) {
     : pack.kind === "tube"
       ? makeTube(pack, art)
       : makeBottle(pack, art, pack.kind);
-  return { object, tilt: pack.kind === "tin" ? 0.62 : 0.18 };
+  return { object, tilt: pack.kind === "tin" ? 0.62 : pack.kind === "pump" ? 0.04 : 0.18 };
 }
 
 function canvasTexture(canvas, offsetX) {
@@ -422,30 +422,23 @@ function labelBand(pack, art, radius, height, y) {
 }
 
 function addPump(group, mat) {
-  const y = 2.16;
-  const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.35, 0.07, 48), mat);
-  disc.position.y = y;
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.2, 0.16, 40), mat);
-  neck.position.y = y + 0.11;
-  const head = new THREE.Mesh(new THREE.CylinderGeometry(0.155, 0.162, 0.4, 40), mat);
-  head.position.y = y + 0.38;
-  const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.062, 0.074, 0.58, 24), mat);
-  nozzle.scale.set(0.62, 1, 0.82);
-  nozzle.rotation.z = -Math.PI / 2 - 0.18;
-  nozzle.position.set(0.3, y + 0.5, 0);
-  const tip = new THREE.Mesh(new THREE.SphereGeometry(0.066, 18, 14), mat);
-  tip.scale.set(0.7, 0.82, 0.82);
-  tip.position.set(0.57, y + 0.42, 0);
-  const joint = new THREE.Mesh(new THREE.SphereGeometry(0.09, 18, 14), mat);
-  joint.scale.set(1, 0.72, 0.85);
-  joint.position.set(0.1, y + 0.54, 0);
-  group.add(disc, neck, head, nozzle, tip, joint);
-  for (let i = 0; i < 3; i += 1) {
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.195, 0.011, 8, 32), mat);
-    ring.rotation.x = Math.PI / 2;
-    ring.position.y = y + 0.05 + i * 0.045;
-    group.add(ring);
-  }
+  const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.37, 0.39, 0.4, 56), mat);
+  collar.position.y = 3.84;
+  const step = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.08, 36), mat);
+  step.position.y = 4.07;
+  const head = new THREE.Mesh(new THREE.CylinderGeometry(0.175, 0.185, 0.26, 40), mat);
+  head.position.y = 4.22;
+  const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.078, 1.02, 28), mat);
+  nozzle.scale.z = 0.7;
+  nozzle.rotation.z = -Math.PI / 2 - 0.06;
+  nozzle.position.set(0.2, 4.38, 0);
+  const tip = new THREE.Mesh(new THREE.SphereGeometry(0.078, 20, 14), mat);
+  tip.scale.set(1.05, 0.72, 0.7);
+  tip.position.set(0.7, 4.34, 0);
+  const heel = new THREE.Mesh(new THREE.SphereGeometry(0.074, 16, 12), mat);
+  heel.scale.set(0.9, 0.72, 0.7);
+  heel.position.set(-0.26, 4.4, 0);
+  group.add(collar, step, head, nozzle, tip, heel);
 }
 
 function makeBottle(pack, art, top) {
@@ -453,26 +446,36 @@ function makeBottle(pack, art, top) {
   const pump = top === "pump";
   const points = (pump
     ? [
-      [0.02, 0], [0.5, 0], [0.6, 0.05], [0.64, 0.16], [0.64, 1.52],
-      [0.58, 1.7], [0.42, 1.88], [0.28, 2.02], [0.22, 2.14], [0.02, 2.14],
+      [0.02, 0], [0.22, 0], [0.58, 0.08], [0.66, 0.2], [0.68, 0.36], [0.68, 2.82],
+      [0.64, 3.02], [0.56, 3.18], [0.44, 3.34], [0.34, 3.5], [0.32, 3.62], [0.02, 3.62],
     ]
     : [
       [0.02, 0], [0.46, 0], [0.56, 0.08], [0.58, 0.22], [0.58, 1.28],
       [0.5, 1.48], [0.34, 1.66], [0.2, 1.78], [0.2, 1.92], [0.02, 1.92],
     ]
   ).map(([x, y]) => new THREE.Vector2(x, y));
-  const body = new THREE.Mesh(new THREE.LatheGeometry(points, 72), new THREE.MeshStandardMaterial({
-    color: pack.body,
-    roughness: pump ? (pack.face === "white" ? 0.22 : 0.3) : pack.kind === "dropper" ? 0.2 : 0.38,
-    metalness: pump ? 0.06 : pack.kind === "dropper" ? 0.35 : 0.08,
-  }));
+  const body = new THREE.Mesh(new THREE.LatheGeometry(points, 80), pump
+    ? new THREE.MeshPhysicalMaterial({
+      color: pack.body,
+      roughness: pack.face === "white" ? 0.16 : 0.28,
+      metalness: 0,
+      clearcoat: pack.face === "white" ? 0.45 : 0.25,
+      clearcoatRoughness: 0.28,
+    })
+    : new THREE.MeshStandardMaterial({
+      color: pack.body,
+      roughness: pack.kind === "dropper" ? 0.2 : 0.38,
+      metalness: pack.kind === "dropper" ? 0.35 : 0.08,
+    }));
   group.add(body);
-  if (pump) labelBand(pack, art, 0.668, 1.2, 0.84).forEach((mesh) => group.add(mesh));
+  if (pump) labelBand(pack, art, 0.71, 2.15, 1.5).forEach((mesh) => group.add(mesh));
   else labelBand(pack, art, 0.608, 0.96, 0.74).forEach((mesh) => group.add(mesh));
-  const capMat = new THREE.MeshStandardMaterial({
-    color: pump && pack.face === "white" ? "#f4f4f2" : "#2a2a2c",
-    roughness: pump && pack.face === "white" ? 0.24 : 0.32,
-    metalness: pump && pack.face === "white" ? 0.04 : 0.45,
+  const capMat = new THREE.MeshPhysicalMaterial({
+    color: pump && pack.face === "white" ? "#f7f6f3" : "#242428",
+    roughness: pump && pack.face === "white" ? 0.18 : 0.3,
+    metalness: pump && pack.face === "white" ? 0 : 0.2,
+    clearcoat: 0.3,
+    clearcoatRoughness: 0.25,
   });
   if (pump) {
     addPump(group, capMat);
