@@ -60,46 +60,61 @@ function paint(html, bodyClass) {
 }
 
 function bindOrbits() {
+  const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
   document.querySelectorAll("[data-orbit]").forEach((el) => {
     const card = el.querySelector(".orbit-card");
-    const label = el.querySelector("[data-deg]");
     if (!card) return;
-    let angle = -18;
+    let rx = 6;
+    let ry = -14;
     let dragging = false;
-    let last = 0;
+    let lastX = 0;
+    let lastY = 0;
     let moved = 0;
     const apply = () => {
-      const shown = ((angle % 360) + 360) % 360;
-      card.style.transform = `rotateY(${angle}deg)`;
-      if (label) label.textContent = Math.round(shown) + "°";
+      card.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+      el.style.setProperty("--shine", `${50 + ry * 0.8}% ${42 - rx * 0.7}%`);
     };
     apply();
-    const loop = () => {
-      if (!el.isConnected) return;
-      if (!dragging && !el.matches(":hover")) angle += 0.35;
-      apply();
-      requestAnimationFrame(loop);
-    };
-    requestAnimationFrame(loop);
     el.addEventListener("pointerdown", (event) => {
+      if (event.target.closest("a, button")) return;
       dragging = true;
       moved = 0;
-      last = event.clientX;
+      lastX = event.clientX;
+      lastY = event.clientY;
       el.classList.add("dragging");
       el.setPointerCapture(event.pointerId);
     });
     el.addEventListener("pointermove", (event) => {
       if (!dragging) return;
-      const delta = event.clientX - last;
-      moved += Math.abs(delta);
-      angle += delta * 0.65;
-      last = event.clientX;
+      const dx = event.clientX - lastX;
+      const dy = event.clientY - lastY;
+      moved += Math.abs(dx) + Math.abs(dy);
+      ry = clamp(ry + dx * 0.28, -50, 50);
+      rx = clamp(rx - dy * 0.24, -34, 34);
+      lastX = event.clientX;
+      lastY = event.clientY;
       apply();
     });
     el.addEventListener("click", (event) => {
       if (moved > 8) {
         event.preventDefault();
         event.stopPropagation();
+      }
+    });
+    el.addEventListener("dblclick", () => {
+      rx = 6;
+      ry = -14;
+      apply();
+    });
+    el.addEventListener("keydown", (event) => {
+      const step = event.shiftKey ? 4 : 8;
+      if (event.key === "ArrowLeft") ry = clamp(ry - step, -50, 50);
+      if (event.key === "ArrowRight") ry = clamp(ry + step, -50, 50);
+      if (event.key === "ArrowUp") rx = clamp(rx - step, -34, 34);
+      if (event.key === "ArrowDown") rx = clamp(rx + step, -34, 34);
+      if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
+        event.preventDefault();
+        apply();
       }
     });
     const stop = () => {

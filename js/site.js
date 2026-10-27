@@ -26,11 +26,8 @@ function iconWhatsapp() {
 }
 
 function orbit(src, alt) {
-  return `<div class="orbit" data-orbit tabindex="0" role="img" aria-label="${esc(alt)}. Arrastra para girar 360 grados">
-    <div class="orbit-scene"><div class="orbit-card">
-      <img class="face" src="${esc(src)}" alt="${esc(alt)}" draggable="false">
-      <img class="face back" src="${esc(src)}" alt="" draggable="false">
-    </div></div>
-    <div class="orbit-foot"><span data-deg>0°</span><small>360°</small></div>
+  return `<div class="orbit" data-orbit tabindex="0" aria-label="${esc(alt)}. Arrastra arriba, abajo o a los lados">
+    <div class="orbit-scene"><div class="orbit-card"><img src="${esc(src)}" alt="${esc(alt)}" draggable="false"><span class="sheen"></span></div></div>
+    <p class="orbit-hint">Arrastra · arriba, abajo y a los lados</p>
   </div>`;
 }
