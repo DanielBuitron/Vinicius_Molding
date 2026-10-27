@@ -1,7 +1,7 @@
 function adminShell(title, body) {
   const tab = VM.parts[1] || "resumen";
-  const leads = VM.metrics ? VM.metrics.leadsNew : 0;
-  const item = (id, label, extra) => `<a href="#/panel/${id}" class="${tab === id || (id === "resumen" && !VM.parts[1]) ? "on" : ""}">${label}${extra || ""}</a>`;
+  const current = tab === "asesor" ? "contacto" : tab === "clave" ? "wompi" : tab;
+  const item = (id, label) => `<a href="#/panel/${id}" class="${current === id || (id === "resumen" && !VM.parts[1]) ? "on" : ""}">${label}</a>`;
   return `
     <div class="admin">
       <aside class="side">
@@ -9,9 +9,9 @@ function adminShell(title, body) {
         ${item("resumen", "Resumen")}
         ${item("inventario", "Inventario")}
         ${item("seguimiento", "Seguimiento")}
-        ${item("asesor", "Asesor", leads ? `<span class="badge">${leads}</span>` : "")}
+        ${item("contacto", "Contacto")}
         ${item("pedidos", "Pedidos")}
-        ${item("clave", "Clave")}
+        ${item("wompi", "Wompi")}
         <div class="spacer"></div>
         <a href="#/inicio">Ver la tienda</a>
         <button class="navlink side-foot" data-act="logout">Cerrar sesión</button>
@@ -59,9 +59,10 @@ function viewDashboard(data) {
     </div>
     <div class="admin-grid">
       <article class="panel-card">
-        <h3>Contactos recientes</h3>
-        ${data.recentLeads.length ? data.recentLeads.map((lead) => `<div class="sum-row"><span>${esc(lead.name)} · ${esc(lead.phone)}</span><span class="status ${esc(lead.status)}">${esc(statusLabel(lead.status))}</span></div>`).join("") : `<p class="empty">Nadie ha dejado su número todavía.</p>`}
-        <p><a href="#/panel/asesor">Abrir bandeja del asesor</a></p>
+        <h3>Contacto</h3>
+        <p>Los clientes escriben a este número.</p>
+        <strong style="display:block;font-family:var(--display);font-size:28px">${esc(VM.config.whatsapp || "")}</strong>
+        <p><a href="#/panel/contacto">Cambiar número</a></p>
       </article>
       <article class="panel-card">
         <h3>Pedidos recientes</h3>
@@ -141,29 +142,27 @@ function viewTracking(payload) {
     </article>`);
 }
 
-function viewLeads(leads) {
-  const rows = leads.map((lead) => `
-    <tr>
-      <td>${esc((lead.at || "").replace("T", " "))}</td>
-      <td><strong>${esc(lead.name)}</strong><div class="fine">${esc(lead.city || "")} · ${esc(lead.interest || "")} · ${esc(lead.schedule || "")}</div></td>
-      <td><a href="tel:+${esc(lead.phone)}">${esc(lead.phone)}</a><div><a href="${esc(waLink(lead.phone))}" target="_blank" rel="noopener">WhatsApp</a></div></td>
-      <td>${esc(lead.note || "")}</td>
-      <td>
-        <select data-act="lead-status" data-id="${esc(lead.id)}">
-          ${["nuevo", "contactado", "cerrado"].map((status) => `<option value="${status}" ${lead.status === status ? "selected" : ""}>${statusLabel(status)}</option>`).join("")}
-        </select>
-      </td>
-    </tr>`).join("");
-  return adminShell("Asesor", `
-    <article class="panel-card">
-      <p class="fine">Números que la gente deja para que el asesor comercial devuelva la llamada.</p>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Fecha</th><th>Contacto</th><th>Número</th><th>Nota</th><th>Estado</th></tr></thead>
-          <tbody>${rows || `<tr><td colspan="5" class="empty">Todavía no hay números.</td></tr>`}</tbody>
-        </table>
-      </div>
-    </article>`);
+function viewContact() {
+  const phone = VM.config.whatsapp || "";
+  return adminShell("Contacto", `
+    <form class="form panel-card" data-form="contact" style="max-width:460px">
+      <p class="fine">El número al que escriben los clientes.</p>
+      <label>Celular<input name="phone" inputmode="tel" required value="${esc(phone)}" placeholder="573235835137"></label>
+      <button class="btn" type="submit">Guardar número</button>
+    </form>`);
+}
+
+function viewWompi() {
+  const wompi = VM.config.wompi || {};
+  return adminShell("Wompi", `
+    <form class="form panel-card" data-form="wompi" style="max-width:560px">
+      <p class="fine">Llaves de la pasarela. Con la pública y el secreto de integridad el pago queda activo.</p>
+      <label>Llave pública<input name="publicKey" required value="${esc(wompi.publicKey || "")}" autocomplete="off"></label>
+      <label>Secreto de integridad<input name="integritySecret" required value="${esc(wompi.integritySecret || "")}" autocomplete="off"></label>
+      <label>Secreto de eventos<input name="eventsSecret" value="${esc(wompi.eventsSecret || "")}" autocomplete="off"></label>
+      <p class="fine">Eventos: ${esc(VM.config.webhookUrl || "/api/wompi/events")}</p>
+      <button class="btn" type="submit">Guardar Wompi</button>
+    </form>`);
 }
 
 function viewOrders(orders) {
@@ -177,14 +176,6 @@ function viewOrders(orders) {
     </tr>`).join("");
   return adminShell("Pedidos", `
     <article class="panel-card">
-      <h3>Wompi</h3>
-      <p>${VM.config.wompiReady ? "La pasarela está activa. El checkout redirige a Wompi y el regreso confirma la transacción." : "Deja en config.json la llave pública, el secreto de integridad y el secreto de eventos. El checkout, la firma y el webhook ya están armados."}</p>
-      <div class="pay-badges">
-        <span>publicKey</span><span>integritySecret</span><span>eventsSecret</span>
-      </div>
-      <p class="fine">Eventos: ${esc(VM.config.webhookUrl || "/api/wompi/events")}</p>
-    </article>
-    <article class="panel-card" style="margin-top:14px">
       <div class="table-wrap">
         <table>
           <thead><tr><th>Fecha</th><th>Referencia</th><th>Detalle</th><th>Total</th><th>Estado</th></tr></thead>
@@ -194,11 +185,3 @@ function viewOrders(orders) {
     </article>`);
 }
 
-function viewPassword() {
-  return adminShell("Clave", `
-    <form class="form panel-card" data-form="password" style="max-width:460px">
-      <label>Clave actual<input name="current" type="password" required></label>
-      <label>Clave nueva<input name="next" type="password" required minlength="8"></label>
-      <button class="btn" type="submit">Actualizar clave</button>
-    </form>`);
-}

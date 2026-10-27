@@ -268,6 +268,11 @@ def read_config():
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def write_config(cfg):
+    path = ROOT / "config.json"
+    path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
 def hash_pw(password, salt_hex):
     salt = bytes.fromhex(salt_hex)
     digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 120_000)
@@ -721,6 +726,29 @@ class Handler(BaseHTTPRequestHandler):
             self.update_product(product_id)
             return
 
+        if path == "/api/admin/settings" and method == "GET":
+            with LOCK:
+                store = load_store()
+                if not self.require_user(store):
+                    return
+            cfg = read_config()
+            wompi = cfg.get("wompi") or {}
+            company = cfg.get("company") or {}
+            self.send_json(200, {
+                "whatsapp": company.get("whatsapp") or "",
+                "publicKey": wompi.get("publicKey") or "",
+                "integritySecret": wompi.get("integritySecret") or "",
+                "eventsSecret": wompi.get("eventsSecret") or "",
+                "currency": wompi.get("currency") or "COP",
+                "wompiReady": wompi_ready(cfg),
+                "webhookUrl": self.base_url() + "/api/wompi/events",
+            })
+            return
+
+        if path == "/api/admin/settings" and method == "POST":
+            self.update_settings()
+            return
+
         if path == "/api/leads" and method == "GET":
             with LOCK:
                 store = load_store()
@@ -798,6 +826,28 @@ class Handler(BaseHTTPRequestHandler):
             user["passwordHash"] = hash_pw(nxt, salt)
             save_store(store)
         self.send_json(200, {"ok": True})
+
+    def update_settings(self):
+        body = self.read_json()
+        with LOCK:
+            store = load_store()
+            if not self.require_user(store):
+                return
+            cfg = read_config()
+            company = cfg.setdefault("company", {})
+            wompi = cfg.setdefault("wompi", {})
+            if "whatsapp" in body:
+                company["whatsapp"] = "".join(ch for ch in str(body.get("whatsapp") or "") if ch.isdigit())[:15]
+            if "publicKey" in body:
+                wompi["publicKey"] = str(body.get("publicKey") or "").strip()[:160]
+            if "integritySecret" in body:
+                wompi["integritySecret"] = str(body.get("integritySecret") or "").strip()[:160]
+            if "eventsSecret" in body:
+                wompi["eventsSecret"] = str(body.get("eventsSecret") or "").strip()[:160]
+            if not wompi.get("currency"):
+                wompi["currency"] = "COP"
+            write_config(cfg)
+        self.send_json(200, {"ok": True, "wompiReady": wompi_ready(cfg)})
 
     def update_product(self, product_id):
         body = self.read_json()
