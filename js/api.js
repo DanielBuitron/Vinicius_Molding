@@ -127,12 +127,8 @@ function stockLabel(product) {
 }
 
 function categoryName(id) {
-  return {
-    fijacion: "Fijación",
-    cuidado: "Cuidado",
-    tratamiento: "Tratamiento",
-    kids: "Kids",
-  }[id] || id;
+  const group = (typeof CATALOG !== "undefined" ? CATALOG : []).find((item) => item.id === id);
+  return group ? group.name : id;
 }
 
 function waLink(phone) {
