@@ -50,16 +50,7 @@ function viewHome() {
       </div>
       <div>${hero ? orbit(hero.image, hero.name, hero.id) : ""}</div>
     </section>
-    ${catalogGroups().map((group) => `
-      <section class="runway">
-        <div class="runway-head">
-          <h2>${esc(group.name)}</h2>
-          <a href="#/catalogo/${esc(group.id)}">Ver</a>
-        </div>
-        <div class="rail">
-          ${group.items.map((item) => `<article>${orbit(item.image, item.name, item.id)}<h3><a href="#/producto/${esc(item.id)}">${esc(item.name)}</a></h3><p>${money(item.price)} · ${esc(item.size)}</p></article>`).join("")}
-        </div>
-      </section>`).join("")}
+    ${catalogGroups().map(homeGroup).join("")}
     <section class="manifesto">
       <h2>No vendemos promesas.<br><em>Entregamos resultados.</em></h2>
       <p>Para quien busca la opción correcta, no una más.</p>
@@ -83,6 +74,41 @@ function phoneBlock(done) {
         </div>
         <p class="fine">Solo el celular. Nada más.</p>
       </form>
+    </section>`;
+}
+
+function homeSlide(item, active) {
+  return `
+    <article class="showcase-slide ${active ? "on" : ""}">
+      <div>${orbit(item.image, item.name, item.id)}</div>
+      <div class="showcase-copy">
+        <p class="kicker">${esc(item.finish)} · ${esc(item.size)}</p>
+        <h3><a href="#/producto/${esc(item.id)}">${esc(item.name)}</a></h3>
+        <p>${esc(item.summary)}</p>
+        <strong class="price">${money(item.price)}</strong>
+        <div class="hero-actions">
+          <a class="btn" href="#/producto/${esc(item.id)}">Ver producto</a>
+          <button class="btn ghost" type="button" data-act="add" data-id="${esc(item.id)}" ${item.stock ? "" : "disabled"}>Agregar</button>
+        </div>
+      </div>
+    </article>`;
+}
+
+function homeGroup(group) {
+  const many = group.items.length > 1;
+  return `
+    <section class="showcase" ${many ? "data-showcase" : ""}>
+      <div class="runway-head">
+        <h2>${esc(group.name)}</h2>
+        <div class="carousel-nav">
+          ${many ? `<button type="button" class="icon-btn" data-act="show" data-dir="-1" aria-label="Anterior">‹</button><button type="button" class="icon-btn" data-act="show" data-dir="1" aria-label="Siguiente">›</button>` : ""}
+          <a href="#/catalogo/${esc(group.id)}">Ver</a>
+        </div>
+      </div>
+      <div class="showcase-stage">
+        ${group.items.map((item, index) => homeSlide(item, index === 0)).join("")}
+      </div>
+      ${many ? `<div class="showcase-dots">${group.items.map((item, index) => `<button type="button" class="${index === 0 ? "on" : ""}" data-act="show-dot" data-index="${index}" aria-label="${esc(item.name)}"></button>`).join("")}</div>` : ""}
     </section>`;
 }
 
