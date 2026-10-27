@@ -6,7 +6,7 @@ let volumeLogo = null;
 let volumeWord = null;
 
 const PACKS = {
-  "cera-fibra": { kind: "tin", accent: "#7A5CFF", body: "#121214", ink: "#f6f3ec", title: "CERA DE FIBRA", lidSub: "ACABADO FIRME", size: "150 g", hold: 4 },
+  "cera-fibra": { kind: "tin", accent: "#7A5CFF", body: "#121214", ink: "#f6f3ec", title: "CERA DE FIBRA", lidSub: "ACABADO HÚMEDO", size: "150 g", hold: 4 },
   "cera-brillo": { kind: "tin", accent: "#E52C3B", body: "#121214", ink: "#f6f3ec", title: "CERA", lidSub: "MOLDEADORA  ·  BRILLO MEDIO", size: "150 g", hold: 3 },
   "pasta": { kind: "tin", accent: "#00C8C2", body: "#121214", ink: "#f6f3ec", title: "PASTA", lidSub: "MOLDEADORA  ·  BRILLANTE", size: "150 g", hold: 4 },
   "pomada": { kind: "tin", accent: "#FFD300", body: "#121214", ink: "#f6f3ec", title: "POMADA", lidSub: "MOLDEADORA  ·  MATE", size: "150 g", hold: 3 },
@@ -115,21 +115,24 @@ function tinted(image, color, w, h) {
   return canvas;
 }
 
-function stripes(ctx, x, y, w, h, color) {
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(x, y, w, h);
-  ctx.clip();
+function stripedMark(logo, color, w, h) {
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
   ctx.strokeStyle = color;
-  ctx.globalAlpha = 0.9;
-  ctx.lineWidth = 3;
-  for (let i = -h; i < w + h; i += 16) {
+  ctx.lineWidth = Math.max(2, Math.round(w / 42));
+  const gap = Math.max(6, Math.round(w / 22));
+  ctx.lineCap = "square";
+  for (let i = -h; i < w + h; i += gap) {
     ctx.beginPath();
-    ctx.moveTo(x + i, y);
-    ctx.lineTo(x + i - h * 0.55, y + h);
+    ctx.moveTo(i, 0);
+    ctx.lineTo(i - h * 0.7, h);
     ctx.stroke();
   }
-  ctx.restore();
+  ctx.globalCompositeOperation = "destination-in";
+  if (logo) ctx.drawImage(logo, 0, 0, w, h);
+  return canvas;
 }
 
 function lidLabel(pack, art) {
@@ -141,78 +144,81 @@ function lidLabel(pack, art) {
   if (pack.kids) {
     ctx.fillStyle = "#2f6fe8";
     ctx.beginPath();
-    ctx.moveTo(70, 90);
-    ctx.lineTo(250, 90);
-    ctx.lineTo(90, 250);
+    ctx.moveTo(40, 70);
+    ctx.lineTo(280, 70);
+    ctx.lineTo(40, 310);
     ctx.closePath();
     ctx.fill();
+    ctx.fillStyle = "#7CFF6B";
     ctx.beginPath();
-    ctx.moveTo(954, 934);
-    ctx.lineTo(774, 934);
-    ctx.lineTo(934, 774);
+    ctx.moveTo(984, 954);
+    ctx.lineTo(744, 954);
+    ctx.lineTo(984, 714);
     ctx.closePath();
     ctx.fill();
   }
-  stripes(ctx, 70, 120, 250, 780, pack.kids ? "rgba(255,255,255,0.45)" : pack.accent);
-  stripes(ctx, 704, 120, 250, 780, pack.kids ? "rgba(255,255,255,0.45)" : pack.accent);
-  if (art.word) ctx.drawImage(art.word, 262, 168, 500, 82);
-  if (art.logo) ctx.drawImage(tinted(art.logo, pack.kids ? "#ffffff" : pack.accent, 620, 380), 202, 300, 620, 380);
+  if (art.word) ctx.drawImage(art.word, 250, 128, 524, 86);
+  const mark = pack.kids ? "#ffffff" : pack.accent;
+  if (art.logo) ctx.drawImage(stripedMark(art.logo, mark, 900, 550), 150, 210, 724, 442);
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillStyle = "#ffffff";
-  ctx.font = "700 64px Outfit, sans-serif";
-  ctx.fillText(pack.title, 512, 690);
+  ctx.font = "800 78px Outfit, sans-serif";
+  ctx.fillText(pack.title, 512, 548);
   if (pack.kids) {
     const letters = [["K", "#FFD300"], ["I", "#B6E000"], ["D", "#3DB7FF"], ["S", "#7CFF6B"]];
-    ctx.font = "800 78px Outfit, sans-serif";
+    ctx.font = "800 86px Outfit, sans-serif";
     letters.forEach(([ch, color], index) => {
       ctx.fillStyle = color;
-      ctx.fillText(ch, 360 + index * 102, 785);
+      ctx.fillText(ch, 352 + index * 108, 660);
     });
+    ctx.fillStyle = "rgba(255,255,255,0.9)";
+    ctx.font = "600 22px Outfit, sans-serif";
+    ctx.fillText(pack.size, 512, 748);
   } else {
     ctx.fillStyle = pack.accent;
-    ctx.font = "600 26px Outfit, sans-serif";
-    ctx.fillText(pack.lidSub, 512, 758);
-    ctx.fillStyle = "rgba(255,255,255,0.82)";
-    ctx.font = "500 22px Outfit, sans-serif";
-    ctx.fillText(pack.size, 512, 804);
+    ctx.font = "700 28px Outfit, sans-serif";
+    ctx.fillText(pack.lidSub, 512, 630);
+    ctx.fillStyle = "rgba(255,255,255,0.88)";
+    ctx.font = "600 22px Outfit, sans-serif";
+    ctx.fillText(pack.size, 512, 678);
   }
   return canvasTexture(canvas, 0);
 }
 
 function drawSideBlock(ctx, cx, pack, art) {
-  stripes(ctx, cx - 470, 18, 160, 244, pack.kids ? "rgba(255,255,255,0.55)" : pack.accent);
-  if (art.logo) ctx.drawImage(tinted(art.logo, pack.kids ? "#ffffff" : pack.accent, 180, 110), cx - 430, 78, 150, 92);
-  ctx.fillStyle = pack.accent;
-  ctx.fillRect(cx - 250, 48, 4, 184);
+  const color = pack.kids ? "#ffffff" : pack.accent;
+  if (art.logo) ctx.drawImage(stripedMark(art.logo, color, 360, 220), cx - 500, 30, 210, 128);
+  ctx.fillStyle = color;
+  ctx.fillRect(cx - 270, 48, 4, 184);
   ctx.fillStyle = pack.ink;
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
-  ctx.font = "600 30px Outfit, sans-serif";
+  ctx.font = "700 28px Outfit, sans-serif";
   ["KERATINA", "ROMERO", "ALOE VERA"].forEach((line, index) => {
-    ctx.fillText(line, cx - 220, 78 + index * 42);
+    ctx.fillText(line, cx - 246, 86 + index * 40);
   });
-  const bx = cx + 90;
-  ctx.fillStyle = pack.accent;
+  const bx = cx + 70;
+  ctx.fillStyle = color;
   ctx.fillRect(bx, 58, 168, 150);
-  ctx.fillStyle = "#141414";
+  ctx.fillStyle = pack.kids ? "#141414" : "#141414";
   ctx.textAlign = "center";
-  ctx.font = "700 18px Outfit, sans-serif";
+  ctx.font = "800 18px Outfit, sans-serif";
   ctx.fillText("A BASE", bx + 84, 100);
   ctx.fillText("DE CERA", bx + 84, 126);
   ctx.fillText("DE ABEJA", bx + 84, 152);
   ctx.textAlign = "left";
   ctx.fillStyle = pack.ink;
-  ctx.font = "500 16px Outfit, sans-serif";
+  ctx.font = "600 16px Outfit, sans-serif";
   ctx.fillText("Rigidez", bx + 186, 86);
   for (let i = 0; i < 4; i += 1) {
     ctx.beginPath();
-    ctx.fillStyle = i < pack.hold ? pack.accent : "rgba(255,255,255,0.35)";
+    ctx.fillStyle = i < pack.hold ? color : "rgba(255,255,255,0.35)";
     ctx.arc(bx + 198 + i * 24, 118, 7, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.fillStyle = pack.ink;
-  ctx.globalAlpha = 0.8;
+  ctx.globalAlpha = 0.85;
   ctx.font = "500 15px Outfit, sans-serif";
   ctx.fillText("Usar en pelo", bx + 186, 156);
   ctx.fillText("seco/semi seco", bx + 186, 178);
@@ -282,8 +288,8 @@ function panel(pack) {
 
 function paintMark(ctx, art, pack, x, y, w) {
   const color = pack.v || pack.accent;
-  stripes(ctx, x - w * 0.15, y, w * 1.3, w * 0.7, color);
-  if (art.logo) ctx.drawImage(tinted(art.logo, color, 640, 390), x, y, w, w * 0.62);
+  const h = Math.round(w * 0.61);
+  if (art.logo) ctx.drawImage(stripedMark(art.logo, color, 900, 550), x, y, w, h);
 }
 
 function frontLabel(pack, art) {
@@ -304,9 +310,16 @@ function frontLabel(pack, art) {
     });
     ctx.fillStyle = pack.accent;
     ctx.fillRect(300, 980, 300, 90);
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(360, 1025, 18, 0, Math.PI * 2);
+    ctx.moveTo(348, 1013);
+    ctx.lineTo(372, 1037);
+    ctx.stroke();
     ctx.fillStyle = "#ffffff";
-    ctx.font = "700 32px Outfit, sans-serif";
-    ctx.fillText("SIN SAL", 450, 1025);
+    ctx.font = "800 32px Outfit, sans-serif";
+    ctx.fillText("SIN SAL", 490, 1028);
     ctx.fillStyle = pack.ink;
     ctx.font = "600 28px Outfit, sans-serif";
     ctx.fillText(pack.size, 450, 1160);
@@ -343,26 +356,27 @@ function frontLabel(pack, art) {
     if (art.word) ctx.drawImage(art.word, 200, 80, 500, 82);
     paintMark(ctx, art, pack, 175, 200, 550);
     ctx.fillStyle = "#ffffff";
-    ctx.font = "800 84px Outfit, sans-serif";
-    ctx.fillText("TÓNICO", 450, 640);
+    ctx.font = "800 92px Outfit, sans-serif";
+    ctx.fillText("TÓNICO", 450, 620);
     ctx.fillStyle = pack.accent;
-    ctx.font = "700 40px Outfit, sans-serif";
-    ctx.fillText("ORGÁNICO", 450, 700);
-    ctx.font = "500 22px Outfit, sans-serif";
+    ctx.font = "700 42px Outfit, sans-serif";
+    ctx.fillText("ORGÁNICO", 450, 680);
+    ctx.font = "600 20px Outfit, sans-serif";
     ctx.textAlign = "left";
     ctx.fillStyle = "#ffffff";
-    ["ROMERO", "ÁCIDO", "HIALURÓNICO"].forEach((line, index) => ctx.fillText(line, 180, 800 + index * 34));
+    ctx.fillText("CONTIENE", 150, 760);
+    ["ROMERO", "ÁCIDO", "HIALURÓNICO"].forEach((line, index) => ctx.fillText(line, 150, 800 + index * 32));
     ctx.fillStyle = pack.accent;
-    ["BIOTINA", "RUIBARBO", "KERATINA", "ALOE VERA"].forEach((line, index) => ctx.fillText(line, 500, 800 + index * 34));
+    ["BIOTINA", "RUIBARBO", "KERATINA", "ALOE VERA"].forEach((line, index) => ctx.fillText(line, 500, 760 + index * 32));
     ctx.fillStyle = pack.accent;
-    ctx.fillRect(150, 980, 600, 80);
-    ctx.fillStyle = "#141414";
+    ctx.fillRect(120, 960, 660, 78);
+    ctx.fillStyle = "#142018";
     ctx.textAlign = "center";
-    ctx.font = "700 26px Outfit, sans-serif";
-    ctx.fillText("ESTIMULANTE CON 19 ACTIVOS", 450, 1020);
+    ctx.font = "800 26px Outfit, sans-serif";
+    ctx.fillText("ESTIMULANTE CON 19 ACTIVOS", 450, 1000);
     ctx.fillStyle = "#ffffff";
-    ctx.font = "500 24px Outfit, sans-serif";
-    ctx.fillText("65 ml", 450, 1120);
+    ctx.font = "600 24px Outfit, sans-serif";
+    ctx.fillText("2.3 FL Oz  /  65 mL", 450, 1100);
   } else if (pack.face === "tube") {
     if (art.word) ctx.drawImage(art.word, 200, 70, 500, 82);
     paintMark(ctx, art, pack, 175, 190, 550);
@@ -386,20 +400,20 @@ function frontLabel(pack, art) {
     if (art.word) ctx.drawImage(art.word, 200, 70, 500, 82);
     paintMark(ctx, art, pack, 160, 180, 580);
     ctx.fillStyle = "#ffffff";
-    ctx.font = "800 96px Outfit, sans-serif";
-    ctx.fillText("SERUM", 450, 680);
+    ctx.font = "800 100px Outfit, sans-serif";
+    ctx.fillText("SERUM", 450, 660);
     ctx.fillStyle = pack.accent;
-    ctx.font = "700 32px Outfit, sans-serif";
-    ctx.fillText("BARBA  ·  BIGOTE", 450, 750);
-    ctx.strokeStyle = pack.accent;
-    ctx.lineWidth = 3;
-    ctx.strokeRect(170, 820, 560, 120);
+    ctx.font = "700 30px Outfit, sans-serif";
+    ctx.fillText("BARBA  ·  BIGOTE", 450, 720);
+    ctx.fillStyle = pack.accent;
+    ctx.fillRect(145, 780, 610, 130);
+    ctx.fillStyle = "#141414";
+    ctx.font = "700 26px Outfit, sans-serif";
+    ctx.fillText("CONTIENE ARGÁN,", 450, 824);
+    ctx.fillText("JOJOBA, ALOE VERA", 450, 862);
+    ctx.fillStyle = "rgba(255,255,255,0.9)";
     ctx.font = "600 24px Outfit, sans-serif";
-    ctx.fillText("CONTIENE ARGÁN,", 450, 860);
-    ctx.fillText("JOJOBA, ALOE VERA", 450, 896);
-    ctx.fillStyle = "rgba(255,255,255,0.85)";
-    ctx.font = "500 24px Outfit, sans-serif";
-    ctx.fillText("65 ml", 450, 1020);
+    ctx.fillText("2.3 FL Oz  /  65 mL", 450, 980);
   }
   const texture = canvasTexture(canvas, 0);
   texture.wrapS = THREE.ClampToEdgeWrapping;
