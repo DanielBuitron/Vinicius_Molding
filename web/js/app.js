@@ -27,9 +27,8 @@ function titles() {
     return;
   }
   const names = {
-    linea: "Línea",
-    marca: "La marca",
-    asesor: "Asesor",
+    catalogo: "Catálogo",
+    linea: "Catálogo",
     carrito: "Carrito",
     pago: "Pago",
     pedido: "Pedido",
@@ -194,7 +193,8 @@ async function render() {
 
   const content = {
     inicio: viewHome,
-    linea: viewLinea,
+    catalogo: viewCatalog,
+    linea: viewCatalog,
     producto: viewProduct,
     marca: viewMarca,
     asesor: () => viewAsesor(advisorDone),
@@ -202,6 +202,11 @@ async function render() {
     pago: viewCheckout,
   }[page];
   paint(shellPublic(content ? content() : viewHome()), "site");
+  const focus = VM.parts[1];
+  if (focus && (page === "catalogo" || page === "linea")) {
+    const block = document.querySelector(`[data-cat="${focus}"]`);
+    if (block) block.scrollIntoView({ block: "start" });
+  }
   trackView();
 }
 

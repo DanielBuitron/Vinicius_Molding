@@ -286,13 +286,20 @@ button { cursor: pointer; }
 .section { padding: 78px 7vw; }
 .filters { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
+  display: inline-block;
   border: 1px solid var(--line);
   background: transparent;
   color: #fff;
   border-radius: 999px;
   padding: 8px 14px;
   font-family: var(--display);
+  text-decoration: none;
 }
+.catalog-intro { display: flex; justify-content: space-between; gap: 16px; align-items: end; flex-wrap: wrap; margin: 8px 0 8px; }
+.catalog-block { margin-top: 56px; scroll-margin-top: 92px; }
+.catalog-head { display: flex; justify-content: space-between; gap: 18px; align-items: end; flex-wrap: wrap; margin-bottom: 18px; }
+.catalog-head h3 { margin: 0; font-family: var(--display); font-size: clamp(28px, 3vw, 46px); font-weight: 600; }
+.catalog-head p { margin: 0; max-width: 420px; color: var(--muted); }
 .chip.on, .chip:hover { background: var(--red); border-color: var(--red); }
 
 .bands { display: grid; gap: 22px; }
