@@ -445,71 +445,101 @@ function addPump(group, mat) {
   group.add(lip, collar, head, crown, nozzle, tip, joint);
 }
 
-function addFlutes(group, mat, radius, y, height, count) {
-  for (let i = 0; i < count; i += 1) {
-    const rib = new THREE.Mesh(new THREE.BoxGeometry(0.026, height, 0.04), mat);
-    const angle = (i / count) * Math.PI * 2;
-    rib.position.set(Math.cos(angle) * radius, y, Math.sin(angle) * radius);
-    rib.rotation.y = Math.PI / 2 - angle;
-    group.add(rib);
+function flutedCollar(radius, height, flutes, depth, mat) {
+  const shape = new THREE.Shape();
+  const steps = flutes * 8;
+  for (let i = 0; i <= steps; i += 1) {
+    const angle = (i / steps) * Math.PI * 2;
+    const r = radius + Math.cos(angle * flutes) * depth;
+    const x = Math.cos(angle) * r;
+    const y = Math.sin(angle) * r;
+    if (i === 0) shape.moveTo(x, y);
+    else shape.lineTo(x, y);
   }
+  const geo = new THREE.ExtrudeGeometry(shape, { depth: height, bevelEnabled: false, curveSegments: 1 });
+  geo.translate(0, 0, -height / 2);
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.rotation.x = Math.PI / 2;
+  return mesh;
 }
 
 function addSpray(group, mat) {
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.3, 0.14, 40), mat);
-  neck.position.y = 2.34;
-  const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.5, 40), mat);
-  collar.position.y = 2.66;
-  group.add(neck, collar);
-  addFlutes(group, mat, 0.224, 2.66, 0.48, 28);
-  const head = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.1, 0.16, 24), mat);
-  head.position.y = 3.02;
-  const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.042, 0.32, 16), mat);
-  nozzle.rotation.z = -Math.PI / 2 - 0.22;
-  nozzle.position.set(0.15, 3.04, 0);
-  const tip = new THREE.Mesh(new THREE.SphereGeometry(0.038, 12, 10), mat);
-  tip.scale.set(1.25, 0.65, 0.65);
-  tip.position.set(0.3, 2.96, 0);
-  group.add(head, nozzle, tip);
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.3, 0.12, 48), mat);
+  neck.position.y = 2.24;
+  const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.04, 40), mat);
+  seat.position.y = 2.32;
+  const collar = flutedCollar(0.2, 0.5, 24, 0.016, mat);
+  collar.position.y = 2.58;
+  const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.2, 0.06, 32), mat);
+  crown.position.y = 2.84;
+  const head = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.085, 0.2, 28), mat);
+  head.position.y = 2.96;
+  const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.038, 0.26, 16), mat);
+  nozzle.rotation.z = -Math.PI / 2 - 0.42;
+  nozzle.position.set(0.1, 2.94, 0);
+  const tip = new THREE.Mesh(new THREE.SphereGeometry(0.03, 14, 10), mat);
+  tip.scale.set(1.5, 0.65, 0.65);
+  tip.position.set(0.2, 2.84, 0);
+  group.add(neck, seat, collar, crown, head, nozzle, tip);
   const glass = new THREE.MeshPhysicalMaterial({
-    color: "#f4f4f8",
-    roughness: 0.04,
+    color: "#f7f8fb",
+    roughness: 0.02,
     metalness: 0,
     transparent: true,
-    opacity: 0.34,
+    opacity: 0.28,
     clearcoat: 1,
-    clearcoatRoughness: 0.04,
+    clearcoatRoughness: 0.02,
     side: THREE.DoubleSide,
+    depthWrite: false,
   });
-  const shroud = new THREE.Mesh(new THREE.CylinderGeometry(0.168, 0.168, 0.58, 32, 1, true), glass);
-  shroud.position.y = 3.2;
-  const lid = new THREE.Mesh(new THREE.CircleGeometry(0.168, 32), glass);
+  const shroud = new THREE.Mesh(new THREE.CylinderGeometry(0.155, 0.162, 0.7, 40, 1, true), glass);
+  shroud.position.y = 3.12;
+  shroud.renderOrder = 2;
+  const lid = new THREE.Mesh(new THREE.CircleGeometry(0.155, 40), glass);
   lid.rotation.x = -Math.PI / 2;
-  lid.position.y = 3.49;
-  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.168, 0.012, 8, 32), glass);
+  lid.position.y = 3.47;
+  lid.renderOrder = 2;
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.012, 8, 40), glass);
   rim.rotation.x = Math.PI / 2;
-  rim.position.y = 3.49;
-  group.add(shroud, lid, rim);
+  rim.position.y = 2.78;
+  rim.renderOrder = 2;
+  const rimTop = rim.clone();
+  rimTop.position.y = 3.47;
+  group.add(shroud, lid, rim, rimTop);
 }
 
-function addDropper(group, mat) {
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.2, 0.1, 32), mat);
-  neck.position.y = 2.42;
-  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.25, 0.48, 36), mat);
-  cap.position.y = 2.7;
-  group.add(neck, cap);
-  addFlutes(group, mat, 0.242, 2.7, 0.46, 26);
-  const bulbMat = new THREE.MeshPhysicalMaterial({
-    color: "#141416",
-    roughness: 0.42,
-    metalness: 0.04,
-    clearcoat: 0.55,
+function addDropper(group) {
+  const metal = new THREE.MeshPhysicalMaterial({
+    color: "#3a3c42",
+    roughness: 0.32,
+    metalness: 0.72,
+    clearcoat: 0.35,
     clearcoatRoughness: 0.2,
   });
-  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.155, 32, 24), bulbMat);
-  bulb.scale.set(1, 1.42, 1);
-  bulb.position.y = 3.1;
-  group.add(bulb);
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.16, 0.1, 36), metal);
+  neck.position.y = 2.46;
+  const cap = flutedCollar(0.17, 0.5, 22, 0.013, metal);
+  cap.position.y = 2.76;
+  const lip = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.17, 0.04, 32), metal);
+  lip.position.y = 3.02;
+  const rubber = new THREE.MeshPhysicalMaterial({
+    color: "#101012",
+    roughness: 0.48,
+    metalness: 0,
+    clearcoat: 0.4,
+    clearcoatRoughness: 0.25,
+  });
+  const bulb = new THREE.Mesh(new THREE.LatheGeometry([
+    [0.055, 0], [0.1, 0.04], [0.145, 0.14], [0.16, 0.26], [0.14, 0.38], [0.09, 0.46], [0.04, 0.5], [0.012, 0.52],
+  ].map(([x, y]) => new THREE.Vector2(x, y)), 40), rubber);
+  bulb.position.y = 3.0;
+  const shine = new THREE.Mesh(
+    new THREE.TorusGeometry(0.6, 0.012, 8, 48),
+    new THREE.MeshPhysicalMaterial({ color: "#9aa0aa", roughness: 0.15, metalness: 0.6 })
+  );
+  shine.rotation.x = Math.PI / 2;
+  shine.position.y = 2.18;
+  group.add(neck, cap, lip, bulb, shine);
 }
 
 function makeBottle(pack, art, top) {
@@ -522,13 +552,13 @@ function makeBottle(pack, art, top) {
     ]
     : top === "spray"
       ? [
-        [0.02, 0], [0.42, 0], [0.58, 0.05], [0.62, 0.14], [0.62, 1.78],
-        [0.56, 1.94], [0.42, 2.08], [0.3, 2.2], [0.28, 2.28], [0.02, 2.28],
+        [0.02, 0], [0.5, 0], [0.62, 0.04], [0.66, 0.12], [0.66, 1.7],
+        [0.62, 1.86], [0.5, 2.0], [0.34, 2.12], [0.26, 2.18], [0.02, 2.18],
       ]
       : top === "dropper"
         ? [
-          [0.02, 0], [0.52, 0], [0.66, 0.04], [0.7, 0.12], [0.7, 1.88],
-          [0.64, 2.04], [0.46, 2.16], [0.24, 2.28], [0.18, 2.38], [0.02, 2.38],
+          [0.02, 0], [0.48, 0], [0.58, 0.03], [0.6, 0.1], [0.6, 2.05],
+          [0.55, 2.16], [0.38, 2.26], [0.2, 2.36], [0.14, 2.42], [0.02, 2.42],
         ]
         : [
           [0.02, 0], [0.46, 0], [0.56, 0.08], [0.58, 0.22], [0.58, 1.28],
@@ -537,28 +567,26 @@ function makeBottle(pack, art, top) {
   ).map(([x, y]) => new THREE.Vector2(x, y));
   const body = new THREE.Mesh(new THREE.LatheGeometry(points, 80), top === "dropper"
     ? new THREE.MeshPhysicalMaterial({
-      color: "#2a2a30",
-      roughness: 0.06,
-      metalness: 0.12,
+      color: "#16181e",
+      roughness: 0.02,
+      metalness: 0.22,
       clearcoat: 1,
-      clearcoatRoughness: 0.04,
+      clearcoatRoughness: 0.02,
       transparent: true,
-      opacity: 0.9,
-      transmission: 0.22,
-      thickness: 0.5,
-      ior: 1.5,
+      opacity: 0.94,
+      reflectivity: 0.8,
     })
     : new THREE.MeshPhysicalMaterial({
       color: pack.body,
-      roughness: pump && pack.face === "white" ? 0.16 : top === "spray" ? 0.22 : 0.28,
-      metalness: 0,
-      clearcoat: top === "spray" ? 0.55 : 0.3,
-      clearcoatRoughness: 0.22,
+      roughness: pump && pack.face === "white" ? 0.16 : top === "spray" ? 0.16 : 0.28,
+      metalness: top === "spray" ? 0.08 : 0,
+      clearcoat: top === "spray" ? 0.85 : 0.3,
+      clearcoatRoughness: top === "spray" ? 0.08 : 0.22,
     }));
   group.add(body);
   if (pump) labelBand(pack, art, 0.685, 1.85, 1.28).forEach((mesh) => group.add(mesh));
-  else if (top === "spray") labelBand(pack, art, 0.645, 1.35, 0.95).forEach((mesh) => group.add(mesh));
-  else if (top === "dropper") labelBand(pack, art, 0.725, 1.45, 1.02).forEach((mesh) => group.add(mesh));
+  else if (top === "spray") labelBand(pack, art, 0.685, 1.38, 0.92).forEach((mesh) => group.add(mesh));
+  else if (top === "dropper") labelBand(pack, art, 0.625, 1.55, 1.12).forEach((mesh) => group.add(mesh));
   else labelBand(pack, art, 0.608, 0.96, 0.74).forEach((mesh) => group.add(mesh));
   const capMat = new THREE.MeshPhysicalMaterial({
     color: pump && pack.face === "white" ? "#f7f6f3" : "#161618",
@@ -572,7 +600,7 @@ function makeBottle(pack, art, top) {
   } else if (top === "spray") {
     addSpray(group, capMat);
   } else {
-    addDropper(group, capMat);
+    addDropper(group);
   }
   return group;
 }
