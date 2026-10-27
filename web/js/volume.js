@@ -118,38 +118,27 @@ function drawMark(ctx, logo, x, y, size, color) {
 
 function sideLabel(pack, logo) {
   const canvas = document.createElement("canvas");
-  canvas.width = 1024;
-  canvas.height = 512;
+  canvas.width = 2048;
+  canvas.height = 236;
   const ctx = canvas.getContext("2d");
   ctx.fillStyle = pack.body;
-  ctx.fillRect(0, 0, 1024, 512);
-  ctx.fillStyle = pack.accent;
-  ctx.fillRect(0, 0, 18, 512);
-  ctx.fillRect(1006, 0, 18, 512);
-  drawMark(ctx, logo, 250, 230, 280, pack.accent);
-  ctx.fillStyle = pack.ink;
-  ctx.textAlign = "left";
-  ctx.textBaseline = "middle";
-  ctx.font = "700 78px Outfit, sans-serif";
-  ctx.fillText(pack.name, 420, 200);
-  ctx.fillStyle = pack.accent;
-  ctx.font = "600 34px Outfit, sans-serif";
-  ctx.fillText(pack.sub, 420, 270);
-  ctx.fillStyle = pack.ink;
-  ctx.font = "500 28px Outfit, sans-serif";
-  ctx.fillText(pack.size, 420, 330);
-  ctx.globalAlpha = 0.8;
-  ctx.font = "500 22px Outfit, sans-serif";
-  ctx.fillText(pack.notes.join("  ·  "), 420, 390);
-  ctx.globalAlpha = 1;
+  ctx.fillRect(0, 0, 2048, 236);
   ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  drawMark(ctx, logo, 1024, 78, 92, pack.accent);
   ctx.fillStyle = pack.ink;
-  ctx.font = "700 42px Outfit, sans-serif";
-  ctx.fillText("VINICIUS", 860, 230);
+  ctx.font = "700 54px Outfit, sans-serif";
+  ctx.fillText(pack.name.toUpperCase(), 1024, 150);
   ctx.fillStyle = pack.accent;
-  ctx.font = "500 22px Outfit, sans-serif";
-  ctx.fillText("MOLDING", 860, 275);
-  return canvasTexture(canvas, 0.25);
+  ctx.font = "600 22px Outfit, sans-serif";
+  ctx.fillText(pack.sub.toUpperCase() + "   ·   " + pack.size, 1024, 188);
+  ctx.fillStyle = pack.ink;
+  ctx.globalAlpha = 0.7;
+  ctx.font = "600 28px Outfit, sans-serif";
+  ctx.fillText("VINICIUS", 180, 118);
+  ctx.fillText("VINICIUS", 1868, 118);
+  ctx.globalAlpha = 1;
+  return canvasTexture(canvas, 0.5);
 }
 
 function lidLabel(pack, logo) {
@@ -220,21 +209,21 @@ function bottleLabel(pack, logo) {
   ctx.fillRect(0, 0, 1024, 1024);
   ctx.fillStyle = pack.accent;
   ctx.fillRect(80, 430, 864, 8);
-  drawMark(ctx, logo, 250, 620, 220, pack.accent);
-  ctx.fillStyle = pack.ink;
-  ctx.textAlign = "left";
+  ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.font = "700 72px Outfit, sans-serif";
-  ctx.fillText(pack.name, 390, 560);
+  drawMark(ctx, logo, 512, 560, 200, pack.accent);
+  ctx.fillStyle = pack.ink;
+  ctx.font = "700 68px Outfit, sans-serif";
+  ctx.fillText(pack.name, 512, 700);
   ctx.fillStyle = pack.accent;
-  ctx.font = "600 32px Outfit, sans-serif";
-  ctx.fillText(pack.sub, 390, 630);
+  ctx.font = "600 30px Outfit, sans-serif";
+  ctx.fillText(pack.sub + "  ·  " + pack.size, 512, 760);
   ctx.fillStyle = pack.ink;
   ctx.globalAlpha = 0.85;
-  ctx.font = "500 26px Outfit, sans-serif";
-  ctx.fillText(pack.size + "   " + pack.notes.join(" · "), 390, 700);
+  ctx.font = "500 24px Outfit, sans-serif";
+  ctx.fillText(pack.notes.join("   ·   "), 512, 820);
   ctx.globalAlpha = 1;
-  return canvasTexture(canvas, 0.25);
+  return canvasTexture(canvas, 0.5);
 }
 
 function makeBottle(pack, logo, top) {
@@ -331,10 +320,10 @@ function attachVolume(el, model) {
   scene.add(rim);
 
   const sphere = new THREE.Box3().setFromObject(root).getBoundingSphere(new THREE.Sphere());
-  camera.position.z = sphere.radius / Math.tan(THREE.MathUtils.degToRad(15)) * 1.38;
+  camera.position.z = sphere.radius / Math.tan(THREE.MathUtils.degToRad(15)) * 1.22;
   camera.lookAt(0, 0, 0);
 
-  const target = { x: -0.42, y: 0.35 };
+  const target = { x: -0.62, y: 0 };
   root.rotation.x = target.x;
   root.rotation.y = target.y;
   el.dataset.solid = "1";
@@ -368,13 +357,14 @@ function attachVolume(el, model) {
     if (event.key === "ArrowDown") target.x = clamp(target.x + step, -1.25, 0.7);
   });
   el.addEventListener("dblclick", () => {
-    target.x = -0.42;
-    target.y = 0.35;
+    target.x = -0.62;
+    target.y = 0;
   });
 
   const shadow = el.querySelector(".orbit-shadow");
   return {
     draw() {
+      if (!el.classList.contains("dragging")) target.y += 0.012;
       root.rotation.x += (target.x - root.rotation.x) * 0.16;
       root.rotation.y += (target.y - root.rotation.y) * 0.16;
       if (shadow) shadow.style.transform = `translateX(${Math.sin(root.rotation.y) * -26}px) scaleX(${0.85 + Math.abs(Math.sin(root.rotation.y)) * 0.2})`;
