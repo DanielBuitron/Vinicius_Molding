@@ -340,17 +340,20 @@ button { cursor: pointer; }
 .tag { border: 1px solid var(--line); border-radius: 999px; padding: 5px 10px; font-size: 13px; color: #ddd; }
 
 .manifesto {
-  margin: 0 7vw;
-  background: var(--red);
-  color: #fff;
+  margin: 28px 7vw 8px;
+  background: #0c0c0e;
+  color: var(--ink);
+  border: 1px solid var(--line);
   border-radius: 28px;
-  padding: 54px 40px;
+  padding: 48px 44px;
   display: grid;
-  grid-template-columns: 1.4fr .6fr;
-  gap: 16px;
+  grid-template-columns: 1.5fr .7fr;
+  gap: 28px;
   align-items: end;
 }
-.manifesto h2 { margin: 0; font-family: var(--display); font-size: clamp(40px, 5vw, 72px); line-height: 0.92; letter-spacing: -0.04em; }
+.manifesto h2 { margin: 0; font-family: var(--display); font-size: clamp(40px, 5vw, 72px); line-height: 0.95; letter-spacing: -0.04em; }
+.manifesto h2 em { font-style: normal; color: var(--red); }
+.manifesto p { margin: 0; color: var(--muted); font-size: 17px; max-width: 280px; }
 
 .swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-top: 28px; }
 .swatches article {

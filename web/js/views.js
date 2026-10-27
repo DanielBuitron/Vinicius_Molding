@@ -61,8 +61,8 @@ function viewHome() {
         </div>
       </section>`).join("")}
     <section class="manifesto">
-      <h2>No vendemos promesas. Entregamos resultados.</h2>
-      <p>Hecho para hombres de 25 a 45 años que quieren la opción correcta, no una más.</p>
+      <h2>No vendemos promesas.<br><em>Entregamos resultados.</em></h2>
+      <p>Para quien busca la opción correcta, no una más.</p>
     </section>`;
 }
 
