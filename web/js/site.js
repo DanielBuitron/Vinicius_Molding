@@ -36,7 +36,7 @@ function orbit(src, alt, id) {
       <span class="orbit-shadow"></span>
       <div class="orbit-card"><img src="${esc(cutoutSrc(src))}" alt="${esc(alt)}" draggable="false"></div>
     </div>
-    <p class="orbit-hint">Arrastra el producto</p>
+    <p class="orbit-hint">Gira el envase</p>
   </div>`;
 }
 

@@ -1,28 +1,40 @@
-/* Volumen real a partir del recorte: la silueta se extruye y la etiqueta queda al frente. */
+/* Envase en 3D: tapa, cuerpo y etiqueta. Se gira y se ve por todos los lados. */
 const volumeViewers = [];
 const volumeModels = new Map();
 let volumeJob = 0;
+let volumeLogo = null;
+
+const PACKS = {
+  "cera-fibra": { kind: "tin", name: "CERA DE FIBRA", sub: "ACABADO FIRME", accent: "#6D4AFF", body: "#141414", ink: "#f4f1ea", size: "150 g", notes: ["KERATINA", "ROMERO", "ALOE VERA"] },
+  "cera-brillo": { kind: "tin", name: "CERA BRILLO", sub: "BRILLO MEDIO", accent: "#E52C3B", body: "#141414", ink: "#f4f1ea", size: "150 g", notes: ["KERATINA", "ROMERO", "ALOE VERA"] },
+  "pasta": { kind: "tin", name: "PASTA", sub: "FIJACIÓN FUERTE", accent: "#00C8C2", body: "#141414", ink: "#f4f1ea", size: "150 g", notes: ["KERATINA", "ROMERO", "ALOE VERA"] },
+  "pomada": { kind: "tin", name: "POMADA", sub: "ACABADO MATE", accent: "#FFD300", body: "#141414", ink: "#f4f1ea", size: "150 g", notes: ["KERATINA", "ROMERO", "ALOE VERA"] },
+  "cera-kids": { kind: "tin", name: "CERA KIDS", sub: "FIJACIÓN SUAVE", accent: "#FFD300", body: "#e31b23", ink: "#fff", size: "150 g", notes: ["KERATINA", "ROMERO", "ALOE VERA"] },
+  "shampoo-proteccion": { kind: "pump", name: "SHAMPOO", sub: "PROTECCIÓN", accent: "#E52C3B", body: "#f4f4f2", ink: "#161616", size: "500 g", notes: ["ROMERO", "KERATINA", "SIN SAL"] },
+  "shampoo-carbon": { kind: "pump", name: "SHAMPOO", sub: "CARBÓN ACTIVO", accent: "#FFD300", body: "#161616", ink: "#f4f1ea", size: "500 ml", notes: ["CARBÓN ACTIVO", "ROMERO", "SIN SAL"] },
+  "serum-barba": { kind: "dropper", name: "SERUM", sub: "BARBA Y BIGOTE", accent: "#A4D800", body: "#1a1a1c", ink: "#f4f1ea", size: "65 ml", notes: ["ARGÁN", "JOJOBA", "ALOE VERA"] },
+  "tonico": { kind: "spray", name: "TÓNICO", sub: "ORGÁNICO", accent: "#FFD300", body: "#12383a", ink: "#f4f1ea", size: "65 ml", notes: ["ROMERO", "MENTA", "ALOE VERA"] },
+  "ducha-intima": { kind: "tube", name: "DUCHA ÍNTIMA", sub: "FOR MEN", accent: "#A4D800", body: "#141414", ink: "#f4f1ea", size: "200 g", notes: ["pH BALANCEADO", "SIN SULFATOS"] },
+};
 
 function releaseVolumes() {
-  while (volumeViewers.length) {
-    const viewer = volumeViewers.pop();
-    viewer.dispose();
-  }
+  while (volumeViewers.length) volumeViewers.pop().dispose();
 }
 
 function mountVolumes() {
   if (!window.THREE) return;
   const job = ++volumeJob;
   releaseVolumes();
-  const nodes = [...document.querySelectorAll("[data-orbit]")];
-  nodes.forEach((el, index) => {
+  document.querySelectorAll("[data-orbit]").forEach((el) => {
     const img = el.querySelector("img");
     if (!img) return;
     buildVolume(img.getAttribute("src")).then((model) => {
       if (job !== volumeJob || !el.isConnected || !model) return;
       volumeViewers.push(attachVolume(el, model));
       pumpVolumes();
-    }).catch(() => {});
+    }).catch((error) => {
+      console.error(error);
+    });
   });
 }
 
@@ -46,6 +58,11 @@ function loadBitmap(src) {
   });
 }
 
+function packFromSrc(src) {
+  const file = String(src).split("/").pop().replace(/\.png.*$/, "");
+  return PACKS[file] || PACKS["cera-fibra"];
+}
+
 function buildVolume(src) {
   if (!volumeModels.has(src)) {
     const pending = createVolume(src).catch((error) => {
@@ -58,247 +75,268 @@ function buildVolume(src) {
 }
 
 async function createVolume(src) {
-  const image = await loadBitmap(src);
-  const low = drawScaled(image, 220);
-  const box = solidBox(low);
-  if (!box) return null;
-  const face = cropImage(image, box, low.width, low.height, 720);
-  const contour = simplify(traceOutline(low, box));
-  if (contour.length < 12) return null;
-  const shape = new THREE.Shape();
-  contour.forEach(([x, y], index) => {
-    const px = x - box.w / 2;
-    const py = box.h / 2 - y;
-    if (index === 0) shape.moveTo(px, py);
-    else shape.lineTo(px, py);
-  });
-  const depth = Math.max(16, box.w * 0.5);
-  const geometry = new THREE.ExtrudeGeometry(shape, {
-    depth,
-    bevelEnabled: true,
-    bevelThickness: depth * 0.045,
-    bevelSize: Math.min(box.w, box.h) * 0.008,
-    bevelSegments: 1,
-    curveSegments: 1,
-  });
-  geometry.translate(0, 0, -depth / 2);
-  mapVolumeUVs(geometry, box.w, box.h, depth);
-  geometry.computeVertexNormals();
-  const texture = new THREE.CanvasTexture(face);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.flipY = false;
-  texture.anisotropy = 8;
-  const side = roundSide(edgeColor(low, box));
-  const front = new THREE.MeshStandardMaterial({
-    map: texture,
-    roughness: 0.38,
-    metalness: 0.22,
-    side: THREE.DoubleSide,
-  });
-  const wall = new THREE.MeshStandardMaterial({
-    map: side,
-    roughness: 0.78,
-    metalness: 0.06,
-    side: THREE.DoubleSide,
-  });
-  return { geometry, front, wall };
-}
-
-function drawScaled(image, maxSize) {
-  const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.max(1, Math.round(image.width * scale));
-  canvas.height = Math.max(1, Math.round(image.height * scale));
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-  return canvas;
-}
-
-function solidBox(canvas) {
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = frame.data;
-  let minX = canvas.width;
-  let minY = canvas.height;
-  let maxX = 0;
-  let maxY = 0;
-  let found = false;
-  for (let y = 0; y < canvas.height; y++) {
-    for (let x = 0; x < canvas.width; x++) {
-      if (data[(y * canvas.width + x) * 4 + 3] < 28) continue;
-      found = true;
-      if (x < minX) minX = x;
-      if (y < minY) minY = y;
-      if (x > maxX) maxX = x;
-      if (y > maxY) maxY = y;
-    }
+  if (document.fonts && document.fonts.load) await document.fonts.load("700 64px Outfit");
+  if (!volumeLogo) {
+    try { volumeLogo = await loadBitmap("assets/isotipo-white.png"); } catch (error) { volumeLogo = null; }
   }
-  if (!found) return null;
-  return { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1, data, width: canvas.width };
+  const pack = packFromSrc(src);
+  const object = pack.kind === "tin"
+    ? makeTin(pack, volumeLogo)
+    : pack.kind === "tube"
+      ? makeTube(pack, volumeLogo)
+      : makeBottle(pack, volumeLogo, pack.kind);
+  return { object };
 }
 
-function cropImage(image, box, lowW, lowH, maxSize) {
-  const sx = image.width / lowW;
-  const sy = image.height / lowH;
-  const left = Math.max(0, Math.floor(box.x * sx));
-  const top = Math.max(0, Math.floor(box.y * sy));
-  const width = Math.min(image.width - left, Math.ceil(box.w * sx));
-  const height = Math.min(image.height - top, Math.ceil(box.h * sy));
-  const scale = Math.min(1, maxSize / Math.max(width, height));
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.max(1, Math.round(width * scale));
-  canvas.height = Math.max(1, Math.round(height * scale));
-  canvas.getContext("2d").drawImage(image, left, top, width, height, 0, 0, canvas.width, canvas.height);
-  return canvas;
-}
-
-function traceOutline(canvas, box) {
-  const { data, width } = box;
-  const solid = (x, y) => {
-    if (x < box.x || y < box.y || x >= box.x + box.w || y >= box.y + box.h) return false;
-    return data[(y * width + x) * 4 + 3] > 36;
-  };
-  let sx = -1;
-  let sy = box.y;
-  let best = 0;
-  for (let y = box.y; y < box.y + box.h; y++) {
-    let count = 0;
-    let left = -1;
-    for (let x = box.x; x < box.x + box.w; x++) {
-      if (!solid(x, y)) continue;
-      if (left < 0) left = x;
-      count++;
-    }
-    if (count > best && left >= 0) {
-      best = count;
-      sx = left;
-      sy = y;
-    }
-  }
-  if (sx < 0) return [];
-  const dirs = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]];
-  const points = [];
-  let x = sx;
-  let y = sy;
-  let from = 4;
-  const limit = (box.w + box.h) * 8;
-  for (let n = 0; n < limit; n++) {
-    points.push([x - box.x, y - box.y]);
-    let moved = false;
-    for (let i = 0; i < 8; i++) {
-      const dir = (from + 1 + i) & 7;
-      const nx = x + dirs[dir][0];
-      const ny = y + dirs[dir][1];
-      if (!solid(nx, ny)) continue;
-      x = nx;
-      y = ny;
-      from = (dir + 4) & 7;
-      moved = true;
-      break;
-    }
-    if (!moved || (n > 8 && x === sx && y === sy)) break;
-  }
-  return points;
-}
-
-function simplify(points) {
-  const target = 120;
-  if (points.length <= target) return points;
-  const stride = points.length / target;
-  const thinned = [];
-  for (let i = 0; i < target; i++) thinned.push(points[Math.floor(i * stride)]);
-  return thinned;
-}
-
-function mapVolumeUVs(geometry, width, height, depth) {
-  const position = geometry.attributes.position;
-  const uv = geometry.attributes.uv;
-  const index = geometry.index;
-  geometry.groups.forEach((group, groupIndex) => {
-    const seen = new Set();
-    for (let i = group.start; i < group.start + group.count; i++) {
-      const vertex = index ? index.getX(i) : i;
-      if (seen.has(vertex)) continue;
-      seen.add(vertex);
-      if (groupIndex === 0) {
-        uv.setXY(vertex, (position.getX(vertex) + width / 2) / width, (height / 2 - position.getY(vertex)) / height);
-      } else {
-        uv.setXY(vertex, 0.5, (position.getZ(vertex) + depth / 2) / depth);
-      }
-    }
-  });
-  uv.needsUpdate = true;
-}
-
-function edgeColor(canvas, box) {
-  const { data, width } = box;
-  let r = 0;
-  let g = 0;
-  let b = 0;
-  let n = 0;
-  const step = 3;
-  for (let y = box.y; y < box.y + box.h; y += step) {
-    for (let x = box.x; x < box.x + box.w; x += step) {
-      const i = (y * width + x) * 4;
-      if (data[i + 3] < 40) continue;
-      const edge = data[i + 3 - 4] < 28 || data[i + 7] < 28 || data[i + 3 - width * 4] < 28 || data[i + 3 + width * 4] < 28;
-      if (!edge) continue;
-      r += data[i];
-      g += data[i + 1];
-      b += data[i + 2];
-      n++;
-    }
-  }
-  if (!n) return [40, 40, 42];
-  return [r / n, g / n, b / n];
-}
-
-function roundSide(rgb) {
-  const canvas = document.createElement("canvas");
-  canvas.width = 16;
-  canvas.height = 64;
-  const ctx = canvas.getContext("2d");
-  const tone = (scale) => `rgb(${rgb.map((channel) => Math.max(0, Math.min(255, Math.round(channel * scale)))).join(",")})`;
-  const gradient = ctx.createLinearGradient(0, 0, 0, 64);
-  gradient.addColorStop(0, tone(0.42));
-  gradient.addColorStop(0.38, tone(0.92));
-  gradient.addColorStop(0.62, tone(1.08));
-  gradient.addColorStop(1, tone(0.36));
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, 16, 64);
+function canvasTexture(canvas, offsetX) {
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 8;
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.offset.x = offsetX || 0;
   return texture;
+}
+
+function drawMark(ctx, logo, x, y, size, color) {
+  if (!logo) {
+    ctx.fillStyle = color;
+    ctx.font = `700 ${Math.round(size)}px Outfit, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("V", x, y);
+    return;
+  }
+  const stamp = document.createElement("canvas");
+  stamp.width = stamp.height = 256;
+  const g = stamp.getContext("2d");
+  g.drawImage(logo, 16, 16, 224, 224);
+  g.globalCompositeOperation = "source-in";
+  g.fillStyle = color;
+  g.fillRect(0, 0, 256, 256);
+  ctx.drawImage(stamp, x - size / 2, y - size / 2, size, size);
+}
+
+function sideLabel(pack, logo) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1024;
+  canvas.height = 512;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = pack.body;
+  ctx.fillRect(0, 0, 1024, 512);
+  ctx.fillStyle = pack.accent;
+  ctx.fillRect(0, 0, 18, 512);
+  ctx.fillRect(1006, 0, 18, 512);
+  drawMark(ctx, logo, 250, 230, 280, pack.accent);
+  ctx.fillStyle = pack.ink;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.font = "700 78px Outfit, sans-serif";
+  ctx.fillText(pack.name, 420, 200);
+  ctx.fillStyle = pack.accent;
+  ctx.font = "600 34px Outfit, sans-serif";
+  ctx.fillText(pack.sub, 420, 270);
+  ctx.fillStyle = pack.ink;
+  ctx.font = "500 28px Outfit, sans-serif";
+  ctx.fillText(pack.size, 420, 330);
+  ctx.globalAlpha = 0.8;
+  ctx.font = "500 22px Outfit, sans-serif";
+  ctx.fillText(pack.notes.join("  ·  "), 420, 390);
+  ctx.globalAlpha = 1;
+  ctx.textAlign = "center";
+  ctx.fillStyle = pack.ink;
+  ctx.font = "700 42px Outfit, sans-serif";
+  ctx.fillText("VINICIUS", 860, 230);
+  ctx.fillStyle = pack.accent;
+  ctx.font = "500 22px Outfit, sans-serif";
+  ctx.fillText("MOLDING", 860, 275);
+  return canvasTexture(canvas, 0.25);
+}
+
+function lidLabel(pack, logo) {
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 512;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = pack.body;
+  ctx.fillRect(0, 0, 512, 512);
+  ctx.strokeStyle = pack.accent;
+  ctx.lineWidth = 10;
+  ctx.beginPath();
+  ctx.arc(256, 256, 210, 0, Math.PI * 2);
+  ctx.stroke();
+  drawMark(ctx, logo, 256, 210, 210, pack.accent);
+  ctx.fillStyle = pack.ink;
+  ctx.textAlign = "center";
+  ctx.font = "700 36px Outfit, sans-serif";
+  ctx.fillText("VINICIUS", 256, 360);
+  ctx.fillStyle = pack.accent;
+  ctx.font = "500 22px Outfit, sans-serif";
+  ctx.fillText(pack.sub, 256, 400);
+  return canvasTexture(canvas, 0);
+}
+
+function makeTin(pack, logo) {
+  const group = new THREE.Group();
+  const metal = new THREE.MeshStandardMaterial({ color: pack.body, roughness: 0.32, metalness: 0.62 });
+  const shell = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 0.72, 72, 1, true), new THREE.MeshStandardMaterial({
+    map: sideLabel(pack, logo),
+    roughness: 0.4,
+    metalness: 0.28,
+  }));
+  group.add(shell);
+  const lid = new THREE.Mesh(new THREE.CylinderGeometry(1.06, 1.06, 0.18, 72), metal);
+  lid.position.y = 0.46;
+  group.add(lid);
+  const face = new THREE.Mesh(new THREE.CircleGeometry(0.98, 64), new THREE.MeshStandardMaterial({
+    map: lidLabel(pack, logo),
+    roughness: 0.42,
+    metalness: 0.2,
+  }));
+  face.rotation.x = -Math.PI / 2;
+  face.position.y = 0.575;
+  group.add(face);
+  const base = new THREE.Mesh(new THREE.CircleGeometry(0.98, 48), metal);
+  base.rotation.x = Math.PI / 2;
+  base.position.y = -0.361;
+  group.add(base);
+  [0.4, 0.46, 0.52].forEach((y) => {
+    const rib = new THREE.Mesh(new THREE.TorusGeometry(1.065, 0.016, 8, 72), metal);
+    rib.rotation.x = Math.PI / 2;
+    rib.position.y = y;
+    group.add(rib);
+  });
+  const foot = new THREE.Mesh(new THREE.TorusGeometry(0.98, 0.03, 8, 72), metal);
+  foot.rotation.x = Math.PI / 2;
+  foot.position.y = -0.34;
+  group.add(foot);
+  return group;
+}
+
+function bottleLabel(pack, logo) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1024;
+  canvas.height = 1024;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = pack.body;
+  ctx.fillRect(0, 0, 1024, 1024);
+  ctx.fillStyle = pack.accent;
+  ctx.fillRect(80, 430, 864, 8);
+  drawMark(ctx, logo, 250, 620, 220, pack.accent);
+  ctx.fillStyle = pack.ink;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.font = "700 72px Outfit, sans-serif";
+  ctx.fillText(pack.name, 390, 560);
+  ctx.fillStyle = pack.accent;
+  ctx.font = "600 32px Outfit, sans-serif";
+  ctx.fillText(pack.sub, 390, 630);
+  ctx.fillStyle = pack.ink;
+  ctx.globalAlpha = 0.85;
+  ctx.font = "500 26px Outfit, sans-serif";
+  ctx.fillText(pack.size + "   " + pack.notes.join(" · "), 390, 700);
+  ctx.globalAlpha = 1;
+  return canvasTexture(canvas, 0.25);
+}
+
+function makeBottle(pack, logo, top) {
+  const group = new THREE.Group();
+  const points = [
+    [0.02, 0], [0.46, 0], [0.56, 0.08], [0.58, 0.22], [0.58, 1.28],
+    [0.5, 1.48], [0.34, 1.66], [0.2, 1.78], [0.2, 1.92], [0.02, 1.92],
+  ].map(([x, y]) => new THREE.Vector2(x, y));
+  const body = new THREE.Mesh(new THREE.LatheGeometry(points, 64), new THREE.MeshStandardMaterial({
+    map: bottleLabel(pack, logo),
+    roughness: pack.kind === "dropper" ? 0.22 : 0.36,
+    metalness: 0.12,
+  }));
+  group.add(body);
+  const capMat = new THREE.MeshStandardMaterial({
+    color: top === "pump" && pack.body === "#f4f4f2" ? "#f7f7f5" : "#2a2a2c",
+    roughness: 0.28,
+    metalness: 0.45,
+  });
+  if (top === "pump") {
+    const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.24, 0.12, 32), capMat);
+    collar.position.y = 1.98;
+    const head = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 0.34, 32), capMat);
+    head.position.y = 2.18;
+    const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, 0.34, 16), capMat);
+    nozzle.rotation.z = Math.PI / 2;
+    nozzle.position.set(0.2, 2.3, 0);
+    group.add(collar, head, nozzle);
+  } else if (top === "spray") {
+    const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.2, 0.16, 32), capMat);
+    collar.position.y = 2.0;
+    const head = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.22, 32), capMat);
+    head.position.y = 2.16;
+    const nozzle = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.05, 0.05), capMat);
+    nozzle.position.set(0.12, 2.22, 0);
+    group.add(collar, head, nozzle);
+  } else {
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 0.28, 32), capMat);
+    cap.position.y = 2.04;
+    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.11, 24, 16), capMat);
+    bulb.scale.y = 1.25;
+    bulb.position.y = 2.26;
+    group.add(cap, bulb);
+  }
+  return group;
+}
+
+function makeTube(pack, logo) {
+  const group = new THREE.Group();
+  const points = [
+    [0.02, 0.08], [0.34, 0], [0.42, 0.12], [0.4, 1.35], [0.36, 1.5], [0.22, 1.62], [0.02, 1.62],
+  ].map(([x, y]) => new THREE.Vector2(x, y));
+  const body = new THREE.Mesh(new THREE.LatheGeometry(points, 48), new THREE.MeshStandardMaterial({
+    map: bottleLabel(pack, logo),
+    roughness: 0.4,
+    metalness: 0.16,
+  }));
+  body.scale.x = 0.72;
+  group.add(body);
+  const capMat = new THREE.MeshStandardMaterial({ color: "#202024", roughness: 0.3, metalness: 0.5 });
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.28, 32), capMat);
+  cap.position.y = 1.72;
+  cap.scale.x = 0.85;
+  const ridge = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.02, 8, 24), capMat);
+  ridge.rotation.x = Math.PI / 2;
+  ridge.position.y = 1.64;
+  ridge.scale.x = 0.85;
+  group.add(cap, ridge);
+  return group;
 }
 
 function attachVolume(el, model) {
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 2000);
-  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: el.clientWidth > 340, powerPreference: "high-performance" });
+  const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
+  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
   renderer.setClearColor(0x000000, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.domElement.className = "vol-view";
-  const mesh = new THREE.Mesh(model.geometry, [model.front, model.wall]);
-  scene.add(mesh);
-  scene.add(new THREE.AmbientLight(0xffffff, 0.72));
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x1a1a1c, 0.55));
-  const key = new THREE.DirectionalLight(0xffffff, 1.45);
-  key.position.set(2.4, 3.2, 4.2);
+  const root = model.object.clone();
+  const bounds = new THREE.Box3().setFromObject(root);
+  const center = bounds.getCenter(new THREE.Vector3());
+  root.children.forEach((child) => child.position.sub(center));
+  scene.add(root);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x222226, 0.7));
+  const key = new THREE.DirectionalLight(0xffffff, 2.1);
+  key.position.set(3.2, 4.4, 5);
   scene.add(key);
-  const rim = new THREE.DirectionalLight(0xfff4ea, 0.85);
-  rim.position.set(-3.2, 1.4, -2.4);
+  const fill = new THREE.DirectionalLight(0xdde7ff, 0.7);
+  fill.position.set(-4, 1.5, 2);
+  scene.add(fill);
+  const rim = new THREE.DirectionalLight(0xfff6ee, 1.15);
+  rim.position.set(-2, 3, -4);
   scene.add(rim);
-  const brand = new THREE.DirectionalLight(0xe52c3b, 0.28);
-  brand.position.set(1.5, -2, 2);
-  scene.add(brand);
 
-  const sphere = new THREE.Box3().setFromObject(mesh).getBoundingSphere(new THREE.Sphere());
-  camera.position.z = sphere.radius / Math.tan(THREE.MathUtils.degToRad(14)) * 1.18;
+  const sphere = new THREE.Box3().setFromObject(root).getBoundingSphere(new THREE.Sphere());
+  camera.position.z = sphere.radius / Math.tan(THREE.MathUtils.degToRad(15)) * 1.38;
   camera.lookAt(0, 0, 0);
 
-  const target = { x: 0.22, y: -0.62 };
-  mesh.rotation.x = target.x;
-  mesh.rotation.y = target.y;
+  const target = { x: -0.42, y: 0.35 };
+  root.rotation.x = target.x;
+  root.rotation.y = target.y;
   el.dataset.solid = "1";
   el.querySelector(".orbit-scene").appendChild(renderer.domElement);
   const card = el.querySelector(".orbit-card");
@@ -307,7 +345,7 @@ function attachVolume(el, model) {
   const resize = () => {
     const width = el.clientWidth || 300;
     const height = Math.max(1, el.clientHeight - 22);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, width > 340 ? 1.5 : 1));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, width > 340 ? 1.6 : 1));
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
@@ -317,35 +355,29 @@ function attachVolume(el, model) {
   observer.observe(el);
 
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
-  const drag = (dx, dy) => {
-    target.y = clamp(target.y + dx * 0.012, -1.15, 1.15);
-    target.x = clamp(target.x + dy * 0.01, -0.75, 0.75);
-  };
   el.addEventListener("pointermove", (event) => {
     if (!el.classList.contains("dragging")) return;
-    drag(event.movementX, event.movementY);
+    target.y += event.movementX * 0.01;
+    target.x = clamp(target.x + event.movementY * 0.008, -1.25, 0.7);
   });
   el.addEventListener("keydown", (event) => {
-    const step = event.shiftKey ? 0.06 : 0.12;
-    if (event.key === "ArrowLeft") target.y = clamp(target.y - step, -1.15, 1.15);
-    if (event.key === "ArrowRight") target.y = clamp(target.y + step, -1.15, 1.15);
-    if (event.key === "ArrowUp") target.x = clamp(target.x - step, -0.75, 0.75);
-    if (event.key === "ArrowDown") target.x = clamp(target.x + step, -0.75, 0.75);
+    const step = event.shiftKey ? 0.08 : 0.18;
+    if (event.key === "ArrowLeft") target.y -= step;
+    if (event.key === "ArrowRight") target.y += step;
+    if (event.key === "ArrowUp") target.x = clamp(target.x - step, -1.25, 0.7);
+    if (event.key === "ArrowDown") target.x = clamp(target.x + step, -1.25, 0.7);
   });
   el.addEventListener("dblclick", () => {
-    target.x = 0.22;
-    target.y = -0.62;
+    target.x = -0.42;
+    target.y = 0.35;
   });
 
   const shadow = el.querySelector(".orbit-shadow");
   return {
     draw() {
-      mesh.rotation.x += (target.x - mesh.rotation.x) * 0.16;
-      mesh.rotation.y += (target.y - mesh.rotation.y) * 0.16;
-      if (shadow) {
-        const yaw = mesh.rotation.y;
-        shadow.style.transform = `translateX(${yaw * -28}px) scale(${1.05 - Math.abs(yaw) * 0.18}, 0.9)`;
-      }
+      root.rotation.x += (target.x - root.rotation.x) * 0.16;
+      root.rotation.y += (target.y - root.rotation.y) * 0.16;
+      if (shadow) shadow.style.transform = `translateX(${Math.sin(root.rotation.y) * -26}px) scaleX(${0.85 + Math.abs(Math.sin(root.rotation.y)) * 0.2})`;
       renderer.render(scene, camera);
     },
     dispose() {
