@@ -43,13 +43,13 @@ function viewHome() {
       <div>
         <div class="eyebrow">Cali · cuidado capilar</div>
         <h1>Somos<br>la solución,<br><em>no el problema.</em></h1>
-        <p class="lede">Fórmulas de alto rendimiento para el hombre que cuida la imagen como parte del oficio. Toma el producto y muévelo: arriba, abajo, a un lado y al otro.</p>
+        <p class="lede">Fórmulas de alto rendimiento para el hombre que cuida la imagen como parte del oficio. Arrastra el producto: arriba, abajo, a un lado y al otro. Ábrelo para ver la ficha.</p>
         <div class="hero-actions">
           <a class="btn" href="#/linea">Ver la línea</a>
           <a class="btn ghost" href="#/asesor">Dejar mi número</a>
         </div>
       </div>
-      <div>${hero ? orbit(hero.image, hero.name) : ""}</div>
+      <div>${hero ? orbit(hero.image, hero.name, hero.id) : ""}</div>
     </section>
     <section class="runway">
       <div class="runway-head">
@@ -57,7 +57,7 @@ function viewHome() {
         <a href="#/linea">Catálogo</a>
       </div>
       <div class="rail">
-        ${rail.map((item) => `<article>${orbit(item.image, item.name)}<h3><a href="#/producto/${esc(item.id)}">${esc(item.name)}</a></h3><p>${money(item.price)} · ${esc(item.size)}</p></article>`).join("")}
+        ${rail.map((item) => `<article>${orbit(item.image, item.name, item.id)}<h3><a href="#/producto/${esc(item.id)}">${esc(item.name)}</a></h3><p>${money(item.price)} · ${esc(item.size)}</p></article>`).join("")}
       </div>
     </section>
     <section class="manifesto">
@@ -100,7 +100,7 @@ function viewLinea() {
       <div class="bands">
         ${list.map((item) => `
           <article class="band">
-            <div>${orbit(item.image, item.name)}</div>
+            <div>${orbit(item.image, item.name, item.id)}</div>
             <div>
               <div class="kicker">${esc(item.line)} · ${esc(item.size)}</div>
               <h3>${esc(item.name)}</h3>
@@ -116,22 +116,56 @@ function viewLinea() {
     </section>`;
 }
 
+function productCard(item) {
+  return `<article class="pick">
+    ${orbit(item.image, item.name, item.id)}
+    <h3><a href="#/producto/${esc(item.id)}">${esc(item.name)}</a></h3>
+    <p>${esc(item.summary)}</p>
+    <div class="pick-row">
+      <span class="price">${money(item.price)}</span>
+      <button class="btn small" data-act="add" data-id="${esc(item.id)}" ${item.stock ? "" : "disabled"}>Agregar</button>
+    </div>
+  </article>`;
+}
+
+function carousel(title, items) {
+  if (!items.length) return "";
+  return `
+    <section class="recommend" data-carousel-wrap>
+      <div class="carousel-head">
+        <h2>${title}</h2>
+        <div class="carousel-nav">
+          <button type="button" class="icon-btn" data-act="slide" data-dir="-1" aria-label="Anterior">‹</button>
+          <button type="button" class="icon-btn" data-act="slide" data-dir="1" aria-label="Siguiente">›</button>
+        </div>
+      </div>
+      <div class="rail" data-rail>${items.map(productCard).join("")}</div>
+    </section>`;
+}
+
 function viewProduct() {
   const product = productById(VM.parts[1]);
   if (!product) return `<section class="page"><h2 class="block-title">Esa pieza no está.</h2><a class="btn" href="#/linea">Volver</a></section>`;
   const qty = VM.qty[product.id] || 1;
-  const hold = product.hold ? `<div class="hold">${[1, 2, 3, 4, 5].map((n) => `<i class="${n <= product.hold ? "on" : ""}"></i>`).join("")}</div>` : "";
+  const hold = product.hold ? `<div class="hold" aria-label="Fijación ${product.hold} de 5">${[1, 2, 3, 4, 5].map((n) => `<i class="${n <= product.hold ? "on" : ""}"></i>`).join("")}</div>` : "";
+  const facts = [
+    ["Línea", product.line],
+    ["Presentación", product.size],
+    ["Acabado", product.finish],
+    ["Referencia", product.sku],
+  ];
   return `
     <article class="product-view">
       <div class="orbit-lg">${orbit(product.image, product.name)}</div>
       <div>
-        <div class="kicker">${esc(categoryName(product.category))} · ${esc(product.sku)}</div>
+        <a class="kicker" href="#/linea">${esc(categoryName(product.category))}</a>
         <h1>${esc(product.name)}</h1>
         <p class="lede">${esc(product.description)}</p>
-        ${hold}
-        <div class="meta"><span class="tag">${esc(product.finish)}</span><span class="tag">${esc(product.size)}</span>${(product.ingredients || []).map((item) => `<span class="tag">${esc(item)}</span>`).join("")}</div>
-        <div class="price" style="font-size:28px">${money(product.price)}</div>
+        <div class="price" style="font-size:34px">${money(product.price)}</div>
         ${stockLabel(product)}
+        ${hold}
+        <dl class="facts">${facts.map(([label, value]) => `<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join("")}</dl>
+        <div class="meta">${(product.ingredients || []).map((item) => `<span class="tag">${esc(item)}</span>`).join("")}</div>
         <div class="buy-row">
           <div class="qty">
             <button type="button" data-act="qty" data-id="${esc(product.id)}" data-dir="-1">−</button>
@@ -139,9 +173,11 @@ function viewProduct() {
             <button type="button" data-act="qty" data-id="${esc(product.id)}" data-dir="1">+</button>
           </div>
           <button class="btn" data-act="add" data-id="${esc(product.id)}" data-qty="${qty}" ${product.stock ? "" : "disabled"}>Agregar al carrito</button>
+          <a class="btn ghost" href="${waHref("Hola, quiero información de " + product.name + ".")}" target="_blank" rel="noopener">Consultar</a>
         </div>
       </div>
-    </article>`;
+    </article>
+    ${carousel("Te recomendamos", recommendedFor(product))}`;
 }
 
 function viewMarca() {
@@ -201,7 +237,7 @@ function viewCart() {
         <h2 class="block-title" style="margin-bottom:16px">Tu selección</h2>
         ${items.map((item) => `
           <article class="line-item">
-            <img src="${esc(item.image)}" alt="">
+            <img src="${esc(cutoutSrc(item.image))}" alt="">
             <div>
               <strong>${esc(item.name)}</strong>
               <div class="fine">${money(item.price)}</div>
