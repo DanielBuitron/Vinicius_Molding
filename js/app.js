@@ -50,13 +50,55 @@ async function trackView() {
   }
 }
 
+let paintedRoute = "";
+let showcaseTimer = 0;
+
+function scrollToStart() {
+  const root = document.documentElement;
+  const previous = root.style.scrollBehavior;
+  root.style.scrollBehavior = "auto";
+  window.scrollTo(0, 0);
+  root.style.scrollBehavior = previous;
+}
+
+function stepShowcase(root, dir, index) {
+  const slides = [...root.querySelectorAll(".showcase-slide")];
+  if (slides.length < 2) return;
+  const current = Math.max(0, slides.findIndex((slide) => slide.classList.contains("on")));
+  const next = index == null ? (current + dir + slides.length) % slides.length : Number(index) % slides.length;
+  slides.forEach((slide, i) => slide.classList.toggle("on", i === next));
+  root.querySelectorAll(".showcase-dots button").forEach((dot, i) => dot.classList.toggle("on", i === next));
+}
+
+function bindShowcases() {
+  clearInterval(showcaseTimer);
+  const roots = [...document.querySelectorAll("[data-showcase]")];
+  if (!roots.length) return;
+  showcaseTimer = setInterval(() => {
+    roots.forEach((root) => {
+      if (root.dataset.pause === "1") return;
+      stepShowcase(root, 1);
+    });
+  }, 4600);
+  roots.forEach((root) => {
+    root.addEventListener("pointerenter", () => { root.dataset.pause = "1"; });
+    root.addEventListener("pointerleave", () => { delete root.dataset.pause; });
+  });
+}
+
 function paint(html, bodyClass) {
   document.body.className = bodyClass;
   document.getElementById("app").innerHTML = html;
+  const route = location.hash || "#/inicio";
+  if (route !== paintedRoute) {
+    paintedRoute = route;
+    scrollToStart();
+  }
   const header = document.querySelector(".site-header");
   if (header) header.classList.toggle("scrolled", window.scrollY > 8);
   bindOrbits();
   if (typeof mountVolumes === "function") mountVolumes();
+  bindShowcases();
 }
 
 function bindOrbits() {
@@ -384,6 +426,13 @@ function bind() {
       if (rail) rail.scrollBy({ left: Number(node.dataset.dir) * Math.min(rail.clientWidth * 0.86, 640), behavior: "smooth" });
       return;
     }
+    if (act === "show" || act === "show-dot") {
+      const root = node.closest("[data-showcase]");
+      if (!root) return;
+      if (act === "show") stepShowcase(root, Number(node.dataset.dir));
+      else stepShowcase(root, 0, node.dataset.index);
+      return;
+    }
     if (act === "filter") {
       VM.filter = node.dataset.cat;
       render();
@@ -571,6 +620,7 @@ window.addEventListener("hashchange", () => {
 });
 
 async function boot() {
+  if ("scrollRestoration" in history) history.scrollRestoration = "manual";
   bind();
   try {
     const [catalog, config, me] = await Promise.all([
