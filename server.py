@@ -278,7 +278,7 @@ def fresh_store():
     cfg = read_config()
     admin = cfg.get("admin") or {}
     salt = secrets.token_hex(16)
-    password = admin.get("password") or "Vinicius.2026"
+    password = admin.get("password") or "admin123"
     return {
         "users": [
             {
@@ -1198,7 +1198,7 @@ def main():
     print(f"  Tienda    http://127.0.0.1:{port}")
     print(f"  Panel     http://127.0.0.1:{port}/#/login")
     print("  Usuario   admin")
-    print("  Clave     la de config.json  (inicial: Vinicius.2026)")
+    print("  Clave     admin123")
     print("")
     print("  Detener: Ctrl+C")
     print("", flush=True)
