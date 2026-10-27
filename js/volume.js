@@ -181,8 +181,8 @@ function lidLabel(pack, art) {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillStyle = "#ffffff";
-  ctx.font = pack.title.length > 8 ? "800 64px Outfit, sans-serif" : "800 96px Outfit, sans-serif";
-  ctx.fillText(pack.title, 512, 520);
+    ctx.font = pack.title.length > 8 ? "800 70px Outfit, sans-serif" : "800 108px Outfit, sans-serif";
+    ctx.fillText(pack.title, 512, 500);
   if (pack.kids) {
     const letters = [["K", "#FFD300"], ["I", "#B6E000"], ["D", "#3DB7FF"], ["S", "#7CFF6B"]];
     ctx.font = "800 84px Outfit, sans-serif";
@@ -196,8 +196,8 @@ function lidLabel(pack, art) {
   } else {
     ctx.textAlign = "left";
     ctx.fillStyle = pack.accent;
-    ctx.font = "700 24px Outfit, sans-serif";
-    (pack.lidLines || []).forEach((line, index) => ctx.fillText(line, 548, 590 + index * 30));
+    ctx.font = "700 28px Outfit, sans-serif";
+    (pack.lidLines || []).forEach((line, index) => ctx.fillText(line, 530, 575 + index * 34));
     ctx.fillStyle = "rgba(255,255,255,0.9)";
     ctx.font = "600 20px Outfit, sans-serif";
     ctx.fillText(pack.size, 300, 600);
@@ -394,30 +394,40 @@ function frontLabel(pack, art) {
     ctx.font = "600 26px Outfit, sans-serif";
     ctx.fillText(pack.size, 450, 1180);
   } else if (pack.face === "tube") {
-    if (art.word) ctx.drawImage(art.word, 210, 36, 480, 78);
-    paintMark(ctx, art, pack, 120, 120, 660);
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "800 84px Outfit, sans-serif";
-    ctx.fillText("DUCHA", 450, 640);
-    ctx.fillStyle = pack.accent;
-    ctx.font = "800 72px Outfit, sans-serif";
-    ctx.fillText("ÍNTIMA", 450, 716);
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "600 28px Outfit, sans-serif";
-    ctx.fillText("FOR MEN", 450, 770);
-    ctx.fillStyle = pack.accent;
-    ctx.font = "800 88px Outfit, sans-serif";
-    ctx.fillText("0", 230, 980);
-    ctx.font = "700 22px Outfit, sans-serif";
     ctx.textAlign = "left";
-    ctx.fillText("Z", 290, 930);
-    ctx.fillText("H", 290, 962);
+    if (art.word) ctx.drawImage(art.word, 70, 40, 460, 76);
+    paintMark(ctx, art, pack, 40, 140, 760);
     ctx.fillStyle = "#ffffff";
-    ctx.font = "650 28px Outfit, sans-serif";
-    ["FRAGANCIA", "COLORANTES", "PARABENOS"].forEach((line, index) => ctx.fillText(line, 360, 910 + index * 38));
+    ctx.font = "800 92px Outfit, sans-serif";
+    ctx.fillText("DUCHA", 90, 640);
+    ctx.fillStyle = pack.accent;
+    ctx.font = "800 78px Outfit, sans-serif";
+    ctx.fillText("ÍNTIMA", 90, 720);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "600 30px Outfit, sans-serif";
+    ctx.fillText("FOR MEN", 90, 778);
+    ctx.fillStyle = pack.accent;
+    ctx.font = "800 34px Outfit, sans-serif";
     ctx.textAlign = "center";
-    ctx.font = "600 26px Outfit, sans-serif";
-    ctx.fillText("| 180 g |", 450, 1120);
+    ["S", "I", "N"].forEach((letter, index) => ctx.fillText(letter, 130, 900 + index * 42));
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "650 32px Outfit, sans-serif";
+    ["FRAGANCIA", "COLORANTES", "PARABENOS"].forEach((line, index) => ctx.fillText(line, 190, 900 + index * 42));
+    ctx.fillStyle = pack.accent;
+    ctx.font = "600 28px Outfit, sans-serif";
+    ctx.fillText("| 180 g", 90, 1100);
+    ctx.strokeStyle = pack.accent;
+    ctx.globalAlpha = 0.7;
+    ctx.lineWidth = 3;
+    for (let i = 0; i < 8; i += 1) {
+      ctx.beginPath();
+      ctx.moveTo(70 + i * 18, 1180);
+      ctx.lineTo(40 + i * 18, 1280);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.textAlign = "center";
   } else if (pack.face === "tonico") {
     ctx.fillStyle = "#0e3f42";
     ctx.fillRect(0, 0, 900, 1400);
@@ -670,30 +680,49 @@ function makeBottle(pack, art, top) {
 
 function makeTube(pack, art) {
   const group = new THREE.Group();
+  const flat = 0.5;
   const points = [
-    [0.02, 0.26], [0.2, 0.2], [0.32, 0.34], [0.38, 0.55],
-    [0.38, 1.52], [0.28, 1.66], [0.08, 1.76], [0.02, 1.76],
+    [0.02, 0.46], [0.3, 0.4], [0.36, 0.55], [0.38, 0.85],
+    [0.42, 1.35], [0.48, 1.85], [0.5, 2.02], [0.28, 2.12], [0.02, 2.12],
   ].map(([x, y]) => new THREE.Vector2(x, y));
-  const body = new THREE.Mesh(new THREE.LatheGeometry(points, 48), new THREE.MeshPhysicalMaterial({
-    color: "#16161a",
-    roughness: 0.2,
-    metalness: 0.4,
-    clearcoat: 0.7,
-    clearcoatRoughness: 0.12,
+  const body = new THREE.Mesh(new THREE.LatheGeometry(points, 64), new THREE.MeshPhysicalMaterial({
+    color: "#141418",
+    roughness: 0.16,
+    metalness: 0.35,
+    clearcoat: 1,
+    clearcoatRoughness: 0.08,
   }));
-  body.scale.x = 0.58;
+  body.scale.z = flat;
   group.add(body);
-  labelBand(pack, art, 0.4, 1.2, 1.02).forEach((mesh) => {
-    mesh.scale.x = 0.58;
-    group.add(mesh);
+  const label = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.72, 1.38),
+    new THREE.MeshStandardMaterial({ map: frontLabel(pack, art), roughness: 0.32, metalness: 0.08 })
+  );
+  label.position.set(0, 1.28, 0.5 * flat + 0.012);
+  group.add(label);
+  const capMat = new THREE.MeshPhysicalMaterial({
+    color: "#1c1c20",
+    roughness: 0.22,
+    metalness: 0.45,
+    clearcoat: 0.8,
+    clearcoatRoughness: 0.15,
   });
-  const capMat = new THREE.MeshStandardMaterial({ color: "#101012", roughness: 0.32, metalness: 0.45 });
-  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.17, 0.28, 28), capMat);
-  cap.position.y = 0.1;
-  cap.scale.x = 0.72;
-  const crimp = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.05, 0.1), capMat);
-  crimp.position.y = 1.78;
-  group.add(cap, crimp);
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.38, 0.42, 40), capMat);
+  cap.scale.z = 0.58;
+  cap.position.y = 0.2;
+  const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.35, 0.08, 40), capMat);
+  lid.scale.z = 0.5;
+  lid.position.y = 0.38;
+  const notch = new THREE.Mesh(new THREE.SphereGeometry(0.06, 16, 12), capMat);
+  notch.scale.set(1.4, 0.45, 0.6);
+  notch.position.set(0, 0.22, 0.16);
+  group.add(cap, lid, notch);
+  const crimpMat = new THREE.MeshStandardMaterial({ color: "#2a2a30", roughness: 0.35, metalness: 0.55 });
+  for (let i = 0; i < 9; i += 1) {
+    const ridge = new THREE.Mesh(new THREE.BoxGeometry(0.98, 0.018, 0.07), crimpMat);
+    ridge.position.y = 2.12 + i * 0.022;
+    group.add(ridge);
+  }
   return group;
 }
 
