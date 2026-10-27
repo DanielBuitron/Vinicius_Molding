@@ -5,7 +5,7 @@ function shellPublic(content) {
   return `
     <a class="wa-side" href="${waHref()}" target="_blank" rel="noopener" aria-label="WhatsApp del asesor">${iconWhatsapp()}<span>Hablar con el asesor</span></a>
     <header class="site-header">
-      <a class="brand" href="#/inicio"><img src="assets/logo-black.png" alt="Vinicius Molding"></a>
+      <a class="brand" href="#/inicio"><img src="assets/logo-white.png" alt="Vinicius Molding"></a>
       <nav class="nav ${VM.menu ? "open" : ""}">
         ${links.map(([id, label]) => `<a href="#/${id}" class="${page === id ? "active" : ""}">${label}</a>`).join("")}
         <a href="#/login">Panel</a>
@@ -43,7 +43,7 @@ function viewHome() {
       <div>
         <div class="eyebrow">Cali · cuidado capilar</div>
         <h1>Somos<br>la solución,<br><em>no el problema.</em></h1>
-        <p class="lede">Fórmulas de alto rendimiento para el hombre que cuida la imagen como parte del oficio. Gira cada producto: la foto oficial, en 360°.</p>
+        <p class="lede">Fórmulas de alto rendimiento para el hombre que cuida la imagen como parte del oficio. Toma el producto y muévelo: arriba, abajo, a un lado y al otro.</p>
         <div class="hero-actions">
           <a class="btn" href="#/linea">Ver la línea</a>
           <a class="btn ghost" href="#/asesor">Dejar mi número</a>
@@ -107,7 +107,7 @@ function viewLinea() {
               <p>${esc(item.summary)}</p>
               <div class="price">${money(item.price)}</div>
               <div class="buy-row">
-                <a class="btn ghost" href="#/producto/${esc(item.id)}">Girar 360°</a>
+                <a class="btn ghost" href="#/producto/${esc(item.id)}">Ver de cerca</a>
                 <button class="btn" data-act="add" data-id="${esc(item.id)}" ${item.stock ? "" : "disabled"}>Agregar</button>
               </div>
             </div>
@@ -145,19 +145,45 @@ function viewProduct() {
 }
 
 function viewMarca() {
+  const colors = [
+    ["#000000", "Negro", "Autoridad"],
+    ["#E52C3B", "Rojo", "Determinación"],
+    ["#00C8C2", "Teal", "Contraste"],
+    ["#FFD300", "Dorado", "Energía"],
+    ["#585E65", "Gris", "Equilibrio"],
+    ["#A4D800", "Lima", "Acento"],
+  ];
   return `
     <section class="section">
       <div class="kicker">Identidad</div>
-      <h2 class="block-title" style="max-width:780px;margin-top:10px">El poder empieza por la imagen.</h2>
-      <p class="lede">Vinicius es cuidado capilar masculino para quien no improvisa. El nombre suena a presencia, carácter y liderazgo.</p>
+      <h2 class="block-title" style="max-width:820px;margin-top:10px">El poder empieza por la imagen.</h2>
+      <p class="lede">Vinicius es cuidado capilar masculino para quien no improvisa. Voz firme, elegante y directa. El arquetipo es el Gobernante: control, excelencia y orden.</p>
+      <div class="swatches">
+        ${colors.map(([hex, name, role]) => `<article style="--swatch:${hex}"><b></b><strong>${name}</strong><span>${hex}</span><em>${role}</em></article>`).join("")}
+      </div>
     </section>
     <section class="manifesto">
-      <h2>Arquetipo: el Gobernante.</h2>
-      <p>Control, excelencia y orden. Voz firme, elegante y directa.</p>
+      <h2>Somos la solución, no el problema.</h2>
+      <p>No seguimos tendencias. Entregamos resultado.</p>
     </section>
     <section class="section">
       <div class="bands">
-        <article class="band"><div><h3>Negro y rojo.</h3><p>Autoridad en #000000. Determinación en #E52C3B. El teal, el dorado, el gris y el lima entran solo como acento.</p></div><img src="assets/logo-black.png" alt="Logotipo" style="width:min(420px,100%);margin:0 auto"></article>
+        <article class="band">
+          <div><img src="assets/logo-white.png" alt="Logotipo Vinicius Molding" style="width:min(460px,100%);margin:0 auto"></div>
+          <div>
+            <div class="kicker">Logotipo</div>
+            <h3>Una V que se impone.</h3>
+            <p>Isotipo angular, VINICIUS en mayúscula y MOLDING con aire. Se usa en negro, en blanco o en el rojo de la marca. Sin sombras, sin estirar, sin degradado.</p>
+          </div>
+        </article>
+        <article class="band">
+          <div>
+            <div class="kicker">A quién</div>
+            <h3>La opción correcta.</h3>
+            <p>Hombres de 25 a 45 años. Profesionales, emprendedores, líderes. No quieren más opciones. Quieren la que funciona.</p>
+          </div>
+          <img src="assets/isotipo-red.png" alt="Isotipo" style="width:min(280px,70%);margin:0 auto">
+        </article>
       </div>
     </section>`;
 }
