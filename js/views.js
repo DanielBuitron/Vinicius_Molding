@@ -43,7 +43,7 @@ function viewHome() {
       <div>
         <div class="eyebrow">Cali · cuidado capilar</div>
         <h1>Somos<br>la solución,<br><em>no el problema.</em></h1>
-        <p class="lede">Fórmulas de alto rendimiento para el hombre que cuida la imagen como parte del oficio. Arrastra el producto: arriba, abajo, a un lado y al otro. Ábrelo para ver la ficha.</p>
+        <p class="lede">Fórmulas de alto rendimiento para el hombre que cuida la imagen como parte del oficio.</p>
         <div class="hero-actions">
           <a class="btn" href="#/catalogo">Ver el catálogo</a>
         </div>
@@ -98,7 +98,7 @@ function catalogCard(item) {
     <article class="sku">
       <a class="sku-shot" href="#/producto/${esc(item.id)}">${orbit(item.image, item.name, item.id)}</a>
       <div class="sku-body">
-        <p class="kicker">${esc(item.size)}</p>
+        <p class="kicker">${esc(item.catName || item.size)}</p>
         <h3><a href="#/producto/${esc(item.id)}">${esc(item.name)}</a></h3>
         <div class="sku-row">
           <span class="price">${money(item.price)}</span>
@@ -125,13 +125,9 @@ function viewCatalog() {
           ${all.map((group) => `<a class="chip ${focus === group.id ? "on" : ""}" href="#/catalogo/${esc(group.id)}">${esc(group.name)} <span>${group.items.length}</span></a>`).join("")}
         </div>
       </div>
-      ${groups.map((group) => `
-        <section class="catalog-block" data-cat="${esc(group.id)}">
-          <div class="catalog-head">
-            <h3>${esc(group.name)}</h3>
-          </div>
-          <div class="sku-grid">${group.items.map(catalogCard).join("")}</div>
-        </section>`).join("")}
+      <div class="sku-grid">
+        ${groups.flatMap((group) => group.items.map((item) => catalogCard({ ...item, catName: group.name }))).join("")}
+      </div>
     </section>`;
 }
 
