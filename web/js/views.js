@@ -93,18 +93,16 @@ function catalogGroups() {
   })).filter((group) => group.items.length);
 }
 
-function productBand(item) {
+function catalogCard(item) {
   return `
-    <article class="band">
-      <div>${orbit(item.image, item.name, item.id)}</div>
-      <div>
-        <div class="kicker">${esc(item.line)} · ${esc(item.size)}</div>
-        <h3>${esc(item.name)}</h3>
-        <p>${esc(item.summary)}</p>
-        <div class="price">${money(item.price)}</div>
-        <div class="buy-row">
-          <a class="btn ghost" href="#/producto/${esc(item.id)}">Ver de cerca</a>
-          <button class="btn" data-act="add" data-id="${esc(item.id)}" ${item.stock ? "" : "disabled"}>Agregar</button>
+    <article class="sku">
+      <a class="sku-shot" href="#/producto/${esc(item.id)}">${orbit(item.image, item.name, item.id)}</a>
+      <div class="sku-body">
+        <p class="kicker">${esc(item.size)}</p>
+        <h3><a href="#/producto/${esc(item.id)}">${esc(item.name)}</a></h3>
+        <div class="sku-row">
+          <span class="price">${money(item.price)}</span>
+          <button class="btn small" data-act="add" data-id="${esc(item.id)}" ${item.stock ? "" : "disabled"}>Agregar</button>
         </div>
       </div>
     </article>`;
@@ -112,23 +110,27 @@ function productBand(item) {
 
 function viewCatalog() {
   const focus = VM.parts[1] || "";
-  const groups = catalogGroups();
+  const all = catalogGroups();
+  const groups = focus ? all.filter((group) => group.id === focus) : all;
+  const total = all.reduce((count, group) => count + group.items.length, 0);
   return `
     <section class="section catalog">
-      <div class="kicker">Cartilla Vinicius</div>
       <div class="catalog-intro">
-        <h2>Catálogo</h2>
+        <div>
+          <div class="kicker">Cartilla Vinicius</div>
+          <h2>Catálogo</h2>
+        </div>
         <div class="filters">
-          ${groups.map((group) => `<a class="chip ${focus === group.id ? "on" : ""}" href="#/catalogo/${esc(group.id)}">${esc(group.name)}</a>`).join("")}
+          <a class="chip ${focus ? "" : "on"}" href="#/catalogo">Todos <span>${total}</span></a>
+          ${all.map((group) => `<a class="chip ${focus === group.id ? "on" : ""}" href="#/catalogo/${esc(group.id)}">${esc(group.name)} <span>${group.items.length}</span></a>`).join("")}
         </div>
       </div>
       ${groups.map((group) => `
         <section class="catalog-block" data-cat="${esc(group.id)}">
           <div class="catalog-head">
             <h3>${esc(group.name)}</h3>
-            <p>${esc(group.blurb)}</p>
           </div>
-          <div class="bands">${group.items.map(productBand).join("")}</div>
+          <div class="sku-grid">${group.items.map(catalogCard).join("")}</div>
         </section>`).join("")}
     </section>`;
 }

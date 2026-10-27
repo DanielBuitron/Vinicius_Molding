@@ -14,7 +14,7 @@ const PACKS = {
   "shampoo-proteccion": { kind: "pump", accent: "#E10600", body: "#f4f2ee", ink: "#171717", title: "SHAMPOO", lidSub: "PROTECCIÓN CAPILAR", size: "500 g", face: "white" },
   "shampoo-carbon": { kind: "pump", accent: "#FFD300", body: "#171717", ink: "#f4f1ea", title: "SHAMPOO", lidSub: "CARBÓN ACTIVO", size: "500 ml", face: "carbon", v: "#6a6a70" },
   "serum-barba": { kind: "dropper", accent: "#A4D800", body: "#1a1a1c", ink: "#f4f1ea", title: "SERUM", lidSub: "BARBA · BIGOTE", size: "65 ml", face: "serum" },
-  "tonico": { kind: "spray", accent: "#E4C84A", body: "#12383a", ink: "#f7f4ea", title: "TÓNICO", lidSub: "ORGÁNICO", size: "65 ml", face: "tonico" },
+  "tonico": { kind: "spray", accent: "#E4C84A", body: "#101012", ink: "#f7f4ea", title: "TÓNICO", lidSub: "ORGÁNICO", size: "65 ml", face: "tonico" },
   "ducha-intima": { kind: "tube", accent: "#8ED400", body: "#141416", ink: "#f4f1ea", title: "DUCHA ÍNTIMA", lidSub: "FOR MEN", size: "180 g", face: "tube" },
 };
 
@@ -90,7 +90,7 @@ async function createVolume(src) {
     : pack.kind === "tube"
       ? makeTube(pack, art)
       : makeBottle(pack, art, pack.kind);
-  return { object, tilt: pack.kind === "tin" ? 0.62 : pack.kind === "pump" ? 0.04 : 0.18 };
+  return { object, tilt: pack.kind === "tin" ? 0.62 : pack.kind === "pump" ? 0.04 : 0.08 };
 }
 
 function canvasTexture(canvas, offsetX) {
@@ -338,6 +338,8 @@ function frontLabel(pack, art) {
     ctx.font = "600 28px Outfit, sans-serif";
     ctx.fillText(pack.size, 450, 1160);
   } else if (pack.face === "tonico") {
+    ctx.fillStyle = "#0e3f42";
+    ctx.fillRect(0, 0, 900, 1400);
     if (art.word) ctx.drawImage(art.word, 200, 80, 500, 82);
     paintMark(ctx, art, pack, 175, 200, 550);
     ctx.fillStyle = "#ffffff";
@@ -443,6 +445,73 @@ function addPump(group, mat) {
   group.add(lip, collar, head, crown, nozzle, tip, joint);
 }
 
+function addFlutes(group, mat, radius, y, height, count) {
+  for (let i = 0; i < count; i += 1) {
+    const rib = new THREE.Mesh(new THREE.BoxGeometry(0.026, height, 0.04), mat);
+    const angle = (i / count) * Math.PI * 2;
+    rib.position.set(Math.cos(angle) * radius, y, Math.sin(angle) * radius);
+    rib.rotation.y = Math.PI / 2 - angle;
+    group.add(rib);
+  }
+}
+
+function addSpray(group, mat) {
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.3, 0.14, 40), mat);
+  neck.position.y = 2.34;
+  const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.5, 40), mat);
+  collar.position.y = 2.66;
+  group.add(neck, collar);
+  addFlutes(group, mat, 0.224, 2.66, 0.48, 28);
+  const head = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.1, 0.16, 24), mat);
+  head.position.y = 3.02;
+  const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.042, 0.32, 16), mat);
+  nozzle.rotation.z = -Math.PI / 2 - 0.22;
+  nozzle.position.set(0.15, 3.04, 0);
+  const tip = new THREE.Mesh(new THREE.SphereGeometry(0.038, 12, 10), mat);
+  tip.scale.set(1.25, 0.65, 0.65);
+  tip.position.set(0.3, 2.96, 0);
+  group.add(head, nozzle, tip);
+  const glass = new THREE.MeshPhysicalMaterial({
+    color: "#f4f4f8",
+    roughness: 0.04,
+    metalness: 0,
+    transparent: true,
+    opacity: 0.34,
+    clearcoat: 1,
+    clearcoatRoughness: 0.04,
+    side: THREE.DoubleSide,
+  });
+  const shroud = new THREE.Mesh(new THREE.CylinderGeometry(0.168, 0.168, 0.58, 32, 1, true), glass);
+  shroud.position.y = 3.2;
+  const lid = new THREE.Mesh(new THREE.CircleGeometry(0.168, 32), glass);
+  lid.rotation.x = -Math.PI / 2;
+  lid.position.y = 3.49;
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.168, 0.012, 8, 32), glass);
+  rim.rotation.x = Math.PI / 2;
+  rim.position.y = 3.49;
+  group.add(shroud, lid, rim);
+}
+
+function addDropper(group, mat) {
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.2, 0.1, 32), mat);
+  neck.position.y = 2.42;
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.25, 0.48, 36), mat);
+  cap.position.y = 2.7;
+  group.add(neck, cap);
+  addFlutes(group, mat, 0.242, 2.7, 0.46, 26);
+  const bulbMat = new THREE.MeshPhysicalMaterial({
+    color: "#141416",
+    roughness: 0.42,
+    metalness: 0.04,
+    clearcoat: 0.55,
+    clearcoatRoughness: 0.2,
+  });
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.155, 32, 24), bulbMat);
+  bulb.scale.set(1, 1.42, 1);
+  bulb.position.y = 3.1;
+  group.add(bulb);
+}
+
 function makeBottle(pack, art, top) {
   const group = new THREE.Group();
   const pump = top === "pump";
@@ -451,26 +520,45 @@ function makeBottle(pack, art, top) {
       [0.02, 0], [0.18, 0], [0.52, 0.05], [0.62, 0.14], [0.66, 0.3], [0.66, 2.35],
       [0.63, 2.62], [0.56, 2.9], [0.46, 3.16], [0.34, 3.38], [0.26, 3.54], [0.24, 3.64], [0.02, 3.64],
     ]
-    : [
-      [0.02, 0], [0.46, 0], [0.56, 0.08], [0.58, 0.22], [0.58, 1.28],
-      [0.5, 1.48], [0.34, 1.66], [0.2, 1.78], [0.2, 1.92], [0.02, 1.92],
-    ]
+    : top === "spray"
+      ? [
+        [0.02, 0], [0.42, 0], [0.58, 0.05], [0.62, 0.14], [0.62, 1.78],
+        [0.56, 1.94], [0.42, 2.08], [0.3, 2.2], [0.28, 2.28], [0.02, 2.28],
+      ]
+      : top === "dropper"
+        ? [
+          [0.02, 0], [0.52, 0], [0.66, 0.04], [0.7, 0.12], [0.7, 1.88],
+          [0.64, 2.04], [0.46, 2.16], [0.24, 2.28], [0.18, 2.38], [0.02, 2.38],
+        ]
+        : [
+          [0.02, 0], [0.46, 0], [0.56, 0.08], [0.58, 0.22], [0.58, 1.28],
+          [0.5, 1.48], [0.34, 1.66], [0.2, 1.78], [0.2, 1.92], [0.02, 1.92],
+        ]
   ).map(([x, y]) => new THREE.Vector2(x, y));
-  const body = new THREE.Mesh(new THREE.LatheGeometry(points, 80), pump
+  const body = new THREE.Mesh(new THREE.LatheGeometry(points, 80), top === "dropper"
     ? new THREE.MeshPhysicalMaterial({
-      color: pack.body,
-      roughness: pack.face === "white" ? 0.16 : 0.28,
-      metalness: 0,
-      clearcoat: pack.face === "white" ? 0.45 : 0.25,
-      clearcoatRoughness: 0.28,
+      color: "#2a2a30",
+      roughness: 0.06,
+      metalness: 0.12,
+      clearcoat: 1,
+      clearcoatRoughness: 0.04,
+      transparent: true,
+      opacity: 0.9,
+      transmission: 0.22,
+      thickness: 0.5,
+      ior: 1.5,
     })
-    : new THREE.MeshStandardMaterial({
+    : new THREE.MeshPhysicalMaterial({
       color: pack.body,
-      roughness: pack.kind === "dropper" ? 0.2 : 0.38,
-      metalness: pack.kind === "dropper" ? 0.35 : 0.08,
+      roughness: pump && pack.face === "white" ? 0.16 : top === "spray" ? 0.22 : 0.28,
+      metalness: 0,
+      clearcoat: top === "spray" ? 0.55 : 0.3,
+      clearcoatRoughness: 0.22,
     }));
   group.add(body);
   if (pump) labelBand(pack, art, 0.685, 1.85, 1.28).forEach((mesh) => group.add(mesh));
+  else if (top === "spray") labelBand(pack, art, 0.645, 1.35, 0.95).forEach((mesh) => group.add(mesh));
+  else if (top === "dropper") labelBand(pack, art, 0.725, 1.45, 1.02).forEach((mesh) => group.add(mesh));
   else labelBand(pack, art, 0.608, 0.96, 0.74).forEach((mesh) => group.add(mesh));
   const capMat = new THREE.MeshPhysicalMaterial({
     color: pump && pack.face === "white" ? "#f7f6f3" : "#161618",
@@ -482,24 +570,9 @@ function makeBottle(pack, art, top) {
   if (pump) {
     addPump(group, capMat);
   } else if (top === "spray") {
-    const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.2, 0.16, 32), capMat);
-    collar.position.y = 2.0;
-    const head = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.28, 32), capMat);
-    head.position.y = 2.2;
-    group.add(collar, head);
+    addSpray(group, capMat);
   } else {
-    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 0.32, 32), capMat);
-    cap.position.y = 2.06;
-    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.1, 24, 16), capMat);
-    bulb.scale.y = 1.35;
-    bulb.position.y = 2.3;
-    group.add(cap, bulb);
-    for (let i = 0; i < 4; i += 1) {
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.175, 0.012, 6, 24), capMat);
-      ring.rotation.x = Math.PI / 2;
-      ring.position.y = 1.96 + i * 0.06;
-      group.add(ring);
-    }
+    addDropper(group, capMat);
   }
   return group;
 }
