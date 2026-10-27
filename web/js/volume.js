@@ -1,20 +1,21 @@
-/* Envase en 3D: tapa, cuerpo y etiqueta. Se gira y se ve por todos los lados. */
+/* Envase en 3D con la etiqueta real de cada producto. */
 const volumeViewers = [];
 const volumeModels = new Map();
 let volumeJob = 0;
 let volumeLogo = null;
+let volumeWord = null;
 
 const PACKS = {
-  "cera-fibra": { kind: "tin", name: "CERA DE FIBRA", sub: "ACABADO FIRME", accent: "#6D4AFF", body: "#141414", ink: "#f4f1ea", size: "150 g", notes: ["KERATINA", "ROMERO", "ALOE VERA"] },
-  "cera-brillo": { kind: "tin", name: "CERA BRILLO", sub: "BRILLO MEDIO", accent: "#E52C3B", body: "#141414", ink: "#f4f1ea", size: "150 g", notes: ["KERATINA", "ROMERO", "ALOE VERA"] },
-  "pasta": { kind: "tin", name: "PASTA", sub: "FIJACIÓN FUERTE", accent: "#00C8C2", body: "#141414", ink: "#f4f1ea", size: "150 g", notes: ["KERATINA", "ROMERO", "ALOE VERA"] },
-  "pomada": { kind: "tin", name: "POMADA", sub: "ACABADO MATE", accent: "#FFD300", body: "#141414", ink: "#f4f1ea", size: "150 g", notes: ["KERATINA", "ROMERO", "ALOE VERA"] },
-  "cera-kids": { kind: "tin", name: "CERA KIDS", sub: "FIJACIÓN SUAVE", accent: "#FFD300", body: "#e31b23", ink: "#fff", size: "150 g", notes: ["KERATINA", "ROMERO", "ALOE VERA"] },
-  "shampoo-proteccion": { kind: "pump", name: "SHAMPOO", sub: "PROTECCIÓN", accent: "#E52C3B", body: "#f4f4f2", ink: "#161616", size: "500 g", notes: ["ROMERO", "KERATINA", "SIN SAL"] },
-  "shampoo-carbon": { kind: "pump", name: "SHAMPOO", sub: "CARBÓN ACTIVO", accent: "#FFD300", body: "#161616", ink: "#f4f1ea", size: "500 ml", notes: ["CARBÓN ACTIVO", "ROMERO", "SIN SAL"] },
-  "serum-barba": { kind: "dropper", name: "SERUM", sub: "BARBA Y BIGOTE", accent: "#A4D800", body: "#1a1a1c", ink: "#f4f1ea", size: "65 ml", notes: ["ARGÁN", "JOJOBA", "ALOE VERA"] },
-  "tonico": { kind: "spray", name: "TÓNICO", sub: "ORGÁNICO", accent: "#FFD300", body: "#12383a", ink: "#f4f1ea", size: "65 ml", notes: ["ROMERO", "MENTA", "ALOE VERA"] },
-  "ducha-intima": { kind: "tube", name: "DUCHA ÍNTIMA", sub: "FOR MEN", accent: "#A4D800", body: "#141414", ink: "#f4f1ea", size: "200 g", notes: ["pH BALANCEADO", "SIN SULFATOS"] },
+  "cera-fibra": { kind: "tin", accent: "#7A5CFF", body: "#121214", ink: "#f6f3ec", title: "CERA DE FIBRA", lidSub: "ACABADO FIRME", size: "150 g", hold: 4 },
+  "cera-brillo": { kind: "tin", accent: "#E52C3B", body: "#121214", ink: "#f6f3ec", title: "CERA", lidSub: "MOLDEADORA  ·  BRILLO MEDIO", size: "150 g", hold: 3 },
+  "pasta": { kind: "tin", accent: "#00C8C2", body: "#121214", ink: "#f6f3ec", title: "PASTA", lidSub: "MOLDEADORA  ·  BRILLANTE", size: "150 g", hold: 4 },
+  "pomada": { kind: "tin", accent: "#FFD300", body: "#121214", ink: "#f6f3ec", title: "POMADA", lidSub: "MOLDEADORA  ·  MATE", size: "150 g", hold: 3 },
+  "cera-kids": { kind: "tin", accent: "#FFD300", body: "#e10600", ink: "#ffffff", title: "CERA DE FIBRA", lidSub: "KIDS", size: "150 g", hold: 3, kids: true },
+  "shampoo-proteccion": { kind: "pump", accent: "#E10600", body: "#f4f2ee", ink: "#171717", title: "SHAMPOO", lidSub: "PROTECCIÓN CAPILAR", size: "500 g", face: "white" },
+  "shampoo-carbon": { kind: "pump", accent: "#FFD300", body: "#171717", ink: "#f4f1ea", title: "SHAMPOO", lidSub: "CARBÓN ACTIVO", size: "500 ml", face: "carbon", v: "#6a6a70" },
+  "serum-barba": { kind: "dropper", accent: "#A4D800", body: "#1a1a1c", ink: "#f4f1ea", title: "SERUM", lidSub: "BARBA · BIGOTE", size: "65 ml", face: "serum" },
+  "tonico": { kind: "spray", accent: "#E4C84A", body: "#12383a", ink: "#f7f4ea", title: "TÓNICO", lidSub: "ORGÁNICO", size: "65 ml", face: "tonico" },
+  "ducha-intima": { kind: "tube", accent: "#8ED400", body: "#141416", ink: "#f4f1ea", title: "DUCHA ÍNTIMA", lidSub: "FOR MEN", size: "180 g", face: "tube" },
 };
 
 function releaseVolumes() {
@@ -59,7 +60,7 @@ function loadBitmap(src) {
 }
 
 function packFromSrc(src) {
-  const file = String(src).split("/").pop().replace(/\.png.*$/, "");
+  const file = String(src).split("/").pop().replace(/\.(png|jpg).*$/, "");
   return PACKS[file] || PACKS["cera-fibra"];
 }
 
@@ -79,13 +80,17 @@ async function createVolume(src) {
   if (!volumeLogo) {
     try { volumeLogo = await loadBitmap("assets/isotipo-white.png"); } catch (error) { volumeLogo = null; }
   }
+  if (!volumeWord) {
+    try { volumeWord = await loadBitmap("assets/logotipo-white.png"); } catch (error) { volumeWord = null; }
+  }
   const pack = packFromSrc(src);
+  const art = { logo: volumeLogo, word: volumeWord };
   const object = pack.kind === "tin"
-    ? makeTin(pack, volumeLogo)
+    ? makeTin(pack, art)
     : pack.kind === "tube"
-      ? makeTube(pack, volumeLogo)
-      : makeBottle(pack, volumeLogo, pack.kind);
-  return { object };
+      ? makeTube(pack, art)
+      : makeBottle(pack, art, pack.kind);
+  return { object, tilt: pack.kind === "tin" ? 0.62 : 0.18 };
 }
 
 function canvasTexture(canvas, offsetX) {
@@ -97,98 +102,161 @@ function canvasTexture(canvas, offsetX) {
   return texture;
 }
 
-function drawMark(ctx, logo, x, y, size, color) {
-  if (!logo) {
-    ctx.fillStyle = color;
-    ctx.font = `700 ${Math.round(size)}px Outfit, sans-serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("V", x, y);
-    return;
-  }
-  const stamp = document.createElement("canvas");
-  stamp.width = stamp.height = 256;
-  const g = stamp.getContext("2d");
-  g.drawImage(logo, 16, 16, 224, 224);
-  g.globalCompositeOperation = "source-in";
-  g.fillStyle = color;
-  g.fillRect(0, 0, 256, 256);
-  ctx.drawImage(stamp, x - size / 2, y - size / 2, size, size);
+function tinted(image, color, w, h) {
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (!image) return canvas;
+  ctx.drawImage(image, 0, 0, w, h);
+  ctx.globalCompositeOperation = "source-in";
+  ctx.fillStyle = color;
+  ctx.fillRect(0, 0, w, h);
+  return canvas;
 }
 
-function sideLabel(pack, logo) {
+function stripes(ctx, x, y, w, h, color) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, w, h);
+  ctx.clip();
+  ctx.strokeStyle = color;
+  ctx.globalAlpha = 0.9;
+  ctx.lineWidth = 3;
+  for (let i = -h; i < w + h; i += 16) {
+    ctx.beginPath();
+    ctx.moveTo(x + i, y);
+    ctx.lineTo(x + i - h * 0.55, y + h);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function lidLabel(pack, art) {
   const canvas = document.createElement("canvas");
-  canvas.width = 2048;
-  canvas.height = 236;
+  canvas.width = canvas.height = 1024;
   const ctx = canvas.getContext("2d");
   ctx.fillStyle = pack.body;
-  ctx.fillRect(0, 0, 2048, 236);
+  ctx.fillRect(0, 0, 1024, 1024);
+  if (pack.kids) {
+    ctx.fillStyle = "#2f6fe8";
+    ctx.beginPath();
+    ctx.moveTo(70, 90);
+    ctx.lineTo(250, 90);
+    ctx.lineTo(90, 250);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(954, 934);
+    ctx.lineTo(774, 934);
+    ctx.lineTo(934, 774);
+    ctx.closePath();
+    ctx.fill();
+  }
+  stripes(ctx, 70, 120, 250, 780, pack.kids ? "rgba(255,255,255,0.45)" : pack.accent);
+  stripes(ctx, 704, 120, 250, 780, pack.kids ? "rgba(255,255,255,0.45)" : pack.accent);
+  if (art.word) ctx.drawImage(art.word, 262, 168, 500, 82);
+  if (art.logo) ctx.drawImage(tinted(art.logo, pack.kids ? "#ffffff" : pack.accent, 620, 380), 202, 300, 620, 380);
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  drawMark(ctx, logo, 1024, 78, 92, pack.accent);
-  ctx.fillStyle = pack.ink;
-  ctx.font = "700 54px Outfit, sans-serif";
-  ctx.fillText(pack.name.toUpperCase(), 1024, 150);
-  ctx.fillStyle = pack.accent;
-  ctx.font = "600 22px Outfit, sans-serif";
-  ctx.fillText(pack.sub.toUpperCase() + "   ·   " + pack.size, 1024, 188);
-  ctx.fillStyle = pack.ink;
-  ctx.globalAlpha = 0.7;
-  ctx.font = "600 28px Outfit, sans-serif";
-  ctx.fillText("VINICIUS", 180, 118);
-  ctx.fillText("VINICIUS", 1868, 118);
-  ctx.globalAlpha = 1;
-  return canvasTexture(canvas, 0.5);
-}
-
-function lidLabel(pack, logo) {
-  const canvas = document.createElement("canvas");
-  canvas.width = canvas.height = 512;
-  const ctx = canvas.getContext("2d");
-  ctx.fillStyle = pack.body;
-  ctx.fillRect(0, 0, 512, 512);
-  ctx.strokeStyle = pack.accent;
-  ctx.lineWidth = 10;
-  ctx.beginPath();
-  ctx.arc(256, 256, 210, 0, Math.PI * 2);
-  ctx.stroke();
-  drawMark(ctx, logo, 256, 210, 210, pack.accent);
-  ctx.fillStyle = pack.ink;
-  ctx.textAlign = "center";
-  ctx.font = "700 36px Outfit, sans-serif";
-  ctx.fillText("VINICIUS", 256, 360);
-  ctx.fillStyle = pack.accent;
-  ctx.font = "500 22px Outfit, sans-serif";
-  ctx.fillText(pack.sub, 256, 400);
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "700 64px Outfit, sans-serif";
+  ctx.fillText(pack.title, 512, 690);
+  if (pack.kids) {
+    const letters = [["K", "#FFD300"], ["I", "#B6E000"], ["D", "#3DB7FF"], ["S", "#7CFF6B"]];
+    ctx.font = "800 78px Outfit, sans-serif";
+    letters.forEach(([ch, color], index) => {
+      ctx.fillStyle = color;
+      ctx.fillText(ch, 360 + index * 102, 785);
+    });
+  } else {
+    ctx.fillStyle = pack.accent;
+    ctx.font = "600 26px Outfit, sans-serif";
+    ctx.fillText(pack.lidSub, 512, 758);
+    ctx.fillStyle = "rgba(255,255,255,0.82)";
+    ctx.font = "500 22px Outfit, sans-serif";
+    ctx.fillText(pack.size, 512, 804);
+  }
   return canvasTexture(canvas, 0);
 }
 
-function makeTin(pack, logo) {
+function drawSideBlock(ctx, cx, pack, art) {
+  stripes(ctx, cx - 470, 18, 160, 244, pack.kids ? "rgba(255,255,255,0.55)" : pack.accent);
+  if (art.logo) ctx.drawImage(tinted(art.logo, pack.kids ? "#ffffff" : pack.accent, 180, 110), cx - 430, 78, 150, 92);
+  ctx.fillStyle = pack.accent;
+  ctx.fillRect(cx - 250, 48, 4, 184);
+  ctx.fillStyle = pack.ink;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.font = "600 30px Outfit, sans-serif";
+  ["KERATINA", "ROMERO", "ALOE VERA"].forEach((line, index) => {
+    ctx.fillText(line, cx - 220, 78 + index * 42);
+  });
+  const bx = cx + 90;
+  ctx.fillStyle = pack.accent;
+  ctx.fillRect(bx, 58, 168, 150);
+  ctx.fillStyle = "#141414";
+  ctx.textAlign = "center";
+  ctx.font = "700 18px Outfit, sans-serif";
+  ctx.fillText("A BASE", bx + 84, 100);
+  ctx.fillText("DE CERA", bx + 84, 126);
+  ctx.fillText("DE ABEJA", bx + 84, 152);
+  ctx.textAlign = "left";
+  ctx.fillStyle = pack.ink;
+  ctx.font = "500 16px Outfit, sans-serif";
+  ctx.fillText("Rigidez", bx + 186, 86);
+  for (let i = 0; i < 4; i += 1) {
+    ctx.beginPath();
+    ctx.fillStyle = i < pack.hold ? pack.accent : "rgba(255,255,255,0.35)";
+    ctx.arc(bx + 198 + i * 24, 118, 7, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.fillStyle = pack.ink;
+  ctx.globalAlpha = 0.8;
+  ctx.font = "500 15px Outfit, sans-serif";
+  ctx.fillText("Usar en pelo", bx + 186, 156);
+  ctx.fillText("seco/semi seco", bx + 186, 178);
+  ctx.globalAlpha = 1;
+}
+
+function sideLabel(pack, art) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 2048;
+  canvas.height = 280;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = pack.body;
+  ctx.fillRect(0, 0, 2048, 280);
+  [0, 1024, 2048].forEach((cx) => drawSideBlock(ctx, cx, pack, art));
+  return canvasTexture(canvas, 0.5);
+}
+
+function makeTin(pack, art) {
   const group = new THREE.Group();
-  const metal = new THREE.MeshStandardMaterial({ color: pack.body, roughness: 0.32, metalness: 0.62 });
+  const metal = new THREE.MeshStandardMaterial({ color: "#2c2c30", roughness: 0.28, metalness: 0.72 });
   const shell = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 0.72, 72, 1, true), new THREE.MeshStandardMaterial({
-    map: sideLabel(pack, logo),
-    roughness: 0.4,
-    metalness: 0.28,
+    map: sideLabel(pack, art),
+    roughness: 0.46,
+    metalness: 0.12,
   }));
   group.add(shell);
-  const lid = new THREE.Mesh(new THREE.CylinderGeometry(1.06, 1.06, 0.18, 72), metal);
-  lid.position.y = 0.46;
+  const lid = new THREE.Mesh(new THREE.CylinderGeometry(1.06, 1.06, 0.16, 72, 1, true), metal);
+  lid.position.y = 0.44;
   group.add(lid);
-  const face = new THREE.Mesh(new THREE.CircleGeometry(0.98, 64), new THREE.MeshStandardMaterial({
-    map: lidLabel(pack, logo),
-    roughness: 0.42,
-    metalness: 0.2,
+  const face = new THREE.Mesh(new THREE.CircleGeometry(0.99, 64), new THREE.MeshStandardMaterial({
+    map: lidLabel(pack, art),
+    roughness: 0.45,
+    metalness: 0.02,
+    side: THREE.DoubleSide,
   }));
   face.rotation.x = -Math.PI / 2;
-  face.position.y = 0.575;
+  face.position.y = 0.525;
   group.add(face);
   const base = new THREE.Mesh(new THREE.CircleGeometry(0.98, 48), metal);
   base.rotation.x = Math.PI / 2;
   base.position.y = -0.361;
   group.add(base);
-  [0.4, 0.46, 0.52].forEach((y) => {
-    const rib = new THREE.Mesh(new THREE.TorusGeometry(1.065, 0.016, 8, 72), metal);
+  [0.39, 0.44, 0.49].forEach((y) => {
+    const rib = new THREE.Mesh(new THREE.TorusGeometry(1.07, 0.015, 8, 72), metal);
     rib.rotation.x = Math.PI / 2;
     rib.position.y = y;
     group.add(rib);
@@ -200,48 +268,176 @@ function makeTin(pack, logo) {
   return group;
 }
 
-function bottleLabel(pack, logo) {
+function panel(pack) {
   const canvas = document.createElement("canvas");
-  canvas.width = 1024;
-  canvas.height = 1024;
+  canvas.width = 900;
+  canvas.height = 1400;
   const ctx = canvas.getContext("2d");
   ctx.fillStyle = pack.body;
-  ctx.fillRect(0, 0, 1024, 1024);
-  ctx.fillStyle = pack.accent;
-  ctx.fillRect(80, 430, 864, 8);
+  ctx.fillRect(0, 0, 900, 1400);
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  drawMark(ctx, logo, 512, 560, 200, pack.accent);
-  ctx.fillStyle = pack.ink;
-  ctx.font = "700 68px Outfit, sans-serif";
-  ctx.fillText(pack.name, 512, 700);
-  ctx.fillStyle = pack.accent;
-  ctx.font = "600 30px Outfit, sans-serif";
-  ctx.fillText(pack.sub + "  ·  " + pack.size, 512, 760);
-  ctx.fillStyle = pack.ink;
-  ctx.globalAlpha = 0.85;
-  ctx.font = "500 24px Outfit, sans-serif";
-  ctx.fillText(pack.notes.join("   ·   "), 512, 820);
-  ctx.globalAlpha = 1;
-  return canvasTexture(canvas, 0.5);
+  return { canvas, ctx };
 }
 
-function makeBottle(pack, logo, top) {
+function paintMark(ctx, art, pack, x, y, w) {
+  const color = pack.v || pack.accent;
+  stripes(ctx, x - w * 0.15, y, w * 1.3, w * 0.7, color);
+  if (art.logo) ctx.drawImage(tinted(art.logo, color, 640, 390), x, y, w, w * 0.62);
+}
+
+function frontLabel(pack, art) {
+  const { canvas, ctx } = panel(pack);
+  if (pack.face === "white") {
+    ctx.fillStyle = pack.ink;
+    ctx.font = "800 92px Outfit, sans-serif";
+    ctx.fillText("SHAMPOO", 450, 180);
+    ctx.font = "600 32px Outfit, sans-serif";
+    ctx.fillText("PROTECCIÓN CAPILAR", 450, 240);
+    paintMark(ctx, art, pack, 175, 300, 550);
+    ctx.fillStyle = pack.ink;
+    ctx.font = "600 26px Outfit, sans-serif";
+    ctx.fillText("CONTIENE EXTRACTO", 450, 760);
+    ctx.font = "500 24px Outfit, sans-serif";
+    ["ROMERO  ·  KERATINA", "CEBOLLA  ·  ALOE VERA", "ZANAHORIA", "ÁCIDO HIALURÓNICO"].forEach((line, index) => {
+      ctx.fillText(line, 450, 810 + index * 36);
+    });
+    ctx.fillStyle = pack.accent;
+    ctx.fillRect(300, 980, 300, 90);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "700 32px Outfit, sans-serif";
+    ctx.fillText("SIN SAL", 450, 1025);
+    ctx.fillStyle = pack.ink;
+    ctx.font = "600 28px Outfit, sans-serif";
+    ctx.fillText(pack.size, 450, 1160);
+  } else if (pack.face === "carbon") {
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "800 92px Outfit, sans-serif";
+    ctx.fillText("SHAMPOO", 450, 170);
+    ctx.fillStyle = "#c8c8cc";
+    ctx.font = "600 34px Outfit, sans-serif";
+    ctx.fillText("CARBÓN ACTIVO", 450, 230);
+    paintMark(ctx, art, pack, 175, 290, 550);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "700 32px Outfit, sans-serif";
+    ctx.fillText("ADIÓS CASPA", 320, 760);
+    ctx.fillText("Y PICAZÓN", 320, 800);
+    ctx.fillStyle = pack.accent;
+    ctx.fillRect(520, 730, 210, 90);
+    ctx.fillStyle = "#141414";
+    ctx.font = "800 28px Outfit, sans-serif";
+    ctx.fillText("SIN SAL", 625, 775);
+    ctx.fillStyle = pack.accent;
+    ctx.font = "600 24px Outfit, sans-serif";
+    ctx.textAlign = "left";
+    ["CONTIENE EXTRACTO", "ROMERO  ·  KERATINA", "CEBOLLA  ·  ALOE VERA", "ZANAHORIA", "ÁCIDO HIALURÓNICO"].forEach((line, index) => {
+      ctx.fillText(line, 150, 900 + index * 36);
+    });
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "600 28px Outfit, sans-serif";
+    ctx.fillText(pack.size, 450, 1160);
+  } else if (pack.face === "tonico") {
+    if (art.word) ctx.drawImage(art.word, 200, 80, 500, 82);
+    paintMark(ctx, art, pack, 175, 200, 550);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "800 84px Outfit, sans-serif";
+    ctx.fillText("TÓNICO", 450, 640);
+    ctx.fillStyle = pack.accent;
+    ctx.font = "700 40px Outfit, sans-serif";
+    ctx.fillText("ORGÁNICO", 450, 700);
+    ctx.font = "500 22px Outfit, sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#ffffff";
+    ["ROMERO", "ÁCIDO", "HIALURÓNICO"].forEach((line, index) => ctx.fillText(line, 180, 800 + index * 34));
+    ctx.fillStyle = pack.accent;
+    ["BIOTINA", "RUIBARBO", "KERATINA", "ALOE VERA"].forEach((line, index) => ctx.fillText(line, 500, 800 + index * 34));
+    ctx.fillStyle = pack.accent;
+    ctx.fillRect(150, 980, 600, 80);
+    ctx.fillStyle = "#141414";
+    ctx.textAlign = "center";
+    ctx.font = "700 26px Outfit, sans-serif";
+    ctx.fillText("ESTIMULANTE CON 19 ACTIVOS", 450, 1020);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "500 24px Outfit, sans-serif";
+    ctx.fillText("65 ml", 450, 1120);
+  } else if (pack.face === "tube") {
+    if (art.word) ctx.drawImage(art.word, 200, 70, 500, 82);
+    paintMark(ctx, art, pack, 175, 190, 550);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "800 72px Outfit, sans-serif";
+    ctx.fillText("DUCHA", 450, 640);
+    ctx.fillText("ÍNTIMA", 450, 720);
+    ctx.fillStyle = pack.accent;
+    ctx.font = "600 28px Outfit, sans-serif";
+    ctx.fillText("FOR MEN", 450, 780);
+    ctx.textAlign = "left";
+    ctx.font = "600 26px Outfit, sans-serif";
+    ["SIN", "FRAGANCIA", "COLORANTES", "PARABENOS"].forEach((line, index) => {
+      ctx.fillText(line, 250, 880 + index * 36);
+    });
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "600 28px Outfit, sans-serif";
+    ctx.fillText(pack.size, 450, 1120);
+  } else {
+    if (art.word) ctx.drawImage(art.word, 200, 70, 500, 82);
+    paintMark(ctx, art, pack, 160, 180, 580);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "800 96px Outfit, sans-serif";
+    ctx.fillText("SERUM", 450, 680);
+    ctx.fillStyle = pack.accent;
+    ctx.font = "700 32px Outfit, sans-serif";
+    ctx.fillText("BARBA  ·  BIGOTE", 450, 750);
+    ctx.strokeStyle = pack.accent;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(170, 820, 560, 120);
+    ctx.font = "600 24px Outfit, sans-serif";
+    ctx.fillText("CONTIENE ARGÁN,", 450, 860);
+    ctx.fillText("JOJOBA, ALOE VERA", 450, 896);
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.font = "500 24px Outfit, sans-serif";
+    ctx.fillText("65 ml", 450, 1020);
+  }
+  const texture = canvasTexture(canvas, 0);
+  texture.wrapS = THREE.ClampToEdgeWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  return texture;
+}
+
+function labelBand(pack, art, radius, height, y) {
+  const arc = 2.2;
+  const mesh = new THREE.Mesh(
+    new THREE.CylinderGeometry(radius, radius, height, 64, 1, true, -arc / 2, arc),
+    new THREE.MeshStandardMaterial({
+      map: frontLabel(pack, art),
+      roughness: 0.42,
+      metalness: 0.04,
+    })
+  );
+  mesh.position.y = y;
+  const back = mesh.clone();
+  back.rotation.y = Math.PI;
+  return [mesh, back];
+}
+
+function makeBottle(pack, art, top) {
   const group = new THREE.Group();
   const points = [
     [0.02, 0], [0.46, 0], [0.56, 0.08], [0.58, 0.22], [0.58, 1.28],
     [0.5, 1.48], [0.34, 1.66], [0.2, 1.78], [0.2, 1.92], [0.02, 1.92],
   ].map(([x, y]) => new THREE.Vector2(x, y));
   const body = new THREE.Mesh(new THREE.LatheGeometry(points, 64), new THREE.MeshStandardMaterial({
-    map: bottleLabel(pack, logo),
-    roughness: pack.kind === "dropper" ? 0.22 : 0.36,
-    metalness: 0.12,
+    color: pack.body,
+    roughness: pack.kind === "dropper" ? 0.2 : 0.38,
+    metalness: pack.kind === "dropper" ? 0.35 : 0.08,
   }));
   group.add(body);
+  labelBand(pack, art, 0.608, 0.96, 0.74).forEach((mesh) => group.add(mesh));
   const capMat = new THREE.MeshStandardMaterial({
-    color: top === "pump" && pack.body === "#f4f4f2" ? "#f7f7f5" : "#2a2a2c",
+    color: top === "pump" && pack.face === "white" ? "#f7f7f5" : "#2a2a2c",
     roughness: 0.28,
-    metalness: 0.45,
+    metalness: 0.5,
   });
   if (top === "pump") {
     const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.24, 0.12, 32), capMat);
@@ -255,35 +451,43 @@ function makeBottle(pack, logo, top) {
   } else if (top === "spray") {
     const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.2, 0.16, 32), capMat);
     collar.position.y = 2.0;
-    const head = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.22, 32), capMat);
-    head.position.y = 2.16;
-    const nozzle = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.05, 0.05), capMat);
-    nozzle.position.set(0.12, 2.22, 0);
-    group.add(collar, head, nozzle);
+    const head = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.28, 32), capMat);
+    head.position.y = 2.2;
+    group.add(collar, head);
   } else {
-    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 0.28, 32), capMat);
-    cap.position.y = 2.04;
-    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.11, 24, 16), capMat);
-    bulb.scale.y = 1.25;
-    bulb.position.y = 2.26;
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 0.32, 32), capMat);
+    cap.position.y = 2.06;
+    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.1, 24, 16), capMat);
+    bulb.scale.y = 1.35;
+    bulb.position.y = 2.3;
     group.add(cap, bulb);
+    for (let i = 0; i < 4; i += 1) {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.175, 0.012, 6, 24), capMat);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.y = 1.96 + i * 0.06;
+      group.add(ring);
+    }
   }
   return group;
 }
 
-function makeTube(pack, logo) {
+function makeTube(pack, art) {
   const group = new THREE.Group();
   const points = [
     [0.02, 0.08], [0.34, 0], [0.42, 0.12], [0.4, 1.35], [0.36, 1.5], [0.22, 1.62], [0.02, 1.62],
   ].map(([x, y]) => new THREE.Vector2(x, y));
   const body = new THREE.Mesh(new THREE.LatheGeometry(points, 48), new THREE.MeshStandardMaterial({
-    map: bottleLabel(pack, logo),
-    roughness: 0.4,
-    metalness: 0.16,
+    color: pack.body,
+    roughness: 0.34,
+    metalness: 0.22,
   }));
   body.scale.x = 0.72;
   group.add(body);
-  const capMat = new THREE.MeshStandardMaterial({ color: "#202024", roughness: 0.3, metalness: 0.5 });
+  labelBand(pack, art, 0.43, 1.05, 0.78).forEach((mesh) => {
+    mesh.scale.x = 0.72;
+    group.add(mesh);
+  });
+  const capMat = new THREE.MeshStandardMaterial({ color: "#202024", roughness: 0.3, metalness: 0.55 });
   const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.28, 32), capMat);
   cap.position.y = 1.72;
   cap.scale.x = 0.85;
@@ -307,23 +511,24 @@ function attachVolume(el, model) {
   const center = bounds.getCenter(new THREE.Vector3());
   root.children.forEach((child) => child.position.sub(center));
   scene.add(root);
-  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x222226, 0.7));
-  const key = new THREE.DirectionalLight(0xffffff, 2.1);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.62));
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x222226, 0.75));
+  const key = new THREE.DirectionalLight(0xffffff, 2.2);
   key.position.set(3.2, 4.4, 5);
   scene.add(key);
-  const fill = new THREE.DirectionalLight(0xdde7ff, 0.7);
+  const fill = new THREE.DirectionalLight(0xdde7ff, 0.75);
   fill.position.set(-4, 1.5, 2);
   scene.add(fill);
-  const rim = new THREE.DirectionalLight(0xfff6ee, 1.15);
+  const rim = new THREE.DirectionalLight(0xfff6ee, 1.05);
   rim.position.set(-2, 3, -4);
   scene.add(rim);
 
   const sphere = new THREE.Box3().setFromObject(root).getBoundingSphere(new THREE.Sphere());
-  camera.position.z = sphere.radius / Math.tan(THREE.MathUtils.degToRad(15)) * 1.22;
+  camera.position.z = sphere.radius / Math.tan(THREE.MathUtils.degToRad(15)) * 1.18;
   camera.lookAt(0, 0, 0);
 
-  const target = { x: -0.62, y: 0 };
+  const home = { x: model.tilt, y: 0 };
+  const target = { x: home.x, y: home.y };
   root.rotation.x = target.x;
   root.rotation.y = target.y;
   el.dataset.solid = "1";
@@ -357,14 +562,14 @@ function attachVolume(el, model) {
     if (event.key === "ArrowDown") target.x = clamp(target.x + step, -1.25, 0.7);
   });
   el.addEventListener("dblclick", () => {
-    target.x = -0.62;
-    target.y = 0;
+    target.x = home.x;
+    target.y = home.y;
   });
 
   const shadow = el.querySelector(".orbit-shadow");
   return {
     draw() {
-      if (!el.classList.contains("dragging")) target.y += 0.012;
+      if (!el.classList.contains("dragging")) target.y += 0.008;
       root.rotation.x += (target.x - root.rotation.x) * 0.16;
       root.rotation.y += (target.y - root.rotation.y) * 0.16;
       if (shadow) shadow.style.transform = `translateX(${Math.sin(root.rotation.y) * -26}px) scaleX(${0.85 + Math.abs(Math.sin(root.rotation.y)) * 0.2})`;
