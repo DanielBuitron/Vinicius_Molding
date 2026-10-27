@@ -64,15 +64,16 @@ function bindOrbits() {
   document.querySelectorAll("[data-orbit]").forEach((el) => {
     const card = el.querySelector(".orbit-card");
     if (!card) return;
-    let rx = 6;
-    let ry = -14;
+    let rx = 8;
+    let ry = -18;
     let dragging = false;
     let lastX = 0;
     let lastY = 0;
     let moved = 0;
     const apply = () => {
       card.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
-      el.style.setProperty("--shine", `${50 + ry * 0.8}% ${42 - rx * 0.7}%`);
+      const shadow = el.querySelector(".orbit-shadow");
+      if (shadow) shadow.style.transform = `translateX(${ry * 1.2}px) scale(${1.08 - Math.abs(ry) / 90}, ${0.82 + Math.abs(rx) / 70})`;
     };
     apply();
     el.addEventListener("pointerdown", (event) => {
@@ -102,8 +103,8 @@ function bindOrbits() {
       }
     });
     el.addEventListener("dblclick", () => {
-      rx = 6;
-      ry = -14;
+      rx = 8;
+      ry = -18;
       apply();
     });
     el.addEventListener("keydown", (event) => {
@@ -121,7 +122,11 @@ function bindOrbits() {
       dragging = false;
       el.classList.remove("dragging");
     };
-    el.addEventListener("pointerup", stop);
+    el.addEventListener("pointerup", () => {
+      const open = moved < 8 && el.dataset.open;
+      stop();
+      if (open) location.hash = "#/producto/" + el.dataset.open;
+    });
     el.addEventListener("pointercancel", stop);
   });
 }
@@ -286,6 +291,11 @@ function bind() {
     if (act === "menu") {
       VM.menu = !VM.menu;
       render();
+      return;
+    }
+    if (act === "slide") {
+      const rail = node.closest("[data-carousel-wrap]")?.querySelector("[data-rail]");
+      if (rail) rail.scrollBy({ left: Number(node.dataset.dir) * Math.min(rail.clientWidth * 0.86, 640), behavior: "smooth" });
       return;
     }
     if (act === "filter") {
