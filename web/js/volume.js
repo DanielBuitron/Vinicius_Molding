@@ -6,10 +6,10 @@ let volumeLogo = null;
 let volumeWord = null;
 
 const PACKS = {
-  "cera-fibra": { kind: "tin", accent: "#7A5CFF", body: "#121214", ink: "#f6f3ec", title: "CERA DE FIBRA", lidSub: "ACABADO HÚMEDO", size: "150 g", hold: 4 },
-  "cera-brillo": { kind: "tin", accent: "#E52C3B", body: "#121214", ink: "#f6f3ec", title: "CERA", lidSub: "MOLDEADORA  ·  BRILLO MEDIO", size: "150 g", hold: 3 },
-  "pasta": { kind: "tin", accent: "#00C8C2", body: "#121214", ink: "#f6f3ec", title: "PASTA", lidSub: "MOLDEADORA  ·  BRILLANTE", size: "150 g", hold: 4 },
-  "pomada": { kind: "tin", accent: "#FFD300", body: "#121214", ink: "#f6f3ec", title: "POMADA", lidSub: "MOLDEADORA  ·  MATE", size: "150 g", hold: 3 },
+  "cera-fibra": { kind: "tin", accent: "#7A5CFF", body: "#121214", ink: "#f6f3ec", title: "CERA DE FIBRA", lidLines: ["ACABADO HÚMEDO"], size: "150 g", hold: 4 },
+  "cera-brillo": { kind: "tin", accent: "#E52C3B", body: "#121214", ink: "#f6f3ec", title: "CERA", lidLines: ["MOLDEADORA", "BRILLO MEDIO"], size: "150 g", hold: 3 },
+  "pasta": { kind: "tin", accent: "#00C8C2", body: "#121214", ink: "#f6f3ec", title: "PASTA", lidLines: ["MOLDEADORA", "BRILLANTE"], size: "150 g", hold: 4 },
+  "pomada": { kind: "tin", accent: "#FFD300", body: "#121214", ink: "#f6f3ec", title: "POMADA", lidLines: ["MOLDEADORA", "MATE"], size: "150 g", hold: 3 },
   "cera-kids": { kind: "tin", accent: "#FFD300", body: "#e10600", ink: "#ffffff", title: "CERA DE FIBRA", lidSub: "KIDS", size: "150 g", hold: 3, kids: true },
   "shampoo-proteccion": { kind: "pump", accent: "#E10600", body: "#f4f2ee", ink: "#171717", title: "SHAMPOO", lidSub: "PROTECCIÓN CAPILAR", size: "500 g", face: "white" },
   "shampoo-carbon": { kind: "pump", accent: "#FFD300", body: "#171717", ink: "#f4f1ea", title: "SHAMPOO", lidSub: "CARBÓN ACTIVO", size: "500 ml", face: "carbon", v: "#6a6a70" },
@@ -135,53 +135,72 @@ function stripedMark(logo, color, w, h) {
   return canvas;
 }
 
+function lidRays(ctx, color) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(512, 512, 490, 0, Math.PI * 2);
+  ctx.clip();
+  ctx.strokeStyle = color;
+  ctx.globalAlpha = 0.42;
+  ctx.lineWidth = 2;
+  for (let i = -360; i < 1600; i += 32) {
+    ctx.beginPath();
+    ctx.moveTo(i, 20);
+    ctx.lineTo(i - 560, 1000);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 function lidLabel(pack, art) {
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 1024;
   const ctx = canvas.getContext("2d");
   ctx.fillStyle = pack.body;
   ctx.fillRect(0, 0, 1024, 1024);
+  const mark = pack.kids ? "#ffffff" : pack.accent;
+  lidRays(ctx, mark);
   if (pack.kids) {
     ctx.fillStyle = "#2f6fe8";
     ctx.beginPath();
-    ctx.moveTo(40, 70);
-    ctx.lineTo(280, 70);
-    ctx.lineTo(40, 310);
+    ctx.moveTo(30, 60);
+    ctx.lineTo(300, 60);
+    ctx.lineTo(30, 330);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = "#7CFF6B";
+    ctx.fillStyle = "#3ecf6e";
     ctx.beginPath();
-    ctx.moveTo(984, 954);
-    ctx.lineTo(744, 954);
-    ctx.lineTo(984, 714);
+    ctx.moveTo(994, 964);
+    ctx.lineTo(720, 964);
+    ctx.lineTo(994, 690);
     ctx.closePath();
     ctx.fill();
   }
-  if (art.word) ctx.drawImage(art.word, 250, 128, 524, 86);
-  const mark = pack.kids ? "#ffffff" : pack.accent;
-  if (art.logo) ctx.drawImage(stripedMark(art.logo, mark, 900, 550), 150, 210, 724, 442);
+  if (art.word) ctx.drawImage(art.word, 262, 108, 500, 82);
+  if (art.logo) ctx.drawImage(stripedMark(art.logo, mark, 900, 550), 120, 188, 784, 478);
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillStyle = "#ffffff";
-  ctx.font = "800 78px Outfit, sans-serif";
-  ctx.fillText(pack.title, 512, 548);
+  ctx.font = pack.title.length > 8 ? "800 64px Outfit, sans-serif" : "800 96px Outfit, sans-serif";
+  ctx.fillText(pack.title, 512, 520);
   if (pack.kids) {
     const letters = [["K", "#FFD300"], ["I", "#B6E000"], ["D", "#3DB7FF"], ["S", "#7CFF6B"]];
-    ctx.font = "800 86px Outfit, sans-serif";
+    ctx.font = "800 84px Outfit, sans-serif";
     letters.forEach(([ch, color], index) => {
       ctx.fillStyle = color;
-      ctx.fillText(ch, 352 + index * 108, 660);
+      ctx.fillText(ch, 348 + index * 110, 640);
     });
-    ctx.fillStyle = "rgba(255,255,255,0.9)";
+    ctx.fillStyle = "rgba(255,255,255,0.92)";
     ctx.font = "600 22px Outfit, sans-serif";
-    ctx.fillText(pack.size, 512, 748);
+    ctx.fillText(pack.size, 512, 730);
   } else {
+    ctx.textAlign = "left";
     ctx.fillStyle = pack.accent;
-    ctx.font = "700 28px Outfit, sans-serif";
-    ctx.fillText(pack.lidSub, 512, 630);
-    ctx.fillStyle = "rgba(255,255,255,0.88)";
-    ctx.font = "600 22px Outfit, sans-serif";
-    ctx.fillText(pack.size, 512, 678);
+    ctx.font = "700 24px Outfit, sans-serif";
+    (pack.lidLines || []).forEach((line, index) => ctx.fillText(line, 548, 590 + index * 30));
+    ctx.fillStyle = "rgba(255,255,255,0.9)";
+    ctx.font = "600 20px Outfit, sans-serif";
+    ctx.fillText(pack.size, 300, 600);
   }
   return canvasTexture(canvas, 0);
 }
@@ -200,13 +219,28 @@ function drawSideBlock(ctx, cx, pack, art) {
   });
   const bx = cx + 70;
   ctx.fillStyle = color;
-  ctx.fillRect(bx, 58, 168, 150);
-  ctx.fillStyle = pack.kids ? "#141414" : "#141414";
+  ctx.fillRect(bx, 46, 176, 176);
+  ctx.save();
+  ctx.translate(bx + 88, 78);
+  ctx.strokeStyle = "#141414";
+  ctx.fillStyle = "#141414";
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.ellipse(0, 2, 9, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(-8, -4, 7, 3, -0.7, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(8, -4, 7, 3, 0.7, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle = "#141414";
   ctx.textAlign = "center";
-  ctx.font = "800 18px Outfit, sans-serif";
-  ctx.fillText("A BASE", bx + 84, 100);
-  ctx.fillText("DE CERA", bx + 84, 126);
-  ctx.fillText("DE ABEJA", bx + 84, 152);
+  ctx.font = "800 16px Outfit, sans-serif";
+  ctx.fillText("A BASE", bx + 88, 112);
+  ctx.fillText("DE CERA", bx + 88, 134);
+  ctx.fillText("DE ABEJA", bx + 88, 156);
   ctx.textAlign = "left";
   ctx.fillStyle = pack.ink;
   ctx.font = "600 16px Outfit, sans-serif";
@@ -245,9 +279,9 @@ function makeTin(pack, art) {
     metalness: 0.12,
   }));
   group.add(shell);
-  const lid = new THREE.Mesh(new THREE.CylinderGeometry(1.06, 1.06, 0.16, 72, 1, true), metal);
-  lid.position.y = 0.44;
-  group.add(lid);
+  const skirt = flutedCollar(1.045, 0.2, 48, 0.014, metal);
+  skirt.position.y = 0.42;
+  group.add(skirt);
   const face = new THREE.Mesh(new THREE.CircleGeometry(0.99, 64), new THREE.MeshStandardMaterial({
     map: lidLabel(pack, art),
     roughness: 0.45,
@@ -325,31 +359,65 @@ function frontLabel(pack, art) {
     ctx.fillText(pack.size, 450, 1160);
   } else if (pack.face === "carbon") {
     ctx.fillStyle = "#ffffff";
-    ctx.font = "800 92px Outfit, sans-serif";
-    ctx.fillText("SHAMPOO", 450, 170);
-    ctx.fillStyle = "#c8c8cc";
-    ctx.font = "600 34px Outfit, sans-serif";
-    ctx.fillText("CARBÓN ACTIVO", 450, 230);
-    paintMark(ctx, art, pack, 175, 290, 550);
+    ctx.font = "800 96px Outfit, sans-serif";
+    ctx.fillText("SHAMPOO", 450, 150);
+    ctx.fillStyle = "#b7b7be";
+    ctx.font = "650 36px Outfit, sans-serif";
+    ctx.fillText("CARBÓN ACTIVO", 450, 210);
+    paintMark(ctx, art, pack, 130, 250, 640);
     ctx.fillStyle = "#ffffff";
-    ctx.font = "700 32px Outfit, sans-serif";
-    ctx.fillText("ADIÓS CASPA", 320, 760);
-    ctx.fillText("Y PICAZÓN", 320, 800);
+    ctx.font = "700 30px Outfit, sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("ADIÓS CASPA", 120, 820);
+    ctx.fillText("Y PICAZÓN", 120, 858);
     ctx.fillStyle = pack.accent;
-    ctx.fillRect(520, 730, 210, 90);
+    ctx.fillRect(520, 790, 250, 90);
+    ctx.strokeStyle = "#141414";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(575, 835, 16, 0, Math.PI * 2);
+    ctx.moveTo(564, 824);
+    ctx.lineTo(586, 846);
+    ctx.stroke();
     ctx.fillStyle = "#141414";
-    ctx.font = "800 28px Outfit, sans-serif";
-    ctx.fillText("SIN SAL", 625, 775);
+    ctx.font = "800 26px Outfit, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("SIN SAL", 680, 838);
     ctx.fillStyle = pack.accent;
-    ctx.font = "600 24px Outfit, sans-serif";
+    ctx.font = "700 24px Outfit, sans-serif";
     ctx.textAlign = "left";
     ["CONTIENE EXTRACTO", "ROMERO  ·  KERATINA", "CEBOLLA  ·  ALOE VERA", "ZANAHORIA", "ÁCIDO HIALURÓNICO"].forEach((line, index) => {
-      ctx.fillText(line, 150, 900 + index * 36);
+      ctx.fillText(line, 140, 960 + index * 34);
     });
     ctx.textAlign = "center";
     ctx.fillStyle = "#ffffff";
+    ctx.font = "600 26px Outfit, sans-serif";
+    ctx.fillText(pack.size, 450, 1180);
+  } else if (pack.face === "tube") {
+    if (art.word) ctx.drawImage(art.word, 210, 36, 480, 78);
+    paintMark(ctx, art, pack, 120, 120, 660);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "800 84px Outfit, sans-serif";
+    ctx.fillText("DUCHA", 450, 640);
+    ctx.fillStyle = pack.accent;
+    ctx.font = "800 72px Outfit, sans-serif";
+    ctx.fillText("ÍNTIMA", 450, 716);
+    ctx.fillStyle = "#ffffff";
     ctx.font = "600 28px Outfit, sans-serif";
-    ctx.fillText(pack.size, 450, 1160);
+    ctx.fillText("FOR MEN", 450, 770);
+    ctx.fillStyle = pack.accent;
+    ctx.font = "800 88px Outfit, sans-serif";
+    ctx.fillText("0", 230, 980);
+    ctx.font = "700 22px Outfit, sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("Z", 290, 930);
+    ctx.fillText("H", 290, 962);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "650 28px Outfit, sans-serif";
+    ["FRAGANCIA", "COLORANTES", "PARABENOS"].forEach((line, index) => ctx.fillText(line, 360, 910 + index * 38));
+    ctx.textAlign = "center";
+    ctx.font = "600 26px Outfit, sans-serif";
+    ctx.fillText("| 180 g |", 450, 1120);
   } else if (pack.face === "tonico") {
     ctx.fillStyle = "#0e3f42";
     ctx.fillRect(0, 0, 900, 1400);
@@ -377,25 +445,6 @@ function frontLabel(pack, art) {
     ctx.fillStyle = "#ffffff";
     ctx.font = "600 24px Outfit, sans-serif";
     ctx.fillText("2.3 FL Oz  /  65 mL", 450, 1100);
-  } else if (pack.face === "tube") {
-    if (art.word) ctx.drawImage(art.word, 200, 70, 500, 82);
-    paintMark(ctx, art, pack, 175, 190, 550);
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "800 72px Outfit, sans-serif";
-    ctx.fillText("DUCHA", 450, 640);
-    ctx.fillText("ÍNTIMA", 450, 720);
-    ctx.fillStyle = pack.accent;
-    ctx.font = "600 28px Outfit, sans-serif";
-    ctx.fillText("FOR MEN", 450, 780);
-    ctx.textAlign = "left";
-    ctx.font = "600 26px Outfit, sans-serif";
-    ["SIN", "FRAGANCIA", "COLORANTES", "PARABENOS"].forEach((line, index) => {
-      ctx.fillText(line, 250, 880 + index * 36);
-    });
-    ctx.textAlign = "center";
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "600 28px Outfit, sans-serif";
-    ctx.fillText(pack.size, 450, 1120);
   } else {
     if (art.word) ctx.drawImage(art.word, 200, 70, 500, 82);
     paintMark(ctx, art, pack, 160, 180, 580);
@@ -622,28 +671,29 @@ function makeBottle(pack, art, top) {
 function makeTube(pack, art) {
   const group = new THREE.Group();
   const points = [
-    [0.02, 0.08], [0.34, 0], [0.42, 0.12], [0.4, 1.35], [0.36, 1.5], [0.22, 1.62], [0.02, 1.62],
+    [0.02, 0.26], [0.2, 0.2], [0.32, 0.34], [0.38, 0.55],
+    [0.38, 1.52], [0.28, 1.66], [0.08, 1.76], [0.02, 1.76],
   ].map(([x, y]) => new THREE.Vector2(x, y));
-  const body = new THREE.Mesh(new THREE.LatheGeometry(points, 48), new THREE.MeshStandardMaterial({
-    color: pack.body,
-    roughness: 0.34,
-    metalness: 0.22,
+  const body = new THREE.Mesh(new THREE.LatheGeometry(points, 48), new THREE.MeshPhysicalMaterial({
+    color: "#16161a",
+    roughness: 0.2,
+    metalness: 0.4,
+    clearcoat: 0.7,
+    clearcoatRoughness: 0.12,
   }));
-  body.scale.x = 0.72;
+  body.scale.x = 0.58;
   group.add(body);
-  labelBand(pack, art, 0.43, 1.05, 0.78).forEach((mesh) => {
-    mesh.scale.x = 0.72;
+  labelBand(pack, art, 0.4, 1.2, 1.02).forEach((mesh) => {
+    mesh.scale.x = 0.58;
     group.add(mesh);
   });
-  const capMat = new THREE.MeshStandardMaterial({ color: "#202024", roughness: 0.3, metalness: 0.55 });
-  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.28, 32), capMat);
-  cap.position.y = 1.72;
-  cap.scale.x = 0.85;
-  const ridge = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.02, 8, 24), capMat);
-  ridge.rotation.x = Math.PI / 2;
-  ridge.position.y = 1.64;
-  ridge.scale.x = 0.85;
-  group.add(cap, ridge);
+  const capMat = new THREE.MeshStandardMaterial({ color: "#101012", roughness: 0.32, metalness: 0.45 });
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.17, 0.28, 28), capMat);
+  cap.position.y = 0.1;
+  cap.scale.x = 0.72;
+  const crimp = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.05, 0.1), capMat);
+  crimp.position.y = 1.78;
+  group.add(cap, crimp);
   return group;
 }
 
