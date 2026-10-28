@@ -1,3 +1,10 @@
+const TESTIMONIOS = [
+  { initials: "AM", name: "Andrés M.", product: "Kit Capilar", text: "Desde que uso Vinicius Molding siento mi cabello más fuerte y con mejor apariencia. Me encantó el resultado." },
+  { initials: "JC", name: "Juan C.", product: "Shampoo", text: "El shampoo deja el cabello limpio, suave y con una sensación muy agradable. Ya se volvió parte de mi rutina." },
+  { initials: "SR", name: "Sebastián R.", product: "Tónico Capilar", text: "Llevo varias semanas usando el tónico y estoy muy satisfecho con cómo se ve mi cabello. Excelente producto." },
+  { initials: "DP", name: "David P.", product: "Kit Completo", text: "Compré el kit completo y me gustó mucho la combinación de productos. Mi cabello se siente más cuidado y saludable." },
+];
+
 const CATALOG = [
   { id: "molding", name: "Línea Molding", blurb: "Ceras, pasta y pomada para armar el peinado y sostenerlo." },
   { id: "kids", name: "Kids", blurb: "La cera de fibra, en una edición para los más jóvenes." },

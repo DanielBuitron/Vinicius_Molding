@@ -298,6 +298,7 @@ def fresh_store():
         "sessions": {},
         "products": json.loads(json.dumps(SEED_PRODUCTS)),
         "leads": [],
+        "comments": [],
         "orders": [],
         "movements": [],
         "analytics": {"days": {}, "events": []},
@@ -315,6 +316,7 @@ def load_store():
     store.setdefault("sessions", {})
     store.setdefault("products", [])
     store.setdefault("leads", [])
+    store.setdefault("comments", [])
     store.setdefault("orders", [])
     store.setdefault("movements", [])
     store.setdefault("analytics", {"days": {}, "events": []})
@@ -645,6 +647,35 @@ class Handler(BaseHTTPRequestHandler):
                 store["leads"] = store["leads"][:500]
                 save_store(store)
             self.send_json(201, {"ok": True, "lead": {"id": lead["id"]}})
+            return
+
+        if path == "/api/comments" and method == "GET":
+            with LOCK:
+                store = load_store()
+                notes = store.get("comments") or []
+            self.send_json(200, {"comments": notes[:40]})
+            return
+
+        if path == "/api/comments" and method == "POST":
+            body = self.read_json()
+            name = str(body.get("name") or "").strip()[:40]
+            text = str(body.get("text") or "").strip()[:280]
+            if len(name) < 2 or len(text) < 8:
+                self.send_json(400, {"error": "Escribe tu nombre y el comentario."})
+                return
+            note = {
+                "id": "cmt_" + secrets.token_hex(4),
+                "name": name,
+                "text": text,
+                "at": now_iso(),
+            }
+            with LOCK:
+                store = load_store()
+                store.setdefault("comments", [])
+                store["comments"].insert(0, note)
+                store["comments"] = store["comments"][:80]
+                save_store(store)
+            self.send_json(201, {"ok": True, "comment": note})
             return
 
         if path == "/api/checkout" and method == "POST":

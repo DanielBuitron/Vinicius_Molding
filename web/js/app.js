@@ -551,6 +551,24 @@ function bind() {
         }
         return;
       }
+      if (kind === "comment") {
+        const name = String(data.name || "").trim().slice(0, 40);
+        const text = String(data.text || "").trim().slice(0, 280);
+        if (name.length < 2 || text.length < 8) {
+          toast("Escribí tu nombre y el comentario");
+          return;
+        }
+        const note = { id: "c_" + Date.now(), name, text, at: new Date().toISOString() };
+        try {
+          const result = await api("/api/comments", { method: "POST", body: { name, text } });
+          if (result.comment) Object.assign(note, result.comment);
+        } catch (err) { /* queda en este navegador */ }
+        VM.comments = [note, ...(VM.comments || [])].slice(0, 40);
+        localStorage.setItem("vm_comments", JSON.stringify(VM.comments));
+        toast("Comentario publicado");
+        render();
+        return;
+      }
       if (kind === "contact") {
         const phone = String(data.phone || "").replace(/\D/g, "");
         if (phone.length < 10) {
@@ -634,10 +652,17 @@ async function boot() {
     VM.user = me.user;
     applyLocalSettings();
     if (config.whatsapp) VM.config.whatsapp = config.whatsapp;
+    try {
+      const notes = await api("/api/comments");
+      VM.comments = notes.comments || [];
+    } catch (error) {
+      VM.comments = JSON.parse(localStorage.getItem("vm_comments") || "[]");
+    }
   } catch (err) {
     VM.products = SITE.products;
     VM.config = { wompiReady: false, city: SITE.city, whatsapp: SITE.whatsapp, email: "" };
     applyLocalSettings();
+    try { VM.comments = JSON.parse(localStorage.getItem("vm_comments") || "[]"); } catch (error) { VM.comments = []; }
     if (VM.token === "local-admin") {
       try { VM.user = JSON.parse(localStorage.getItem("vm_user") || "null"); } catch (error) { VM.user = null; }
     } else {

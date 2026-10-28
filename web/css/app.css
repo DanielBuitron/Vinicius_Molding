@@ -377,6 +377,68 @@ button { cursor: pointer; }
 .manifesto h2 em { font-style: normal; color: var(--red); }
 .manifesto p { margin: 0; color: var(--muted); font-size: 17px; max-width: 280px; }
 
+.voices {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 36px;
+  padding: 64px 7vw 28px;
+  align-items: start;
+}
+.voices-stats { display: grid; gap: 28px; }
+.voices-stats strong {
+  display: block;
+  font-family: var(--display);
+  font-size: clamp(56px, 7vw, 92px);
+  letter-spacing: -0.05em;
+  line-height: 0.9;
+}
+.voices-stats span { display: block; color: var(--muted); max-width: 280px; margin-top: 8px; }
+.voices-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.voice-card {
+  background: #141416;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 22px;
+}
+.voice-card p { margin: 0 0 16px; }
+.stars { color: var(--gold); letter-spacing: 0.12em; font-size: 13px; }
+.voice-who { display: flex; gap: 10px; align-items: center; }
+.voice-who b {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #2a2a30;
+  color: #fff;
+  font-family: var(--display);
+  font-size: 13px;
+}
+.voice-who strong, .voice-who span { display: block; }
+.voice-who span { color: var(--muted); font-size: 13px; }
+.comments { padding: 28px 7vw 12px; }
+.comments-layout { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 18px; align-items: start; }
+.comment-list { display: grid; gap: 10px; }
+.comment-card {
+  background: #111113;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 16px 18px;
+}
+.comment-card strong { font-family: var(--display); }
+.comment-card span { display: block; color: var(--muted); font-size: 12px; margin: 2px 0 8px; }
+.comment-card p { margin: 0; }
+.short-block { padding: 20px 7vw 72px; }
+.short-video {
+  display: block;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  border-radius: 24px;
+  background: #0c0c0e;
+  border: 1px solid var(--line);
+}
+
 .swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-top: 28px; }
 .swatches article {
   background: #111;
@@ -551,7 +613,7 @@ td img { width: 72px; height: 48px; object-fit: cover; border-radius: 8px; }
   .opening, .product-view, .band, .band:nth-child(even), .dial-block, .manifesto, .cart-layout, .checkout-layout, .login-wrap, .site-footer, .admin-grid, .stats, .swatches {
     grid-template-columns: 1fr 1fr;
   }
-  .opening, .product-view, .dial-block, .manifesto, .cart-layout, .checkout-layout, .login-wrap, .site-footer, .admin-grid, .showcase-slide { grid-template-columns: 1fr; }
+  .opening, .product-view, .dial-block, .manifesto, .cart-layout, .checkout-layout, .login-wrap, .site-footer, .admin-grid, .showcase-slide, .voices, .comments-layout, .voices-grid { grid-template-columns: 1fr; }
   .band:nth-child(even) .orbit, .band:nth-child(even) > div:first-child { order: 0; }
   .swatches { grid-template-columns: 1fr 1fr 1fr; }
   .sku-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
