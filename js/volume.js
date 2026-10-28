@@ -27,6 +27,7 @@ function mountVolumes() {
   const job = ++volumeJob;
   releaseVolumes();
   document.querySelectorAll("[data-orbit]").forEach((el) => {
+    if (el.dataset.flat === "1") return;
     const img = el.querySelector("img");
     if (!img) return;
     buildVolume(img.getAttribute("src")).then((model) => {

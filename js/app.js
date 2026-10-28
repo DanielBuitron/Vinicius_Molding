@@ -86,8 +86,27 @@ function bindShowcases() {
   });
 }
 
+function bindFan() {
+  const wrap = document.querySelector("[data-fan]");
+  const stage = document.querySelector("[data-fan-stage]");
+  if (!wrap || !stage) return;
+  wrap.addEventListener("pointermove", (event) => {
+    const box = wrap.getBoundingClientRect();
+    const x = (event.clientX - box.left) / box.width - 0.5;
+    const y = (event.clientY - box.top) / box.height - 0.5;
+    stage.style.transform = `rotateX(${8 - y * 10}deg) rotateY(${x * 16}deg)`;
+  });
+  wrap.addEventListener("pointerleave", () => {
+    stage.style.transform = "";
+  });
+}
+
 function paint(html, bodyClass) {
-  document.body.className = bodyClass;
+  const page = (VM.parts && VM.parts[0]) || "inicio";
+  const extras = [];
+  if (bodyClass === "site" && (page === "inicio" || !page)) extras.push("home");
+  if (bodyClass === "site" && page === "producto") extras.push("product-page");
+  document.body.className = [bodyClass, ...extras].join(" ");
   document.getElementById("app").innerHTML = html;
   const route = location.hash || "#/inicio";
   if (route !== paintedRoute) {
@@ -99,6 +118,7 @@ function paint(html, bodyClass) {
   bindOrbits();
   if (typeof mountVolumes === "function") mountVolumes();
   bindShowcases();
+  bindFan();
 }
 
 function bindOrbits() {
