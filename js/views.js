@@ -24,6 +24,7 @@ function shellPublic(content) {
       <div>
         <strong>Casa</strong>
         <a href="#/catalogo">Catálogo</a>
+        <a href="#/inicio">Testimonios</a>
         <a href="#/catalogo/molding">Línea Molding</a>
         <a href="#/catalogo/limpieza">Limpieza</a>
         <a href="#/catalogo/tratamiento">Tratamiento</a>
@@ -54,6 +55,68 @@ function viewHome() {
     <section class="manifesto">
       <h2>No vendemos promesas.<br><em>Entregamos resultados.</em></h2>
       <p>Para quien busca la opción correcta, no una más.</p>
+    </section>
+    ${viewTestimonials()}
+    ${viewComments()}
+    <section class="short-block">
+      <div class="runway-head">
+        <h2>La línea, en un minuto</h2>
+      </div>
+      <video class="short-video" controls playsinline preload="metadata" poster="assets/short-poster.jpg">
+        <source src="assets/short-linea.mp4" type="video/mp4">
+      </video>
+    </section>`;
+}
+
+function viewTestimonials() {
+  return `
+    <section class="voices">
+      <div class="voices-stats">
+        <p class="kicker">Testimonios</p>
+        <div><strong>+1000</strong><span>Órdenes entregadas a clientes en todo el país.</span></div>
+        <div><strong>4.9★</strong><span>Calificación promedio de nuestros clientes.</span></div>
+        <div><strong>100%</strong><span>Productos originales de cuidado capilar profesional.</span></div>
+      </div>
+      <div class="voices-grid">
+        ${TESTIMONIOS.map((item) => `
+          <article class="voice-card">
+            <p class="stars" aria-label="5 estrellas">★★★★★</p>
+            <p>“${esc(item.text)}”</p>
+            <div class="voice-who">
+              <b>${esc(item.initials)}</b>
+              <div>
+                <strong>${esc(item.name)}</strong>
+                <span>${esc(item.product)} · Compra verificada</span>
+              </div>
+            </div>
+          </article>`).join("")}
+      </div>
+    </section>`;
+}
+
+function viewComments() {
+  const notes = VM.comments || [];
+  return `
+    <section class="comments">
+      <div class="runway-head">
+        <h2>Comentarios</h2>
+      </div>
+      <div class="comments-layout">
+        <form class="form panel-card" data-form="comment">
+          <p class="fine">Deja tu comentario sobre Vinicius Molding.</p>
+          <label>Nombre<input name="name" required maxlength="40" autocomplete="name"></label>
+          <label>Comentario<textarea name="text" required maxlength="280" rows="4"></textarea></label>
+          <button class="btn" type="submit">Publicar</button>
+        </form>
+        <div class="comment-list">
+          ${notes.length ? notes.map((item) => `
+            <article class="comment-card">
+              <strong>${esc(item.name)}</strong>
+              <span>${esc((item.at || "").replace("T", " ").slice(0, 16))}</span>
+              <p>${esc(item.text)}</p>
+            </article>`).join("") : `<p class="empty">Todavía no hay comentarios. El primero puede ser el tuyo.</p>`}
+        </div>
+      </div>
     </section>`;
 }
 

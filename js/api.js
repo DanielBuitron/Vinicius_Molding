@@ -9,6 +9,7 @@ const VM = {
   qty: {},
   parts: [],
   qs: new URLSearchParams(),
+  comments: [],
 };
 
 try {
