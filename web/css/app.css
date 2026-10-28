@@ -237,6 +237,7 @@ body.product-page .site-header.scrolled {
   object-position: center bottom;
   filter: brightness(1.12) contrast(1.1) saturate(1.08) drop-shadow(0 30px 24px rgba(0, 0, 0, 0.62));
 }
+.lineup-fallback span { display: none; }
 
 .edition {
   min-height: 92vh;
@@ -798,26 +799,54 @@ td img { width: 72px; height: 48px; object-fit: cover; border-radius: 8px; }
   .side img, .side .spacer, .side .side-foot { display: none; }
   .form-row, .line-item { grid-template-columns: 1fr; }
   .opening h1, .stage-hero h1 { font-size: 48px; }
-  .house { min-height: auto; padding: 8vh 0 0; }
+  .house { min-height: auto; padding: 8vh 0 2vh; overflow: hidden; min-width: 0; width: 100%; }
   .edition { min-height: auto; padding: 8vh 7vw; }
-  .lineup { min-height: 0; }
+  .house-copy { padding: 0 22px; }
+  .house-copy h2 { font-size: clamp(36px, 11vw, 56px); }
+  .lineup { min-height: 0; min-width: 0; width: 100%; max-width: 100%; }
   .lineup-fallback {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     overflow-x: auto;
     justify-content: flex-start;
-    padding: 36px 18px 40px;
-    scroll-snap-type: x proximity;
+    gap: 8px;
+    padding: 20px 18px 56px;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 18px;
     -webkit-overflow-scrolling: touch;
+    pointer-events: auto;
+    touch-action: pan-x;
+    scrollbar-width: none;
   }
+  .lineup-fallback::-webkit-scrollbar { display: none; }
   .lineup-fallback a {
-    flex: 0 0 210px;
-    width: 210px;
-    max-width: 210px;
-    margin: 0 -28px;
+    flex: 0 0 min(78vw, 300px);
+    width: min(78vw, 300px);
+    max-width: min(78vw, 300px);
+    margin: 0;
+    transform: none;
     scroll-snap-align: center;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .lineup-fallback a:hover {
+    transform: none;
   }
   .lineup-fallback img {
-    height: 230px;
-    max-width: 280px;
+    width: 100%;
+    height: min(46vh, 340px);
+    max-width: 100%;
+  }
+  .lineup-fallback span {
+    display: block;
+    font-family: var(--display);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
   }
   .pack { width: 46%; }
   .product-dots {
