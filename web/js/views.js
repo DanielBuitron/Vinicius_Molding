@@ -60,7 +60,7 @@ function viewHome() {
     ${viewComments()}
     <section class="short-block">
       <div class="runway-head">
-        <h2>La línea, en un minuto</h2>
+        <h2>La línea</h2>
       </div>
       <video class="short-video" controls playsinline preload="metadata" poster="assets/short-poster.jpg">
         <source src="assets/short-linea.mp4" type="video/mp4">

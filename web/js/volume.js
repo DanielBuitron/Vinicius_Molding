@@ -729,7 +729,13 @@ function makeTube(pack, art) {
 function attachVolume(el, model) {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
-  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
+  const recording = Boolean(window.VM_RECORD);
+  const renderer = new THREE.WebGLRenderer({
+    alpha: true,
+    antialias: true,
+    powerPreference: "high-performance",
+    preserveDrawingBuffer: recording,
+  });
   renderer.setClearColor(0x000000, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.domElement.className = "vol-view";
@@ -794,8 +800,20 @@ function attachVolume(el, model) {
   });
 
   const shadow = el.querySelector(".orbit-shadow");
+  if (recording) {
+    window.VM_STEP = (yaw) => {
+      root.rotation.x = home.x;
+      root.rotation.y = yaw;
+      renderer.render(scene, camera);
+    };
+  }
+
   return {
     draw() {
+      if (recording) {
+        renderer.render(scene, camera);
+        return;
+      }
       if (!el.classList.contains("dragging")) target.y += 0.008;
       root.rotation.x += (target.x - root.rotation.x) * 0.16;
       root.rotation.y += (target.y - root.rotation.y) * 0.16;
