@@ -41,31 +41,8 @@ function mountVolumes() {
   if (!window.THREE) return;
   const job = ++volumeJob;
   releaseVolumes();
-  const lineup = document.querySelector("[data-lineup]");
-  if (!lineup) {
-    mountOrbits(job);
-    fillPackStills(job);
-    return;
-  }
-  mountLineup(job, () => {
-    if (job !== volumeJob) return;
-    keepLineup(job, 0);
-    mountOrbits(job);
-    setTimeout(() => {
-      if (job === volumeJob) fillPackStills(job);
-    }, 480);
-  });
-}
-
-function keepLineup(job, tries) {
-  if (job !== volumeJob || tries > 12) return;
-  if (!document.querySelector("[data-lineup]") || document.querySelector("canvas.lineup-view")) return;
-  mountLineup(job, () => {
-    if (job !== volumeJob) return;
-    if (!document.querySelector("canvas.lineup-view")) {
-      setTimeout(() => keepLineup(job, tries + 1), 350);
-    }
-  });
+  mountOrbits(job);
+  fillPackStills(job);
 }
 
 function pumpVolumes() {
@@ -82,17 +59,23 @@ function pumpVolumes() {
 }
 
 function studioLights(scene) {
-  scene.add(new THREE.AmbientLight(0xffffff, 0.58));
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x18181c, 0.82));
-  const key = new THREE.DirectionalLight(0xffffff, 2.4);
-  key.position.set(3.4, 4.6, 5.2);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.42));
+  scene.add(new THREE.HemisphereLight(0xfff6ee, 0x16161c, 0.7));
+  const key = new THREE.DirectionalLight(0xfff8f2, 3.35);
+  key.position.set(3.1, 5.4, 6.2);
   scene.add(key);
-  const fill = new THREE.DirectionalLight(0xdde7ff, 0.82);
-  fill.position.set(-4.2, 1.6, 2.2);
+  const fill = new THREE.DirectionalLight(0xd7e6ff, 1.28);
+  fill.position.set(-5.4, 2.1, 3.4);
   scene.add(fill);
-  const rim = new THREE.DirectionalLight(0xfff4ea, 1.2);
-  rim.position.set(-2.2, 3.2, -4.2);
+  const rim = new THREE.DirectionalLight(0xfff3e4, 2.15);
+  rim.position.set(-2.6, 4.4, -5.6);
   scene.add(rim);
+  const bounce = new THREE.DirectionalLight(0xffffff, 0.48);
+  bounce.position.set(0.4, -3.6, 2.2);
+  scene.add(bounce);
+  const spark = new THREE.PointLight(0xfff7ee, 1.55, 14);
+  spark.position.set(1.6, 3.1, 4.2);
+  scene.add(spark);
 }
 
 function centeredClone(object) {
@@ -107,222 +90,34 @@ function packSrc(item) {
   return String((item && item.image) || "").replace(/\.jpe?g(\?.*)?$/i, ".png$1");
 }
 
-function fitCamera(camera, object, fill) {
-  object.updateMatrixWorld(true);
-  const box = new THREE.Box3().setFromObject(object);
-  const size = box.getSize(new THREE.Vector3());
-  const center = box.getCenter(new THREE.Vector3());
-  if (size.x < 0.01 && size.y < 0.01) {
-    camera.position.set(0, 1.2, 8);
-    camera.lookAt(0, 0.3, 0);
-    return;
-  }
-  const fov = THREE.MathUtils.degToRad(camera.fov);
-  const fitH = size.y / (2 * Math.tan(fov / 2));
-  const fitW = size.x / (2 * Math.tan(fov / 2) * Math.max(camera.aspect, 0.2));
-  const dist = (fill || 1.12) * Math.max(fitH, fitW, 2);
-  camera.position.set(center.x, center.y + size.y * 0.08, center.z + dist);
-  camera.lookAt(center.x, center.y * 0.9, center.z);
-}
-
-function mountLineup(job, done) {
-  const finish = () => { if (typeof done === "function") done(); };
-  const el = document.querySelector("[data-lineup]");
-  const catalog = (typeof VM !== "undefined" && VM.products && VM.products.length)
-    ? VM.products
-    : ((typeof SITE !== "undefined" && SITE.products) || []);
-  const items = catalog.slice();
-  if (!el || !items.length) {
-    finish();
-    return;
-  }
-  Promise.allSettled(items.map((item) => buildVolume(packSrc(item)).then((model) => ({ item, model })))).then((results) => {
-    const rows = results.filter((row) => row.status === "fulfilled" && row.value && row.value.model).map((row) => row.value);
-    const stage = document.querySelector("[data-lineup]");
-    if (!stage || !rows.length || job !== volumeJob) {
-      finish();
-      return;
-    }
-    try {
-      volumeViewers.push(attachLineup(stage, rows));
-      pumpVolumes();
-    } catch (error) {
-      console.error(error);
-    }
-    finish();
-  }).catch((error) => {
-    console.error(error);
-    finish();
-  });
-}
-
-function attachLineup(el, rows) {
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 80);
-  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
-  renderer.setClearColor(0x000000, 0);
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.domElement.className = "lineup-view";
-  for (let i = volumeViewers.length - 1; i >= 0; i -= 1) {
-    if (volumeViewers[i].kind === "lineup") {
-      try { volumeViewers[i].dispose(); } catch (error) { /* ya estaba suelto */ }
-      volumeViewers.splice(i, 1);
-    }
-  }
-  el.querySelectorAll("canvas.lineup-view").forEach((node) => node.remove());
-  el.appendChild(renderer.domElement);
-  scene.add(new THREE.AmbientLight(0xffffff, 0.62));
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x222226, 0.75));
-  const key = new THREE.DirectionalLight(0xffffff, 2.2);
-  key.position.set(3.2, 4.4, 5);
-  scene.add(key);
-  const fill = new THREE.DirectionalLight(0xdde7ff, 0.75);
-  fill.position.set(-4, 1.5, 2);
-  scene.add(fill);
-  const rim = new THREE.DirectionalLight(0xfff6ee, 1.05);
-  rim.position.set(-2, 3, -4);
-  scene.add(rim);
-  const glow = new THREE.PointLight(0xe52c3b, 0.9, 16);
-  glow.position.set(0, 0.8, 4);
-  scene.add(glow);
-
-  const stage = new THREE.Group();
-  scene.add(stage);
-  const n = rows.length;
-  const pivots = [];
-
-  rows.forEach(({ item, model }, i) => {
-    const pack = packFromSrc(item.image);
-    const mesh = centeredClone(model.object);
-    const size = new THREE.Box3().setFromObject(mesh).getSize(new THREE.Vector3());
-    const target = pack.kind === "tin" ? 1.78 : 2.42;
-    mesh.scale.setScalar(target / Math.max(size.x, size.y, size.z, 0.2));
-    const t = n === 1 ? 0 : i / (n - 1) - 0.5;
-    if (pack.kind === "tin") {
-      mesh.rotation.x = 0.58;
-      mesh.rotation.y = t * 0.22;
-      mesh.rotation.z = t * 0.72;
-    } else if (pack.kind === "tube") {
-      mesh.rotation.x = 0.08;
-      mesh.rotation.y = 0.22;
-      mesh.rotation.z = t * 0.34;
-    } else {
-      mesh.rotation.x = 0.08;
-      mesh.rotation.y = -0.42;
-      mesh.rotation.z = t * 0.36;
-    }
-    const pivot = new THREE.Group();
-    pivot.add(mesh);
-    pivot.position.set(t * 10.6, Math.abs(t) * 0.22, t * t * 5.4);
-    pivot.userData = { id: item.id, t, spin: pack.kind === "tin" ? 0.0011 : 0.0022, y0: pivot.position.y };
-    stage.add(pivot);
-    pivots.push(pivot);
-  });
-
-  const look = { x: 0.02, y: 0 };
-  let hover = null;
-  let down = null;
-  const ray = new THREE.Raycaster();
-  const mouse = new THREE.Vector2();
-
-  const pick = (event) => {
-    const box = renderer.domElement.getBoundingClientRect();
-    mouse.x = ((event.clientX - box.left) / box.width) * 2 - 1;
-    mouse.y = -((event.clientY - box.top) / box.height) * 2 + 1;
-    ray.setFromCamera(mouse, camera);
-    const hits = ray.intersectObjects(pivots, true);
-    if (!hits.length) return null;
-    let node = hits[0].object;
-    while (node && !node.userData.id) node = node.parent;
-    return node;
-  };
-
-  const onMove = (event) => {
-    const box = el.getBoundingClientRect();
-    look.y = ((event.clientX - box.left) / box.width - 0.5) * 0.42;
-    look.x = ((event.clientY - box.top) / box.height - 0.5) * -0.14;
-    hover = pick(event);
-    el.style.cursor = hover ? "pointer" : "grab";
-  };
-  const onLeave = () => {
-    hover = null;
-    look.x = 0.02;
-    look.y = 0;
-    el.style.cursor = "";
-  };
-  const onDown = (event) => {
-    down = { x: event.clientX, y: event.clientY };
-  };
-  const onUp = (event) => {
-    if (!down) return;
-    const moved = Math.hypot(event.clientX - down.x, event.clientY - down.y) > 10;
-    const node = moved ? null : pick(event);
-    down = null;
-    if (node && node.userData.id) location.hash = "#/producto/" + node.userData.id;
-  };
-
-  el.addEventListener("pointermove", onMove);
-  el.addEventListener("pointerleave", onLeave);
-  el.addEventListener("pointerdown", onDown);
-  el.addEventListener("pointerup", onUp);
-
-  const resize = () => {
-    const width = el.clientWidth || 640;
-    const height = Math.max(1, el.clientHeight || 420);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
-    renderer.setSize(width, height, false);
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-    fitCamera(camera, stage, width / height < 1.05 ? 1.42 : 1.12);
-  };
-  resize();
-  const observer = new ResizeObserver(resize);
-  observer.observe(el);
-
-  return {
-    kind: "lineup",
-    draw() {
-      const time = performance.now() * 0.001;
-      stage.rotation.y += ((look.y + Math.sin(time * 0.28) * 0.06) - stage.rotation.y) * 0.08;
-      stage.rotation.x += ((look.x + Math.sin(time * 0.22) * 0.02) - stage.rotation.x) * 0.08;
-      pivots.forEach((pivot) => {
-        pivot.children[0].rotation.y += pivot.userData.spin;
-        const on = pivot === hover;
-        const s = on ? 1.14 : 1;
-        const bob = Math.sin(time * 0.9 + pivot.userData.t * 4.2) * 0.14;
-        const y = (on ? 0.28 : 0) + bob;
-        pivot.position.y += (pivot.userData.y0 + y - pivot.position.y) * 0.1;
-        const next = pivot.scale.x + (s - pivot.scale.x) * 0.12;
-        pivot.scale.setScalar(next);
-      });
-      renderer.render(scene, camera);
-    },
-    dispose() {
-      observer.disconnect();
-      el.removeEventListener("pointermove", onMove);
-      el.removeEventListener("pointerleave", onLeave);
-      el.removeEventListener("pointerdown", onDown);
-      el.removeEventListener("pointerup", onUp);
-      renderer.dispose();
-      renderer.forceContextLoss();
-      renderer.domElement.remove();
-    },
-  };
-}
-
+const STILL_W = 1080;
+const STILL_H = 1440;
 const stillCache = new Map();
 let stillRenderer = null;
 
 function getStillRenderer() {
   if (stillRenderer) return stillRenderer;
-  stillRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+  stillRenderer = new THREE.WebGLRenderer({
+    alpha: true,
+    antialias: true,
+    preserveDrawingBuffer: true,
+    powerPreference: "high-performance",
+  });
   stillRenderer.setClearColor(0x000000, 0);
   stillRenderer.outputColorSpace = THREE.SRGBColorSpace;
   stillRenderer.toneMapping = THREE.ACESFilmicToneMapping;
-  stillRenderer.toneMappingExposure = 1.14;
+  stillRenderer.toneMappingExposure = 1.28;
   stillRenderer.setPixelRatio(1);
-  stillRenderer.setSize(720, 960, false);
+  stillRenderer.setSize(STILL_W, STILL_H, false);
   return stillRenderer;
+}
+
+function stillDataUrl(canvas) {
+  try {
+    const webp = canvas.toDataURL("image/webp", 0.92);
+    if (webp.indexOf("data:image/webp") === 0) return webp;
+  } catch (error) { /* el navegador no exporta webp */ }
+  return canvas.toDataURL("image/png");
 }
 
 async function renderPackStill(src) {
@@ -330,19 +125,30 @@ async function renderPackStill(src) {
   const model = await buildVolume(src);
   const renderer = getStillRenderer();
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(30, 720 / 960, 0.1, 60);
+  const camera = new THREE.PerspectiveCamera(28, STILL_W / STILL_H, 0.1, 80);
   studioLights(scene);
   const pack = packFromSrc(src);
   const root = centeredClone(model.object);
-  root.rotation.x = pack.kind === "tin" ? 0.52 : model.tilt;
-  root.rotation.y = pack.kind === "tin" ? 0.22 : -0.42;
+  if (pack.kind === "tin") {
+    root.rotation.x = 0.48;
+    root.rotation.y = 0.28;
+    root.rotation.z = 0.04;
+  } else if (pack.kind === "tube") {
+    root.rotation.x = 0.06;
+    root.rotation.y = 0.38;
+    root.rotation.z = 0.08;
+  } else {
+    root.rotation.x = 0.05;
+    root.rotation.y = -0.38;
+    root.rotation.z = 0;
+  }
   scene.add(root);
   const sphere = new THREE.Box3().setFromObject(root).getBoundingSphere(new THREE.Sphere());
-  const zoom = pack.kind === "tin" ? 1.04 : pack.kind === "tube" ? 1.12 : 1.18;
-  camera.position.z = sphere.radius / Math.tan(THREE.MathUtils.degToRad(15)) * zoom;
-  camera.lookAt(0, 0, 0);
+  const zoom = pack.kind === "tin" ? 0.98 : pack.kind === "tube" ? 1.02 : 1.04;
+  camera.position.set(0, sphere.radius * 0.08, sphere.radius / Math.tan(THREE.MathUtils.degToRad(14)) * zoom);
+  camera.lookAt(0, -sphere.radius * 0.04, 0);
   renderer.render(scene, camera);
-  const url = renderer.domElement.toDataURL("image/png");
+  const url = stillDataUrl(renderer.domElement);
   stillCache.set(src, url);
   return url;
 }
@@ -410,7 +216,7 @@ async function createVolume(src) {
 function canvasTexture(canvas, offsetX) {
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 8;
+  texture.anisotropy = 16;
   texture.wrapS = THREE.RepeatWrapping;
   texture.offset.x = offsetX || 0;
   return texture;

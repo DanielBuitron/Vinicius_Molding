@@ -39,7 +39,7 @@ function shellPublic(content) {
 
 function packShot(item) {
   return `<a class="pack" href="#/producto/${esc(item.id)}" style="--accent:${esc(item.accent || "#E52C3B")}">
-    <img data-pack-still="${esc(cutoutSrc(item.image))}" src="${esc(cutoutSrc(item.image))}" alt="${esc(item.name)}" draggable="false">
+    <img data-pack-still="${esc(cutoutSrc(item.image))}" src="${esc(cutoutSrc(item.image))}" alt="${esc(item.name)}" width="1080" height="1440" decoding="async" draggable="false">
     <em>${esc(item.name)}</em>
   </a>`;
 }
@@ -54,9 +54,9 @@ function viewFan() {
         <h2>Diez piezas.<br>Una línea.</h2>
         <p>Ceras, shampoos y tratamiento. El cuidado capilar masculino, en un solo lugar.</p>
       </div>
-      <div class="lineup" data-lineup aria-label="Línea Vinicius en 3D">
+      <div class="lineup" data-lineup aria-label="Línea Vinicius">
         <div class="lineup-fallback">
-          ${items.map((item, i) => `<a href="#/producto/${esc(item.id)}" style="--i:${(i - mid).toFixed(2)}" aria-label="${esc(item.name)}"><img data-pack-still="${esc(cutoutSrc(item.image))}" src="${esc(cutoutSrc(item.image))}" alt="${esc(item.name)}" draggable="false"></a>`).join("")}
+          ${items.map((item, i) => `<a href="#/producto/${esc(item.id)}" style="--i:${(i - mid).toFixed(2)}" aria-label="${esc(item.name)}"><img data-pack-still="${esc(cutoutSrc(item.image))}" src="${esc(cutoutSrc(item.image))}" alt="${esc(item.name)}" width="1080" height="1440" decoding="async" draggable="false"></a>`).join("")}
         </div>
       </div>
     </section>`;
