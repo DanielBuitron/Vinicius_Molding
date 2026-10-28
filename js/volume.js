@@ -38,6 +38,7 @@ function mountVolumes() {
       console.error(error);
     });
   });
+  fillPackStills(job);
 }
 
 function pumpVolumes() {
@@ -49,6 +50,80 @@ function pumpVolumes() {
     else pumpVolumes.running = false;
   };
   requestAnimationFrame(frame);
+}
+
+function studioLights(scene) {
+  scene.add(new THREE.AmbientLight(0xffffff, 0.58));
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x18181c, 0.82));
+  const key = new THREE.DirectionalLight(0xffffff, 2.4);
+  key.position.set(3.4, 4.6, 5.2);
+  scene.add(key);
+  const fill = new THREE.DirectionalLight(0xdde7ff, 0.82);
+  fill.position.set(-4.2, 1.6, 2.2);
+  scene.add(fill);
+  const rim = new THREE.DirectionalLight(0xfff4ea, 1.2);
+  rim.position.set(-2.2, 3.2, -4.2);
+  scene.add(rim);
+}
+
+function centeredClone(object) {
+  const root = object.clone();
+  const bounds = new THREE.Box3().setFromObject(root);
+  const center = bounds.getCenter(new THREE.Vector3());
+  root.children.forEach((child) => child.position.sub(center));
+  return root;
+}
+
+const stillCache = new Map();
+let stillRenderer = null;
+
+function getStillRenderer() {
+  if (stillRenderer) return stillRenderer;
+  stillRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+  stillRenderer.setClearColor(0x000000, 0);
+  stillRenderer.outputColorSpace = THREE.SRGBColorSpace;
+  stillRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+  stillRenderer.toneMappingExposure = 1.14;
+  stillRenderer.setPixelRatio(1);
+  stillRenderer.setSize(720, 960, false);
+  return stillRenderer;
+}
+
+async function renderPackStill(src) {
+  if (stillCache.has(src)) return stillCache.get(src);
+  const model = await buildVolume(src);
+  const renderer = getStillRenderer();
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(30, 720 / 960, 0.1, 60);
+  studioLights(scene);
+  const pack = packFromSrc(src);
+  const root = centeredClone(model.object);
+  root.rotation.x = pack.kind === "tin" ? 0.52 : model.tilt;
+  root.rotation.y = pack.kind === "tin" ? 0.22 : -0.42;
+  scene.add(root);
+  const sphere = new THREE.Box3().setFromObject(root).getBoundingSphere(new THREE.Sphere());
+  const zoom = pack.kind === "tin" ? 1.04 : pack.kind === "tube" ? 1.12 : 1.18;
+  camera.position.z = sphere.radius / Math.tan(THREE.MathUtils.degToRad(15)) * zoom;
+  camera.lookAt(0, 0, 0);
+  renderer.render(scene, camera);
+  const url = renderer.domElement.toDataURL("image/png");
+  stillCache.set(src, url);
+  return url;
+}
+
+function fillPackStills(job) {
+  const images = [...document.querySelectorAll("img[data-pack-still]")];
+  if (!images.length) return;
+  images.reduce((chain, img) => chain.then(async () => {
+    if (job !== volumeJob) return;
+    try {
+      const url = await renderPackStill(img.getAttribute("data-pack-still"));
+      if (job !== volumeJob || !img.isConnected) return;
+      img.src = url;
+    } catch (error) {
+      console.error(error);
+    }
+  }), Promise.resolve());
 }
 
 function loadBitmap(src) {

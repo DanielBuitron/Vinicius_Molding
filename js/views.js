@@ -39,24 +39,24 @@ function shellPublic(content) {
 
 function packShot(item) {
   return `<a class="pack" href="#/producto/${esc(item.id)}" style="--accent:${esc(item.accent || "#E52C3B")}">
-    <img src="${esc(cutoutSrc(item.image))}" alt="${esc(item.name)}" draggable="false">
+    <img data-pack-still="${esc(cutoutSrc(item.image))}" src="${esc(cutoutSrc(item.image))}" alt="${esc(item.name)}" draggable="false">
     <em>${esc(item.name)}</em>
   </a>`;
 }
 
 function viewFan() {
-  const items = VM.products;
+  const items = VM.products || [];
   const mid = (items.length - 1) / 2;
   return `
-    <section class="house" data-fan>
+    <section class="house">
       <div class="house-copy">
         <p class="kicker">La casa</p>
         <h2>Diez piezas.<br>Una línea.</h2>
         <p>Ceras, shampoos y tratamiento. El cuidado capilar masculino, en un solo lugar.</p>
       </div>
-      <div class="fan-wrap">
-        <div class="fan" data-fan-stage>
-          ${items.map((item, i) => `<a class="fan-pack" href="#/producto/${esc(item.id)}" style="--i:${(i - mid).toFixed(2)};--z:${Math.round(20 - Math.abs(i - mid) * 2)};--accent:${esc(item.accent || "#E52C3B")}" aria-label="${esc(item.name)}"><img src="${esc(cutoutSrc(item.image))}" alt="${esc(item.name)}" draggable="false"></a>`).join("")}
+      <div class="lineup" data-lineup aria-label="Línea Vinicius en 3D">
+        <div class="lineup-fallback">
+          ${items.map((item, i) => `<a href="#/producto/${esc(item.id)}" style="--i:${(i - mid).toFixed(2)}" aria-label="${esc(item.name)}"><img data-pack-still="${esc(cutoutSrc(item.image))}" src="${esc(cutoutSrc(item.image))}" alt="${esc(item.name)}" draggable="false"></a>`).join("")}
         </div>
       </div>
     </section>`;
