@@ -37,21 +37,66 @@ function shellPublic(content) {
     </footer>`;
 }
 
+function packShot(item) {
+  return `<a class="pack" href="#/producto/${esc(item.id)}" style="--accent:${esc(item.accent || "#E52C3B")}">
+    <img src="${esc(cutoutSrc(item.image))}" alt="${esc(item.name)}" draggable="false">
+    <em>${esc(item.name)}</em>
+  </a>`;
+}
+
+function viewFan() {
+  const items = VM.products;
+  const mid = (items.length - 1) / 2;
+  return `
+    <section class="house" data-fan>
+      <div class="house-copy">
+        <p class="kicker">La casa</p>
+        <h2>Diez piezas.<br>Una línea.</h2>
+        <p>Ceras, shampoos y tratamiento. El cuidado capilar masculino, en un solo lugar.</p>
+      </div>
+      <div class="fan-wrap">
+        <div class="fan" data-fan-stage>
+          ${items.map((item, i) => `<a class="fan-pack" href="#/producto/${esc(item.id)}" style="--i:${(i - mid).toFixed(2)};--z:${Math.round(20 - Math.abs(i - mid) * 2)};--accent:${esc(item.accent || "#E52C3B")}" aria-label="${esc(item.name)}"><img src="${esc(cutoutSrc(item.image))}" alt="${esc(item.name)}" draggable="false"></a>`).join("")}
+        </div>
+      </div>
+    </section>`;
+}
+
+function viewEdition(group) {
+  const lead = group.items[0];
+  const words = ["Cero", "Una pieza", "Dos piezas", "Tres piezas", "Cuatro piezas", "Cinco piezas"];
+  const count = words[group.items.length] || `${group.items.length} piezas`;
+  return `
+    <section class="edition" style="--accent:${esc(lead.accent || "#E52C3B")}">
+      <div class="edition-copy">
+        <p class="kicker">${esc(group.name)}</p>
+        <h2>${count}.<br>${esc(group.name)}.</h2>
+        <p class="lede">${esc(group.blurb)}</p>
+        <a class="btn ghost" href="#/catalogo/${esc(group.id)}">Ver la línea</a>
+      </div>
+      <div class="edition-row">
+        ${group.items.map(packShot).join("")}
+      </div>
+    </section>`;
+}
+
 function viewHome() {
   const hero = productById("cera-brillo") || VM.products[0];
   return `
-    <section class="opening">
-      <div>
-        <div class="eyebrow">Cali · cuidado capilar</div>
-        <h1>Somos<br>la solución,<br><em>no el problema.</em></h1>
+    <section class="stage-hero" style="--accent:${esc((hero && hero.accent) || "#E52C3B")}">
+      <div class="stage-copy">
+        <p class="eyebrow">Cali · cuidado capilar</p>
+        <h1>Somos la solución,<br><em>no el problema.</em></h1>
         <p class="lede">Fórmulas de alto rendimiento para el hombre que cuida la imagen como parte del oficio.</p>
         <div class="hero-actions">
           <a class="btn" href="#/catalogo">Ver el catálogo</a>
+          ${hero ? `<a class="btn ghost" href="#/producto/${esc(hero.id)}">${esc(hero.name)}</a>` : ""}
         </div>
       </div>
-      <div>${hero ? orbit(hero.image, hero.name, hero.id) : ""}</div>
+      <div class="stage-pack">${hero ? orbit(hero.image, hero.name, hero.id) : ""}</div>
     </section>
-    ${catalogGroups().map(homeGroup).join("")}
+    ${viewFan()}
+    ${catalogGroups().map(viewEdition).join("")}
     <section class="manifesto">
       <h2>No vendemos promesas.<br><em>Entregamos resultados.</em></h2>
       <p>Para quien busca la opción correcta, no una más.</p>
@@ -184,7 +229,7 @@ function catalogGroups() {
 
 function catalogCard(item) {
   return `
-    <article class="sku">
+    <article class="sku" style="--accent:${esc(item.accent)}">
       <a class="sku-shot" href="#/producto/${esc(item.id)}">${orbit(item.image, item.name, item.id)}</a>
       <div class="sku-body">
         <p class="kicker">${esc(item.catName || item.size)}</p>
@@ -262,10 +307,10 @@ function viewProduct() {
     ["Acabado", product.finish],
     ["Referencia", product.sku],
   ];
+  const family = VM.products.filter((item) => item.category === product.category);
   return `
-    <article class="product-view">
-      <div class="orbit-lg">${orbit(product.image, product.name)}</div>
-      <div>
+    <article class="product-stage" style="--accent:${esc(product.accent)}">
+      <div class="product-copy">
         <a class="kicker" href="#/catalogo/${esc(product.category)}">${esc(categoryName(product.category))}</a>
         <h1>${esc(product.name)}</h1>
         <p class="lede">${esc(product.description)}</p>
@@ -284,6 +329,10 @@ function viewProduct() {
           <a class="btn ghost" href="${waHref("Hola, quiero información de " + product.name + ".")}" target="_blank" rel="noopener">Consultar</a>
         </div>
       </div>
+      <div class="orbit-lg">${orbit(product.image, product.name)}</div>
+      <nav class="product-dots" aria-label="Otras de la línea">
+        ${family.map((item) => `<a href="#/producto/${esc(item.id)}" class="${item.id === product.id ? "on" : ""}" aria-label="${esc(item.name)}" style="--accent:${esc(item.accent)}"></a>`).join("")}
+      </nav>
     </article>
     ${carousel("Te recomendamos", recommendedFor(product))}`;
 }
