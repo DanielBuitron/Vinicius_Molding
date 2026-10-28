@@ -46,7 +46,6 @@ function mountVolumes() {
   const job = ++volumeJob;
   releaseVolumes();
   mountOrbits(job);
-  fillPackStills(job);
 }
 
 function pumpVolumes() {

@@ -182,8 +182,8 @@ body.product-page .site-header.scrolled {
   min-height: 100vh;
   display: grid;
   grid-template-rows: auto 1fr;
-  padding: 12vh 0 0;
-  overflow: hidden;
+  padding: 10vh 0 4vh;
+  overflow: visible;
   background:
     radial-gradient(62% 48% at 50% 78%, rgba(229, 44, 59, 0.16), transparent 70%),
     #000;
@@ -198,42 +198,45 @@ body.product-page .site-header.scrolled {
 .lineup {
   position: relative;
   width: 100%;
-  min-height: min(62vh, 680px);
+  min-height: min(52vh, 560px);
+  overflow: visible;
 }
 .lineup-fallback {
   display: flex;
   align-items: flex-end;
   justify-content: center;
   width: 100%;
-  padding: 4vh 5vw 7vh;
+  padding: 3vh 2vw 10vh;
   pointer-events: none;
 }
 .lineup-fallback a {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
   flex: 1 1 0;
   min-width: 0;
-  max-width: 220px;
-  margin: 0 -0.9vw;
+  max-width: 200px;
+  margin: 0 -2.2vw;
+  overflow: visible;
   pointer-events: auto;
-  transform: rotate(calc(var(--i) * 4.6deg)) translateY(calc(abs(var(--i)) * 8px));
+  transform: rotate(calc(var(--i) * 3.4deg)) translateY(calc(abs(var(--i)) * 10px));
   transform-origin: 50% 92%;
   z-index: 2;
-  transition: transform 0.35s ease;
+  transition: transform 0.35s ease, filter 0.35s ease;
 }
 .lineup-fallback a:hover {
-  transform: rotate(calc(var(--i) * 4.6deg)) translateY(-20px) scale(1.07);
+  transform: rotate(calc(var(--i) * 3.4deg)) translateY(-24px) scale(1.12);
   z-index: 12;
 }
 .lineup-fallback img {
   display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 1080 / 1440;
+  width: auto;
+  height: min(40vh, 360px);
+  max-width: min(340px, 34vw);
   object-fit: contain;
-  filter: drop-shadow(0 26px 20px rgba(0, 0, 0, 0.52));
-  opacity: 0;
-  transition: opacity 0.4s ease;
+  object-position: center bottom;
+  filter: brightness(1.12) contrast(1.1) saturate(1.08) drop-shadow(0 30px 24px rgba(0, 0, 0, 0.62));
 }
-.lineup-fallback img[src^="data:"] { opacity: 1; }
 
 .edition {
   min-height: 92vh;
@@ -264,9 +267,8 @@ body.product-page .site-header.scrolled {
 .pack img {
   width: 100%;
   height: auto;
-  aspect-ratio: 1080 / 1440;
   object-fit: contain;
-  filter: drop-shadow(0 22px 20px rgba(0, 0, 0, 0.55));
+  filter: brightness(1.1) contrast(1.08) saturate(1.06) drop-shadow(0 22px 20px rgba(0, 0, 0, 0.55));
   transition: transform 0.35s ease, filter 0.35s ease;
 }
 .pack:hover img { transform: translateY(-14px) scale(1.04); }
@@ -807,11 +809,15 @@ td img { width: 72px; height: 48px; object-fit: cover; border-radius: 8px; }
     -webkit-overflow-scrolling: touch;
   }
   .lineup-fallback a {
-    flex: 0 0 168px;
-    width: 168px;
-    max-width: 168px;
-    margin: 0 -18px;
+    flex: 0 0 210px;
+    width: 210px;
+    max-width: 210px;
+    margin: 0 -28px;
     scroll-snap-align: center;
+  }
+  .lineup-fallback img {
+    height: 230px;
+    max-width: 280px;
   }
   .pack { width: 46%; }
   .product-dots {

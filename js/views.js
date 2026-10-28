@@ -40,7 +40,7 @@ function shellPublic(content) {
 
 function packShot(item) {
   return `<a class="pack" href="#/producto/${esc(item.id)}" style="--accent:${esc(item.accent || "#E52C3B")}">
-    <img data-pack-still="${esc(cutoutSrc(item.image))}" src="${esc(cutoutSrc(item.image))}" alt="${esc(item.name)}" width="1080" height="1440" decoding="async" draggable="false">
+    <img src="${esc(cutoutSrc(item.image))}" alt="${esc(item.name)}" decoding="async" draggable="false">
     <em>${esc(item.name)}</em>
   </a>`;
 }
@@ -57,7 +57,7 @@ function viewFan() {
       </div>
       <div class="lineup" data-lineup aria-label="Línea Vinicius">
         <div class="lineup-fallback">
-          ${items.map((item, i) => `<a href="#/producto/${esc(item.id)}" style="--i:${(i - mid).toFixed(2)}" aria-label="${esc(item.name)}"><img data-pack-still="${esc(cutoutSrc(item.image))}" src="${esc(cutoutSrc(item.image))}" alt="${esc(item.name)}" width="1080" height="1440" decoding="async" draggable="false"></a>`).join("")}
+          ${items.map((item, i) => `<a href="#/producto/${esc(item.id)}" style="--i:${(i - mid).toFixed(2)}" aria-label="${esc(item.name)}"><img src="${esc(cutoutSrc(item.image))}" alt="${esc(item.name)}" decoding="async" draggable="false"></a>`).join("")}
         </div>
       </div>
     </section>`;
