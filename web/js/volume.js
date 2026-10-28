@@ -10,12 +10,16 @@ const PACKS = {
   "cera-brillo": { kind: "tin", accent: "#E52C3B", body: "#121214", ink: "#f6f3ec", title: "CERA", lidLines: ["MOLDEADORA", "BRILLO MEDIO"], size: "150 g", hold: 3 },
   "pasta": { kind: "tin", accent: "#00C8C2", body: "#121214", ink: "#f6f3ec", title: "PASTA", lidLines: ["MOLDEADORA", "BRILLANTE"], size: "150 g", hold: 4 },
   "pomada": { kind: "tin", accent: "#FFD300", body: "#121214", ink: "#f6f3ec", title: "POMADA", lidLines: ["MOLDEADORA", "MATE"], size: "150 g", hold: 3 },
+  "gel-cubre-canas": { kind: "tin", accent: "#C5CAD1", body: "#121214", ink: "#f6f3ec", title: "GEL", lidLines: ["CUBRE CANAS"], size: "150 g", hold: 3, sideLines: ["KERATINA", "ROMERO", "ALOE VERA"] },
+  "pasta-minoxidil": { kind: "tin", accent: "#141414", body: "#2EE6D0", ink: "#141414", title: "PASTA", lidLines: ["MINOXIDIL"], size: "150 g", hold: 3, sideLines: ["MINOXIDIL", "PANTENOL", "ROMERO"] },
   "cera-kids": { kind: "tin", accent: "#FFD300", body: "#e10600", ink: "#ffffff", title: "CERA DE FIBRA", lidSub: "KIDS", size: "150 g", hold: 3, kids: true },
   "shampoo-proteccion": { kind: "pump", accent: "#E10600", body: "#f4f2ee", ink: "#171717", title: "SHAMPOO", lidSub: "PROTECCIÓN CAPILAR", size: "500 g", face: "white" },
   "shampoo-carbon": { kind: "pump", accent: "#FFD300", body: "#171717", ink: "#f4f1ea", title: "SHAMPOO", lidSub: "CARBÓN ACTIVO", size: "500 ml", face: "carbon", v: "#6a6a70" },
   "serum-barba": { kind: "dropper", accent: "#A4D800", body: "#1a1a1c", ink: "#f4f1ea", title: "SERUM", lidSub: "BARBA · BIGOTE", size: "65 ml", face: "serum" },
   "tonico": { kind: "spray", accent: "#E4C84A", body: "#101012", ink: "#f7f4ea", title: "TÓNICO", lidSub: "ORGÁNICO", size: "65 ml", face: "tonico" },
   "ducha-intima": { kind: "tube", accent: "#8ED400", body: "#141416", ink: "#f4f1ea", title: "DUCHA ÍNTIMA", lidSub: "FOR MEN", size: "180 g", face: "tube" },
+  "splash": { kind: "spray", accent: "#4BA3DC", body: "#0c2f4a", ink: "#f4f8fc", title: "BODY SPLASH", lidSub: "FOR MEN", size: "250 ml", face: "splash" },
+  "shaving-gel": { kind: "tube", accent: "#FF6A00", body: "#161616", ink: "#f4f1ea", title: "SHAVING GEL", lidSub: "FOR MEN", size: "250 ml", face: "shave" },
 };
 
 function releaseVolumes() {
@@ -300,7 +304,7 @@ function lidLabel(pack, art) {
   if (art.logo) ctx.drawImage(stripedMark(art.logo, mark, 900, 550), 120, 188, 784, 478);
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = pack.ink || "#ffffff";
     ctx.font = pack.title.length > 8 ? "800 70px Outfit, sans-serif" : "800 108px Outfit, sans-serif";
     ctx.fillText(pack.title, 512, 500);
   if (pack.kids) {
@@ -334,7 +338,7 @@ function drawSideBlock(ctx, cx, pack, art) {
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
   ctx.font = "700 28px Outfit, sans-serif";
-  ["KERATINA", "ROMERO", "ALOE VERA"].forEach((line, index) => {
+  (pack.sideLines || ["KERATINA", "ROMERO", "ALOE VERA"]).forEach((line, index) => {
     ctx.fillText(line, cx - 246, 86 + index * 40);
   });
   const bx = cx + 70;
@@ -536,7 +540,7 @@ function frontLabel(pack, art) {
     ["FRAGANCIA", "COLORANTES", "PARABENOS"].forEach((line, index) => ctx.fillText(line, 190, 900 + index * 42));
     ctx.fillStyle = pack.accent;
     ctx.font = "600 28px Outfit, sans-serif";
-    ctx.fillText("| 180 g", 90, 1100);
+    ctx.fillText("| " + pack.size, 90, 1100);
     ctx.strokeStyle = pack.accent;
     ctx.globalAlpha = 0.7;
     ctx.lineWidth = 3;
@@ -547,6 +551,30 @@ function frontLabel(pack, art) {
       ctx.stroke();
     }
     ctx.globalAlpha = 1;
+    ctx.textAlign = "center";
+  } else if (pack.face === "shave") {
+    ctx.textAlign = "left";
+    if (art.word) ctx.drawImage(art.word, 70, 40, 460, 76);
+    paintMark(ctx, art, pack, 40, 140, 760);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "800 78px Outfit, sans-serif";
+    ctx.fillText("SHAVING", 90, 620);
+    ctx.fillStyle = pack.accent;
+    ctx.font = "800 78px Outfit, sans-serif";
+    ctx.fillText("GEL", 90, 704);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "600 30px Outfit, sans-serif";
+    ctx.fillText("FOR MEN", 90, 762);
+    ctx.fillStyle = pack.accent;
+    ctx.fillRect(90, 820, 430, 90);
+    ctx.fillStyle = "#141414";
+    ctx.font = "800 28px Outfit, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("CONTIENE ALOE VERA", 305, 868);
+    ctx.textAlign = "left";
+    ctx.fillStyle = pack.accent;
+    ctx.font = "600 28px Outfit, sans-serif";
+    ctx.fillText("| " + pack.size, 90, 1100);
     ctx.textAlign = "center";
   } else if (pack.face === "tonico") {
     ctx.fillStyle = "#0e3f42";
@@ -575,6 +603,29 @@ function frontLabel(pack, art) {
     ctx.fillStyle = "#ffffff";
     ctx.font = "600 24px Outfit, sans-serif";
     ctx.fillText("2.3 FL Oz  /  65 mL", 450, 1100);
+  } else if (pack.face === "splash") {
+    ctx.fillStyle = pack.body;
+    ctx.fillRect(0, 0, 900, 1400);
+    if (art.word) ctx.drawImage(art.word, 200, 80, 500, 82);
+    paintMark(ctx, art, pack, 175, 200, 550);
+    ctx.fillStyle = pack.accent;
+    ctx.font = "800 64px Outfit, sans-serif";
+    ctx.fillText("BODY", 450, 620);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "800 72px Outfit, sans-serif";
+    ctx.fillText("SPLASH", 450, 700);
+    ctx.fillStyle = pack.accent;
+    ctx.font = "700 32px Outfit, sans-serif";
+    ctx.fillText("FOR MEN", 450, 760);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "600 22px Outfit, sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("CONTIENE", 180, 860);
+    ["EUCALIPTO", "MENTOL"].forEach((line, index) => ctx.fillText(line, 180, 900 + index * 34));
+    ctx.textAlign = "center";
+    ctx.fillStyle = pack.accent;
+    ctx.font = "600 28px Outfit, sans-serif";
+    ctx.fillText(pack.size, 450, 1100);
   } else {
     if (art.word) ctx.drawImage(art.word, 200, 70, 500, 82);
     paintMark(ctx, art, pack, 160, 180, 580);
