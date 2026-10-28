@@ -29,6 +29,7 @@ function shellPublic(content) {
         <a href="#/catalogo/limpieza">Limpieza</a>
         <a href="#/catalogo/tratamiento">Tratamiento</a>
         <a href="#/catalogo/kids">Kids</a>
+        <a href="#/catalogo/cuerpo">Cuerpo</a>
       </div>
       <div>
         <strong>Asesor</strong>
@@ -51,8 +52,8 @@ function viewFan() {
     <section class="house">
       <div class="house-copy">
         <p class="kicker">La casa</p>
-        <h2>Diez piezas.<br>Una línea.</h2>
-        <p>Ceras, shampoos y tratamiento. El cuidado capilar masculino, en un solo lugar.</p>
+        <h2>${esc(pieceLabel(items.length))}.<br>Una línea.</h2>
+        <p>Ceras, shampoos, tratamiento y cuerpo. El cuidado capilar masculino, en un solo lugar.</p>
       </div>
       <div class="lineup" data-lineup aria-label="Línea Vinicius">
         <div class="lineup-fallback">
@@ -64,8 +65,7 @@ function viewFan() {
 
 function viewEdition(group) {
   const lead = group.items[0];
-  const words = ["Cero", "Una pieza", "Dos piezas", "Tres piezas", "Cuatro piezas", "Cinco piezas"];
-  const count = words[group.items.length] || `${group.items.length} piezas`;
+  const count = pieceLabel(group.items.length);
   return `
     <section class="edition" style="--accent:${esc(lead.accent || "#E52C3B")}">
       <div class="edition-copy">
