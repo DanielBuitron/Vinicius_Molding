@@ -86,21 +86,6 @@ function bindShowcases() {
   });
 }
 
-function bindFan() {
-  const wrap = document.querySelector("[data-fan]");
-  const stage = document.querySelector("[data-fan-stage]");
-  if (!wrap || !stage) return;
-  wrap.addEventListener("pointermove", (event) => {
-    const box = wrap.getBoundingClientRect();
-    const x = (event.clientX - box.left) / box.width - 0.5;
-    const y = (event.clientY - box.top) / box.height - 0.5;
-    stage.style.transform = `rotateX(${8 - y * 10}deg) rotateY(${x * 16}deg)`;
-  });
-  wrap.addEventListener("pointerleave", () => {
-    stage.style.transform = "";
-  });
-}
-
 function paint(html, bodyClass) {
   const page = (VM.parts && VM.parts[0]) || "inicio";
   const extras = [];
@@ -118,7 +103,6 @@ function paint(html, bodyClass) {
   bindOrbits();
   if (typeof mountVolumes === "function") mountVolumes();
   bindShowcases();
-  bindFan();
 }
 
 function bindOrbits() {
