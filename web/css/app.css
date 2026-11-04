@@ -350,27 +350,28 @@ body.home .brand img { height: 36px; }
   overflow: hidden;
   display: grid;
   place-items: center;
-  padding: 64px 3vw 40px;
+  align-content: center;
+  padding: 70px 2vw 36px;
   background: #030201;
 }
 .desk-wood {
   position: absolute;
-  inset: -18%;
+  inset: -20%;
   background:
-    url("../assets/desk-wood.jpg") center / cover no-repeat,
-    #1a110c;
-  transform: perspective(1600px) rotateX(calc(24deg + var(--my) * 3deg)) rotateY(calc(var(--mx) * 2deg)) scale(1.18);
-  transform-origin: 50% 55%;
-  filter: contrast(1.08) saturate(0.92) brightness(0.72);
+    url("../assets/desk-wood.jpg") center 60% / cover no-repeat,
+    #120c09;
+  transform: perspective(1600px) rotateX(calc(28deg + var(--my) * 2.5deg)) rotateY(calc(var(--mx) * 1.5deg)) scale(1.22);
+  transform-origin: 50% 60%;
+  filter: contrast(1.14) saturate(0.8) brightness(0.58);
   pointer-events: none;
 }
 .desk-glow {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(36% 30% at 50% 50%, rgba(255, 220, 180, 0.28), transparent 70%),
-    radial-gradient(26% 22% at 50% 48%, rgba(229, 44, 59, 0.2), transparent 72%),
-    radial-gradient(72% 62% at 50% 55%, transparent 24%, rgba(0, 0, 0, 0.82) 100%);
+    radial-gradient(42% 34% at 50% 62%, rgba(255, 214, 170, 0.32), transparent 70%),
+    radial-gradient(28% 22% at 50% 58%, rgba(229, 44, 59, 0.14), transparent 72%),
+    radial-gradient(75% 65% at 50% 55%, transparent 20%, rgba(0, 0, 0, 0.88) 100%);
   pointer-events: none;
   z-index: 1;
 }
@@ -393,12 +394,10 @@ body.home .brand img { height: 36px; }
   will-change: transform;
 }
 .desk-prop img { width: 100%; height: auto; pointer-events: none; }
-.desk-prop.prop-a { left: 4%; top: 22%; width: clamp(110px, 13vw, 190px); }
-.desk-prop.prop-b { right: 5%; top: 16%; width: clamp(96px, 11vw, 160px); }
-.desk-prop.prop-c { left: 7%; bottom: 12%; width: clamp(48px, 5.5vw, 78px); }
-.desk-prop.prop-d { right: 8%; bottom: 14%; width: clamp(44px, 5vw, 72px); }
-.desk-prop.prop-e { left: 40%; top: 8%; width: clamp(64px, 7vw, 100px); opacity: 0.95; }
-.desk-prop.prop-f { right: 26%; top: 10%; width: clamp(72px, 8vw, 118px); opacity: 0.9; }
+.desk-prop.prop-a { left: 3%; top: 18%; width: clamp(72px, 8vw, 120px); }
+.desk-prop.prop-b { right: 4%; top: 14%; width: clamp(64px, 7vw, 108px); }
+.desk-prop.prop-c { left: 5%; bottom: 10%; width: clamp(40px, 4.5vw, 64px); }
+.desk-prop.prop-d { right: 6%; bottom: 12%; width: clamp(38px, 4.2vw, 60px); }
 .desk-prop:hover {
   z-index: 9;
   filter: drop-shadow(0 26px 22px rgba(229, 44, 59, 0.4)) brightness(1.08);
@@ -444,143 +443,93 @@ body.home .brand img { height: 36px; }
   pointer-events: none;
 }
 
-.book {
+.book-stage {
+  --tilt: 18deg;
   position: relative;
   z-index: 5;
-  width: min(920px, 86vw);
-  height: min(54vh, 500px);
-  perspective: 2200px;
+  width: min(1240px, 94vw);
+  margin: 4vh auto 0;
+  transform: perspective(1600px) rotateX(calc(var(--tilt) + var(--my) * 2deg)) rotateY(calc(var(--mx) * -1.8deg));
   transform-style: preserve-3d;
 }
 .book-shadow {
   position: absolute;
-  left: 8%;
-  right: 8%;
-  bottom: -28px;
-  height: 48px;
-  background: radial-gradient(50% 60% at 50% 50%, rgba(0, 0, 0, 0.75), transparent 72%);
-  filter: blur(6px);
+  left: 6%;
+  right: 6%;
+  bottom: -6%;
+  height: 14%;
+  background: radial-gradient(50% 70% at 50% 35%, rgba(0, 0, 0, 0.88), transparent 74%);
+  filter: blur(12px);
   pointer-events: none;
+  z-index: 0;
 }
-.book-cover {
+.hard-cover {
   position: absolute;
-  inset: 0;
-  z-index: 30;
-  border-radius: 6px;
-  background:
-    linear-gradient(145deg, #1c1c20 0%, #09090b 52%, #16161a 100%);
+  z-index: 12;
+  left: 50%;
+  top: 50%;
+  width: min(78%, 860px);
+  aspect-ratio: 1.52 / 1;
+  transform: translate(-50%, -50%) rotateY(0deg);
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+  border-radius: 3px;
   box-shadow:
-    0 40px 80px rgba(0, 0, 0, 0.7),
-    0 0 0 1px rgba(255, 255, 255, 0.07),
+    0 50px 90px rgba(0, 0, 0, 0.78),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.hard-cover-face {
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
   display: grid;
   place-items: center;
-  transform-origin: left center;
-  transform-style: preserve-3d;
-  backface-visibility: hidden;
-  will-change: transform;
+  background:
+    radial-gradient(55% 45% at 50% 52%, rgba(229, 44, 59, 0.1), transparent 70%),
+    linear-gradient(155deg, #1c1c20 0%, #08080a 50%, #151518 100%);
 }
-.book-cover img {
-  width: min(240px, 48%);
+.hard-cover-face img {
+  width: min(56%, 260px);
   height: auto;
-  opacity: 0.95;
+  opacity: 0.96;
 }
-.book-open {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  border-radius: 5px;
-  overflow: visible;
-  transform: rotateX(14deg) rotateY(calc(var(--mx) * -2.5deg));
-  transform-style: preserve-3d;
-  box-shadow: 0 36px 70px rgba(0, 0, 0, 0.65);
+.book-stage[data-open="0"] .flip-root {
   opacity: 0;
   pointer-events: none;
+}
+.book-stage[data-open="1"] .flip-root {
+  opacity: 1;
+  pointer-events: auto;
+}
+.flip-root {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  margin: 0 auto;
+  filter: drop-shadow(0 34px 48px rgba(0, 0, 0, 0.62));
   transition: opacity 0.35s ease;
 }
-.book[data-open="1"] .book-open {
-  opacity: 1;
-  pointer-events: auto;
+.flip-root .stf__parent {
+  margin: 0 auto;
 }
-.book[data-open="1"] .book-cover {
-  pointer-events: none;
-}
-.book-spine {
-  position: absolute;
-  left: 50%;
-  top: 1%;
-  bottom: 1%;
-  width: 16px;
-  transform: translateX(-50%);
-  z-index: 25;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.45), rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.5));
-  pointer-events: none;
-}
-.book-left,
-.book-right {
-  position: relative;
-  min-width: 0;
-  height: 100%;
+.flip-page {
+  background: #0f0f12;
+  color: #f4f1ea;
   overflow: hidden;
-  background: #0e0e12;
 }
-.book-left { border-radius: 5px 0 0 5px; }
-.book-right { border-radius: 0 5px 5px 0; }
-.book-panel {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  pointer-events: none;
-}
-.book-panel.on {
-  opacity: 1;
-  pointer-events: auto;
-  z-index: 1;
-}
-.book-sheets {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  transform-style: preserve-3d;
-  z-index: 20;
-}
-.book-sheet {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 50%;
-  height: 100%;
-  transform-origin: left center;
-  transform-style: preserve-3d;
-  will-change: transform;
-}
-.sheet-side {
-  position: absolute;
-  inset: 0;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  overflow: hidden;
-  border-radius: 0 5px 5px 0;
-  box-shadow: inset 8px 0 18px rgba(0, 0, 0, 0.18);
-}
-.sheet-side.back {
-  transform: rotateY(180deg);
-  border-radius: 5px 0 0 5px;
-  box-shadow: inset -8px 0 18px rgba(0, 0, 0, 0.18);
-}
-.book-sheet[data-flipping="1"] { pointer-events: none; }
 .sheet-face {
   position: relative;
   display: grid;
   align-content: space-between;
   width: 100%;
   height: 100%;
-  min-height: min(54vh, 500px);
-  padding: clamp(20px, 2.8vw, 36px);
+  min-height: 100%;
+  padding: clamp(22px, 3vw, 42px);
   color: #f4f1ea;
   background:
-    radial-gradient(80% 70% at 72% 82%, color-mix(in srgb, var(--accent, var(--red)) 20%, transparent), transparent 70%),
+    radial-gradient(80% 70% at 72% 82%, color-mix(in srgb, var(--accent, var(--red)) 18%, transparent), transparent 70%),
     #101014;
   overflow: hidden;
 }
@@ -1279,12 +1228,11 @@ td img { width: 72px; height: 48px; object-fit: cover; border-radius: 8px; }
   }
   .desk-prop.prop-a { left: 2%; top: 18%; }
   .desk-prop.prop-b { right: 2%; top: 20%; }
-  .book {
-    width: min(920px, 96vw);
-    height: min(48vh, 420px);
+  .book-stage {
+    width: 96vw;
+    --tilt: 10deg;
   }
-  .book-open { transform: rotateX(8deg); }
-  .sheet-face { min-height: min(48vh, 420px); padding: 16px; }
+  .sheet-face { padding: 16px; }
   .sheet-copy h3 { font-size: clamp(20px, 5.5vw, 30px); }
   .sheet-shot { width: min(58%, 160px); }
   .desk-hint { font-size: 10px; letter-spacing: 0.18em; bottom: 18px; }
