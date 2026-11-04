@@ -145,8 +145,6 @@ function viewDesk() {
         <div class="desk-glow" aria-hidden="true"></div>
         <div class="desk-vignette" aria-hidden="true"></div>
         <div class="desk-grain" aria-hidden="true"></div>
-        <div class="desk-prop prop-coffee" data-depth="6" data-rot="3" style="--rot:3deg" aria-hidden="true"><img src="assets/prop-coffee.png" alt="" draggable="false"></div>
-        <div class="desk-prop prop-stylus" data-depth="8" data-rot="-34" style="--rot:-34deg" aria-hidden="true"><img src="assets/prop-stylus.png" alt="" draggable="false"></div>
         <div class="desk-intro" data-desk-intro>
           <h1>Lookbook interactivo<br>que puedes explorar</h1>
           <p>Desliza la rueda. El cuaderno se abre y las páginas giran como en papel.</p>
