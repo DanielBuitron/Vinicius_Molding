@@ -106,17 +106,45 @@ function paint(html, bodyClass) {
   bindReel();
   bindLookbook();
   bindDesk();
+  bindFolio();
 }
 
-function stepLookbook(index) {
+function openFolio() {
+  const folio = document.querySelector("[data-folio]");
+  if (!folio || folio.dataset.open === "1") return;
+  folio.dataset.open = "1";
+  const intro = document.querySelector("[data-desk-intro]");
+  if (intro) intro.classList.add("gone");
+}
+
+function stepLookbook(index, dir) {
   const root = document.querySelector("[data-lookbook]");
   if (!root) return;
   const spreads = [...root.querySelectorAll("[data-spread]")];
   if (!spreads.length) return;
   const current = Math.max(0, spreads.findIndex((item) => item.classList.contains("on")));
   const next = ((index == null ? current : Number(index)) + spreads.length) % spreads.length;
+  if (next === current) return;
+  const flip = root.querySelector("[data-folio-flip]");
+  const going = dir == null ? (next > current || (current === spreads.length - 1 && next === 0) ? 1 : -1) : dir;
+  if (flip) {
+    flip.className = "folio-flip " + (going > 0 ? "fwd" : "back");
+    void flip.offsetWidth;
+    flip.classList.add("run");
+    setTimeout(() => { flip.className = "folio-flip"; }, 700);
+  }
   spreads.forEach((item, i) => item.classList.toggle("on", i === next));
-  root.querySelectorAll(".look-dots button").forEach((dot, i) => dot.classList.toggle("on", i === next));
+  root.querySelectorAll(".folio-dots button").forEach((dot, i) => dot.classList.toggle("on", i === next));
+}
+
+function bindFolio() {
+  const folio = document.querySelector("[data-folio]");
+  if (!folio || folio.dataset.bound === "1") return;
+  folio.dataset.bound = "1";
+  if (folio.dataset.open === "1") {
+    const intro = document.querySelector("[data-desk-intro]");
+    if (intro) intro.classList.add("gone");
+  }
 }
 
 function bindLookbook() {
@@ -125,19 +153,20 @@ function bindLookbook() {
   root.dataset.bound = "1";
   let startX = null;
   root.addEventListener("pointerdown", (event) => {
-    if (event.target.closest(".look-nav, .look-dots, a")) {
+    if (event.target.closest(".folio-nav, .folio-dots, a")) {
       startX = null;
       return;
     }
     startX = event.clientX;
   });
   root.addEventListener("pointerup", (event) => {
-    if (startX == null || event.target.closest(".look-nav, .look-dots, a")) return;
+    if (startX == null || event.target.closest(".folio-nav, .folio-dots, a")) return;
     const delta = event.clientX - startX;
     startX = null;
     if (Math.abs(delta) < 48) return;
     const current = [...root.querySelectorAll("[data-spread]")].findIndex((item) => item.classList.contains("on"));
-    stepLookbook(current + (delta < 0 ? 1 : -1));
+    const dir = delta < 0 ? 1 : -1;
+    stepLookbook(current + dir, dir);
   });
 }
 
@@ -146,6 +175,11 @@ function bindDesk() {
   if (!desk || desk.dataset.bound === "1") return;
   desk.dataset.bound = "1";
   const props = [...desk.querySelectorAll(".desk-prop")];
+  const bases = props.map((prop) => {
+    const style = getComputedStyle(prop);
+    return { rotate: style.getPropertyValue("transform") === "none" ? "" : "" };
+  });
+  void bases;
   const onMove = (event) => {
     const rect = desk.getBoundingClientRect();
     const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
@@ -154,7 +188,8 @@ function bindDesk() {
     desk.style.setProperty("--my", y.toFixed(3));
     props.forEach((prop) => {
       const depth = Number(prop.dataset.depth) || 12;
-      prop.style.transform = `translate3d(${(x * depth).toFixed(1)}px, ${(y * depth * 0.7).toFixed(1)}px, 0)`;
+      const rot = prop.dataset.rot || "0";
+      prop.style.transform = `translate3d(${(x * depth).toFixed(1)}px, ${(y * depth * 0.55).toFixed(1)}px, 0) rotate(${rot}deg)`;
     });
   };
   desk.addEventListener("pointermove", onMove);
@@ -538,12 +573,21 @@ function bind() {
       else stepShowcase(root, 0, node.dataset.index);
       return;
     }
+    if (act === "folio-open") {
+      openFolio();
+      return;
+    }
     if (act === "look" || act === "look-dot") {
       const root = node.closest("[data-lookbook]");
       if (!root) return;
       const current = [...root.querySelectorAll("[data-spread]")].findIndex((item) => item.classList.contains("on"));
-      if (act === "look") stepLookbook(current + Number(node.dataset.dir || 0));
-      else stepLookbook(Number(node.dataset.index));
+      if (act === "look") {
+        const dir = Number(node.dataset.dir || 0);
+        stepLookbook(current + dir, dir);
+      } else {
+        const target = Number(node.dataset.index);
+        stepLookbook(target, target > current ? 1 : -1);
+      }
       return;
     }
     if (act === "filter") {
