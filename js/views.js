@@ -4,20 +4,23 @@ function shellPublic(content) {
   const links = [["inicio", "Inicio"], ["catalogo", "Catálogo"]];
   const home = page === "inicio";
   return `
-    <a class="wa-side" href="${waHref()}" target="_blank" rel="noopener" aria-label="WhatsApp del asesor">${iconWhatsapp()}<span>Hablar con el asesor</span></a>
+    ${home ? "" : `<a class="wa-side" href="${waHref()}" target="_blank" rel="noopener" aria-label="WhatsApp del asesor">${iconWhatsapp()}<span>Hablar con el asesor</span></a>`}
     <header class="site-header ${home ? "desk-header" : ""}">
       <a class="brand" href="#/inicio"><img src="assets/logo-white.png" alt="Vinicius Molding"></a>
+      ${home ? "" : `
       <nav class="nav ${VM.menu ? "open" : ""}">
         ${links.map(([id, label]) => `<a href="#/${id}" class="${page === id || (id === "catalogo" && page === "linea") ? "active" : ""}">${label}</a>`).join("")}
         <a href="#/login">Panel</a>
-      </nav>
+      </nav>`}
       <div class="header-actions">
-        ${home ? `<a class="btn touch" href="${waHref()}" target="_blank" rel="noopener">Hablar</a>` : ""}
+        <a class="btn touch" href="${waHref()}" target="_blank" rel="noopener">Hablar</a>
+        ${home ? "" : `
         <a class="icon-btn" href="#/carrito" aria-label="Carrito">${iconBag()}<span class="cart-count ${count ? "show" : ""}" data-cart-count>${count}</span></a>
-        <button class="menu-toggle" data-act="menu" aria-label="Menú">${VM.menu ? iconClose() : iconMenu()}</button>
+        <button class="menu-toggle" data-act="menu" aria-label="Menú">${VM.menu ? iconClose() : iconMenu()}</button>`}
       </div>
     </header>
     <main>${content}</main>
+    ${home ? "" : `
     <footer class="site-footer">
       <div>
         <img src="assets/logo-white.png" alt="">
@@ -26,7 +29,7 @@ function shellPublic(content) {
       <div>
         <strong>Casa</strong>
         <a href="#/catalogo">Catálogo</a>
-        <a href="#/inicio">Testimonios</a>
+        <a href="#/inicio">Inicio</a>
         <a href="#/catalogo/molding">Línea Molding</a>
         <a href="#/catalogo/limpieza">Limpieza</a>
         <a href="#/catalogo/tratamiento">Tratamiento</a>
@@ -37,7 +40,7 @@ function shellPublic(content) {
         <strong>Asesor</strong>
         <a href="${waHref()}" target="_blank" rel="noopener">WhatsApp</a>
       </div>
-    </footer>`;
+    </footer>`}`;
 }
 
 function packShot(item) {
@@ -86,14 +89,14 @@ function lookPage(opts) {
   const item = opts.item;
   const href = item ? `#/producto/${esc(item.id)}` : (opts.href || "#/catalogo");
   return `
-    <a class="look-page ${opts.tone || ""}" href="${href}" style="--accent:${esc((item && item.accent) || opts.accent || "#E52C3B")}">
-      <div class="look-copy">
-        <p class="look-kicker">${esc(opts.kicker || "")}</p>
+    <a class="folio-page ${opts.tone || ""}" href="${href}" style="--accent:${esc((item && item.accent) || opts.accent || "#E52C3B")}">
+      <div class="folio-copy">
+        <p class="folio-kicker">${esc(opts.kicker || "")}</p>
         <h3>${opts.title}</h3>
         ${opts.text ? `<p>${esc(opts.text)}</p>` : ""}
       </div>
-      ${item ? `<img class="look-shot" src="${esc(cutoutSrc(item.image))}" alt="${esc(item.name)}" draggable="false">` : (opts.img ? `<img class="look-shot" src="${esc(opts.img)}" alt="" draggable="false">` : "")}
-      ${opts.note ? `<span class="look-note">${esc(opts.note)}</span>` : ""}
+      ${item ? `<img class="folio-shot" src="${esc(cutoutSrc(item.image))}" alt="${esc(item.name)}" draggable="false">` : (opts.img ? `<img class="folio-shot" src="${esc(opts.img)}" alt="" draggable="false">` : "")}
+      ${opts.note ? `<span class="folio-note">${esc(opts.note)}</span>` : ""}
     </a>`;
 }
 
@@ -102,107 +105,83 @@ function lookSpreads() {
   const n = (VM.products || []).length;
   return [
     {
-      left: lookPage({ item: by("cera-brillo"), kicker: "La casa", title: "Somos la solución.<br>No el problema.", text: "Cuidado capilar masculino hecho en Cali.", note: "Cera brillo medio" }),
-      right: lookPage({ item: by("cera-fibra"), kicker: "Línea Molding", title: "Cada capa<br>cuenta.", text: "Ceras, pasta y pomada para armar el peinado.", note: "Cera de fibra", tone: "light" }),
+      left: lookPage({ kicker: "Índice", title: "Vinicius<br>Molding.", text: "Cuidado capilar masculino. Somos la solución, no el problema.", tone: "light", href: "#/catalogo", accent: "#E52C3B", img: "assets/isotipo-red.png", note: `${n} piezas` }),
+      right: lookPage({ item: by("cera-brillo"), kicker: "Línea Molding", title: "Cada capa<br>cuenta.", text: "Ceras, pasta y pomada para armar el peinado." }),
     },
     {
-      left: lookPage({ item: by("pasta-minoxidil"), kicker: "Ingeniería", title: "Una pieza<br>de oficio.", text: "Minoxidil, pantenol y romero a base de cera de abeja.", note: "Pasta minoxidil" }),
-      right: lookPage({ item: by("gel-cubre-canas"), kicker: "Acabado", title: "Canas bajo<br>control.", text: "Acabado húmedo brillante para el peinado.", note: "Gel cubre canas", tone: "light" }),
+      left: lookPage({ item: by("cera-fibra"), kicker: "Fibra", title: "Textura<br>viva.", text: "Agarre y volumen sin peso." }),
+      right: lookPage({ item: by("pasta"), kicker: "Pasta", title: "Mate<br>definido.", text: "Acabado seco para peinados diarios.", tone: "light" }),
     },
     {
-      left: lookPage({ item: by("tonico"), kicker: "Tratamiento", title: "Tónico<br>orgánico.", text: "19 activos para el cuero cabelludo.", note: "65 ml" }),
-      right: lookPage({ item: by("serum-barba"), kicker: "Barba", title: "Serum vivo<br>en la mesa.", text: "Argán, jojoba y aloe vera.", note: "Serum barba", tone: "light" }),
+      left: lookPage({ item: by("pasta-minoxidil"), kicker: "Ingeniería", title: "Una pieza<br>de oficio.", text: "Minoxidil, pantenol y romero a base de cera de abeja." }),
+      right: lookPage({ item: by("gel-cubre-canas"), kicker: "Acabado", title: "Canas bajo<br>control.", text: "Acabado húmedo brillante.", tone: "light" }),
     },
     {
-      left: lookPage({ item: by("shampoo-proteccion"), kicker: "Limpieza", title: "Sin sal.<br>Con oficio.", text: "Protección capilar para la rutina diaria.", note: "Shampoo" }),
-      right: lookPage({ item: by("ducha-intima"), kicker: "Cuerpo", title: "Ducha íntima<br>for men.", text: "Sin fragancia, colorantes ni parabenos.", note: "180 g", tone: "light" }),
+      left: lookPage({ item: by("tonico"), kicker: "Tratamiento", title: "Tónico<br>orgánico.", text: "19 activos para el cuero cabelludo." }),
+      right: lookPage({ item: by("serum-barba"), kicker: "Barba", title: "Serum vivo<br>en la mesa.", text: "Argán, jojoba y aloe vera.", tone: "light" }),
     },
     {
-      left: lookPage({ item: by("splash"), kicker: "Cuerpo", title: "Body splash<br>for men.", text: "Eucalipto y mentol. 250 ml.", note: "Splash" }),
-      right: lookPage({ item: by("shaving-gel"), kicker: "Afeitado", title: "Shaving gel<br>con aloe.", text: "La rutina de cada día, en un tubo.", note: "Shaving gel", tone: "light" }),
+      left: lookPage({ item: by("shampoo-proteccion"), kicker: "Limpieza", title: "Sin sal.<br>Con oficio.", text: "Protección capilar diaria." }),
+      right: lookPage({ item: by("ducha-intima"), kicker: "Cuerpo", title: "Ducha íntima<br>for men.", text: "Sin fragancia ni parabenos.", tone: "light" }),
     },
     {
-      left: lookPage({ item: by("cera-kids"), kicker: "Kids", title: "La misma fibra.<br>Otra edad.", text: "Edición suave para los más jóvenes.", note: "Kids" }),
-      right: lookPage({ kicker: `${n} piezas`, title: "Toda la línea<br>en un solo lugar.", text: "Abre el catálogo y elige la pieza.", href: "#/catalogo", accent: "#E52C3B", tone: "cta", img: "assets/isotipo-red.png" }),
+      left: lookPage({ item: by("splash"), kicker: "Splash", title: "Body splash<br>for men.", text: "Eucalipto y mentol. 250 ml." }),
+      right: lookPage({ kicker: "Catálogo", title: "Toda la línea<br>en un clic.", text: "Abre el catálogo y elige la pieza.", href: "#/catalogo", accent: "#E52C3B", tone: "cta", img: "assets/isotipo-red.png", note: "Ver catálogo" }),
     },
   ];
 }
 
 function viewDesk() {
   const props = [
-    ["cera-brillo", "prop-a"],
-    ["pasta", "prop-b"],
-    ["tonico", "prop-c"],
-    ["serum-barba", "prop-d"],
-    ["pomada", "prop-e"],
-  ].map(([id, cls]) => {
+    ["cera-brillo", "prop-a", "22", "-18"],
+    ["pomada", "prop-b", "16", "14"],
+    ["tonico", "prop-c", "28", "6"],
+    ["serum-barba", "prop-d", "14", "-10"],
+    ["pasta", "prop-e", "10", "8"],
+    ["cera-fibra", "prop-f", "12", "-22"],
+  ].map(([id, cls, depth, rot]) => {
     const item = productById(id);
     if (!item) return "";
-    return `<a class="desk-prop ${cls}" href="#/producto/${esc(item.id)}" aria-label="${esc(item.name)}" data-depth="${cls === "prop-a" ? "18" : cls === "prop-c" ? "28" : "12"}"><img src="${esc(cutoutSrc(item.image))}" alt="" draggable="false"></a>`;
+    return `<a class="desk-prop ${cls}" href="#/producto/${esc(item.id)}" aria-label="${esc(item.name)}" data-depth="${depth}" data-rot="${rot}" style="--rot:${rot}deg"><img src="${esc(cutoutSrc(item.image))}" alt="" draggable="false"></a>`;
   }).join("");
   const spreads = lookSpreads();
   return `
     <section class="desk" data-desk>
-      <div class="desk-glow" aria-hidden="true"></div>
       <div class="desk-wood" aria-hidden="true"></div>
+      <div class="desk-glow" aria-hidden="true"></div>
       <div class="desk-vignette" aria-hidden="true"></div>
       ${props}
-      <div class="lookbook" data-lookbook>
-        <button class="look-nav prev" type="button" data-act="look" data-dir="-1" aria-label="Página anterior"></button>
-        <div class="look-stage">
-          ${spreads.map((spread, i) => `
-            <article class="look-spread ${i === 0 ? "on" : ""}" data-spread="${i}">
-              ${spread.left}
-              ${spread.right}
-            </article>`).join("")}
-        </div>
-        <button class="look-nav next" type="button" data-act="look" data-dir="1" aria-label="Página siguiente"></button>
-        <div class="look-dots" role="tablist" aria-label="Páginas del lookbook">
-          ${spreads.map((_, i) => `<button type="button" data-act="look-dot" data-index="${i}" class="${i === 0 ? "on" : ""}" aria-label="Página ${i + 1}"></button>`).join("")}
-        </div>
+      <div class="desk-intro" data-desk-intro>
+        <h1>Lookbook interactivo<br>que puedes explorar</h1>
+        <p>Haz clic en el libro para abrirlo. Pasa el cursor y ve cómo se mueve la mesa.</p>
       </div>
-      <div class="desk-caption">
-        <p class="desk-title">Lookbook que puedes explorar</p>
-        <p class="desk-sub">Haz clic en las páginas para ver la línea. Pasa el cursor y ve cómo se mueve la mesa.</p>
+      <div class="folio" data-folio data-open="0">
+        <button class="folio-cover" type="button" data-act="folio-open" aria-label="Abrir lookbook">
+          <span class="folio-cover-mark"><img src="assets/logo-white.png" alt=""></span>
+          <span class="folio-cover-hint">Abrir</span>
+        </button>
+        <div class="folio-book" data-lookbook>
+          <button class="folio-nav prev" type="button" data-act="look" data-dir="-1" aria-label="Página anterior"></button>
+          <div class="folio-stage">
+            <div class="folio-spine" aria-hidden="true"></div>
+            ${spreads.map((spread, i) => `
+              <article class="folio-spread ${i === 0 ? "on" : ""}" data-spread="${i}">
+                <div class="folio-leaf left">${spread.left}</div>
+                <div class="folio-leaf right">${spread.right}</div>
+              </article>`).join("")}
+            <div class="folio-flip" aria-hidden="true" data-folio-flip></div>
+          </div>
+          <button class="folio-nav next" type="button" data-act="look" data-dir="1" aria-label="Página siguiente"></button>
+          <div class="folio-dots" role="tablist" aria-label="Páginas del lookbook">
+            ${spreads.map((_, i) => `<button type="button" data-act="look-dot" data-index="${i}" class="${i === 0 ? "on" : ""}" aria-label="Página ${i + 1}"></button>`).join("")}
+          </div>
+        </div>
       </div>
     </section>`;
 }
 
 function viewHome() {
-  return `
-    ${viewDesk()}
-    <section class="manifesto desk-follow">
-      <h2>No vendemos promesas.<br><em>Entregamos resultados.</em></h2>
-      <p>Para quien busca la opción correcta, no una más.</p>
-      <a class="btn" href="#/catalogo">Ver el catálogo</a>
-    </section>
-    ${catalogGroups().map(viewEdition).join("")}
-    ${viewTestimonials()}
-    ${viewComments()}
-    <section class="short-block">
-      <div class="runway-head">
-        <p class="kicker">Reel · 30 s</p>
-        <h2>Toda la casa.<br>En un look.</h2>
-      </div>
-      <div class="reel" data-reel>
-        <div class="reel-phone">
-          <video class="short-video" playsinline muted loop autoplay preload="auto" poster="assets/short-poster.jpg" data-reel-video>
-            <source src="assets/short-linea.mp4" type="video/mp4">
-          </video>
-          <button class="reel-sound" type="button" data-act="reel-sound">Toca para oír</button>
-          <div class="reel-bar"><i data-reel-bar></i></div>
-        </div>
-        <div class="reel-chapters" role="tablist" aria-label="Capítulos del reel">
-          <button type="button" data-act="reel-seek" data-t="0">El gancho</button>
-          <button type="button" data-act="reel-seek" data-t="4">Cali</button>
-          <button type="button" data-act="reel-seek" data-t="10">Rutina</button>
-          <button type="button" data-act="reel-seek" data-t="16">La línea</button>
-          <button type="button" data-act="reel-seek" data-t="26">Cierre</button>
-        </div>
-        <p class="reel-note">Hecho en Cali. Catorce piezas. Una línea. Toca el video para oír la voz.</p>
-        <a class="btn" href="#/catalogo">Ver el catálogo</a>
-      </div>
-    </section>`;
+  return viewDesk();
 }
 
 function viewTestimonials() {
@@ -321,8 +300,10 @@ function catalogGroups() {
 
 function catalogCard(item) {
   return `
-    <article class="sku" style="--accent:${esc(item.accent)}">
-      <a class="sku-shot" href="#/producto/${esc(item.id)}">${orbit(item.image, item.name, item.id)}</a>
+    <article class="sku folio-sku" style="--accent:${esc(item.accent)}">
+      <a class="sku-shot" href="#/producto/${esc(item.id)}">
+        <img src="${esc(cutoutSrc(item.image))}" alt="${esc(item.name)}" decoding="async" draggable="false">
+      </a>
       <div class="sku-body">
         <p class="kicker">${esc(item.catName || item.size)}</p>
         <h3><a href="#/producto/${esc(item.id)}">${esc(item.name)}</a></h3>
@@ -340,11 +321,12 @@ function viewCatalog() {
   const groups = focus ? all.filter((group) => group.id === focus) : all;
   const total = all.reduce((count, group) => count + group.items.length, 0);
   return `
-    <section class="section catalog">
+    <section class="section catalog desk-page">
       <div class="catalog-intro">
         <div>
-          <div class="kicker">Cartilla Vinicius</div>
+          <div class="kicker">Lookbook · Vinicius</div>
           <h2>Catálogo</h2>
+          <p class="catalog-lede">La misma línea del escritorio, pieza por pieza.</p>
         </div>
         <div class="filters">
           <a class="chip ${focus ? "" : "on"}" href="#/catalogo">Todos <span>${total}</span></a>
