@@ -93,7 +93,7 @@
     }
     if (hint) {
       hint.style.opacity = (p < 0.09 ? 1 : clamp(1 - (p - 0.09) / 0.1, 0, 1)).toFixed(3);
-      hint.textContent = openT < 0.5 ? "Desliza para abrir el lookbook" : "Sigue deslizando · las páginas giran";
+      hint.textContent = openT < 0.5 ? "Desliza para abrir" : "Sigue deslizando";
     }
 
     if (openT < 0.98) {
