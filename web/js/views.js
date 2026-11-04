@@ -132,44 +132,21 @@ function lookSpreads() {
 }
 
 function viewDesk() {
-  const spreads = lookSpreads();
-  const pages = spreads.flatMap((spread) => [
-    `<div class="flip-page">${spread.left}</div>`,
-    `<div class="flip-page">${spread.right}</div>`,
-  ]).join("");
-  const vh = Math.max(9, spreads.length + 4);
   return `
-    <section class="desk-rail">
-      <div class="desk" data-desk>
-        <div class="desk-wood" aria-hidden="true"></div>
-        <div class="desk-glow" aria-hidden="true"></div>
-        <div class="desk-vignette" aria-hidden="true"></div>
-        <div class="desk-grain" aria-hidden="true"></div>
-        <div class="desk-prop prop-stylus" data-depth="5" data-rot="-28" style="--rot:-28deg" aria-hidden="true">
-          <img src="assets/prop-stylus.png?v=95" alt="" decoding="async" draggable="false">
-        </div>
-        <div class="desk-prop prop-coffee" data-depth="8" data-rot="6" style="--rot:6deg" aria-hidden="true">
-          <img src="assets/prop-coffee.png?v=95" alt="" decoding="async" draggable="false">
-        </div>
-        <div class="desk-intro" data-desk-intro>
+    <section class="desk3d-rail">
+      <div class="desk3d-pin" data-desk3d>
+        <div class="desk3d-canvas" data-desk3d-canvas></div>
+        <div class="desk3d-vignette" aria-hidden="true"></div>
+        <div class="desk3d-grain" aria-hidden="true"></div>
+        <div class="desk3d-intro" data-desk-intro>
+          <p class="desk3d-tag">Nueva escena 3D · v200</p>
           <h1>Lookbook interactivo<br>que puedes explorar</h1>
-          <p>Desliza. El cuaderno se abre y las páginas giran como en papel.</p>
+          <p>Desliza la rueda. La tapa se abre y las páginas giran sobre la mesa.</p>
         </div>
-        <div class="book-stage" data-book-stage data-open="0">
-          <div class="book-shadow" aria-hidden="true"></div>
-          <div class="book-edge" aria-hidden="true"></div>
-          <div class="hard-cover" data-hard-cover>
-            <div class="hard-cover-face">
-              <img src="assets/logo-white.png" alt="Vinicius Molding">
-            </div>
-          </div>
-          <div class="flip-root" data-flip data-spreads="${spreads.length}">
-            ${pages}
-          </div>
-        </div>
-        <p class="desk-hint" data-desk-hint>Desliza para abrir</p>
+        <p class="desk3d-hint" data-desk-hint>Desliza para abrir</p>
+        <a class="desk3d-cta" href="#/catalogo">Ver catálogo</a>
       </div>
-      <div class="desk-space" data-desk-space style="height:${vh * 100}vh" aria-hidden="true"></div>
+      <div class="desk3d-space" style="height:1400vh" aria-hidden="true"></div>
     </section>`;
 }
 
