@@ -105,43 +105,35 @@ function lookSpreads() {
   const n = (VM.products || []).length;
   return [
     {
-      left: lookFace({ kicker: "Índice", title: "Vinicius<br>Molding.", text: "Cuidado capilar masculino. Somos la solución, no el problema.", tone: "light", href: "#/catalogo", accent: "#E52C3B", img: "assets/isotipo-red.png", note: `${n} piezas` }),
-      right: lookFace({ item: by("cera-brillo"), kicker: "Línea Molding", title: "Cada capa<br>cuenta.", text: "Ceras, pasta y pomada para armar el peinado." }),
+      left: lookFace({ kicker: "La casa", title: "Somos la<br>solución.", text: "No el problema. Cuidado capilar masculino hecho en Cali.", tone: "light", href: "#/catalogo", accent: "#E52C3B", img: "assets/isotipo-red.png", note: `${n} piezas` }),
+      right: lookFace({ item: by("cera-brillo"), kicker: "Línea Molding", title: "Cada capa<br>cuenta.", text: "Ceras, pasta y pomada para armar el peinado.", accent: "#E52C3B" }),
     },
     {
-      left: lookFace({ item: by("cera-fibra"), kicker: "Fibra", title: "Textura<br>viva.", text: "Agarre y volumen sin peso." }),
-      right: lookFace({ item: by("pasta"), kicker: "Pasta", title: "Mate<br>definido.", text: "Acabado seco para peinados diarios.", tone: "light" }),
+      left: lookFace({ item: by("cera-fibra"), kicker: "Fibra", title: "Textura<br>viva.", text: "Agarre y volumen sin peso.", accent: "#7B2CBF" }),
+      right: lookFace({ item: by("pasta"), kicker: "Pasta", title: "Mate<br>definido.", text: "Acabado seco para peinados diarios.", tone: "light", accent: "#00C8C2" }),
     },
     {
-      left: lookFace({ item: by("pasta-minoxidil"), kicker: "Ingeniería", title: "Una pieza<br>de oficio.", text: "Minoxidil, pantenol y romero a base de cera de abeja." }),
-      right: lookFace({ item: by("gel-cubre-canas"), kicker: "Acabado", title: "Canas bajo<br>control.", text: "Acabado húmedo brillante.", tone: "light" }),
+      left: lookFace({ item: by("pasta-minoxidil"), kicker: "Ingeniería", title: "Una pieza<br>de oficio.", text: "Minoxidil, pantenol y romero a base de cera de abeja.", accent: "#00C8C2" }),
+      right: lookFace({ item: by("gel-cubre-canas"), kicker: "Acabado", title: "Canas bajo<br>control.", text: "Acabado húmedo brillante.", tone: "light", accent: "#E52C3B" }),
     },
     {
-      left: lookFace({ item: by("tonico"), kicker: "Tratamiento", title: "Tónico<br>orgánico.", text: "19 activos para el cuero cabelludo." }),
-      right: lookFace({ item: by("serum-barba"), kicker: "Barba", title: "Serum vivo<br>en la mesa.", text: "Argán, jojoba y aloe vera.", tone: "light" }),
+      left: lookFace({ item: by("tonico"), kicker: "Tratamiento", title: "Tónico<br>orgánico.", text: "19 activos para el cuero cabelludo.", accent: "#00C8C2" }),
+      right: lookFace({ item: by("serum-barba"), kicker: "Barba", title: "Serum vivo<br>en la mesa.", text: "Argán, jojoba y aloe vera.", tone: "light", accent: "#A4D800" }),
     },
     {
-      left: lookFace({ item: by("shampoo-proteccion"), kicker: "Limpieza", title: "Sin sal.<br>Con oficio.", text: "Protección capilar diaria." }),
-      right: lookFace({ item: by("ducha-intima"), kicker: "Cuerpo", title: "Ducha íntima<br>for men.", text: "Sin fragancia ni parabenos.", tone: "light" }),
+      left: lookFace({ item: by("shampoo-proteccion"), kicker: "Limpieza", title: "Sin sal.<br>Con oficio.", text: "Protección capilar diaria.", accent: "#E52C3B" }),
+      right: lookFace({ item: by("ducha-intima"), kicker: "Cuerpo", title: "Ducha íntima<br>for men.", text: "Sin fragancia ni parabenos.", tone: "light", accent: "#FFD300" }),
     },
     {
-      left: lookFace({ item: by("splash"), kicker: "Splash", title: "Body splash<br>for men.", text: "Eucalipto y mentol. 250 ml." }),
+      left: lookFace({ item: by("splash"), kicker: "Splash", title: "Body splash<br>for men.", text: "Eucalipto y mentol. 250 ml.", accent: "#A4D800" }),
       right: lookFace({ kicker: "Catálogo", title: "Toda la línea<br>en un clic.", text: "Abre el catálogo y elige la pieza.", href: "#/catalogo", accent: "#E52C3B", tone: "cta", img: "assets/isotipo-red.png", note: "Ver catálogo" }),
     },
   ];
 }
 
 function viewDesk() {
-  const props = [
-    ["cera-brillo", "prop-a", "14", "-14"],
-    ["tonico", "prop-c", "18", "8"],
-    ["serum-barba", "prop-d", "12", "-8"],
-    ["pomada", "prop-b", "10", "12"],
-  ].map(([id, cls, depth, rot]) => {
-    const item = productById(id);
-    if (!item) return "";
-    return `<a class="desk-prop ${cls}" href="#/producto/${esc(item.id)}" aria-label="${esc(item.name)}" data-depth="${depth}" data-rot="${rot}" style="--rot:${rot}deg"><img src="${esc(cutoutSrc(item.image))}" alt="" draggable="false"></a>`;
-  }).join("");
+  const tin = productById("cera-brillo");
+  const serum = productById("serum-barba");
   const spreads = lookSpreads();
   const pages = spreads.flatMap((spread) => [
     `<div class="flip-page">${spread.left}</div>`,
@@ -154,13 +146,17 @@ function viewDesk() {
         <div class="desk-wood" aria-hidden="true"></div>
         <div class="desk-glow" aria-hidden="true"></div>
         <div class="desk-vignette" aria-hidden="true"></div>
-        ${props}
+        <div class="desk-prop prop-coffee" data-depth="10" data-rot="0" aria-hidden="true"><img src="assets/prop-coffee.png" alt="" draggable="false"></div>
+        <div class="desk-prop prop-stylus" data-depth="14" data-rot="-28" aria-hidden="true"><img src="assets/prop-stylus.png" alt="" draggable="false"></div>
+        ${tin ? `<a class="desk-prop prop-product" href="#/producto/${esc(tin.id)}" aria-label="${esc(tin.name)}" data-depth="12" data-rot="-16" style="--rot:-16deg"><img src="${esc(cutoutSrc(tin.image))}" alt="" draggable="false"></a>` : ""}
+        ${serum ? `<a class="desk-prop prop-product-b" href="#/producto/${esc(serum.id)}" aria-label="${esc(serum.name)}" data-depth="11" data-rot="10" style="--rot:10deg"><img src="${esc(cutoutSrc(serum.image))}" alt="" draggable="false"></a>` : ""}
         <div class="desk-intro" data-desk-intro>
           <h1>Lookbook interactivo<br>que puedes explorar</h1>
           <p>Desliza la rueda. El cuaderno se abre y las páginas giran como en papel.</p>
         </div>
         <div class="book-stage" data-book-stage data-open="0">
           <div class="book-shadow" aria-hidden="true"></div>
+          <div class="book-edge" aria-hidden="true"></div>
           <div class="hard-cover" data-hard-cover>
             <div class="hard-cover-face">
               <img src="assets/logo-white.png" alt="Vinicius Molding">
