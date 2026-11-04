@@ -352,26 +352,27 @@ body.home .brand img { height: 36px; }
   display: grid;
   place-items: center;
   align-content: center;
-  padding: 72px 3vw 6vh;
-  background: #020201;
+  padding: 68px 2.5vw 5vh;
+  background: #050302;
 }
 .desk-wood {
   position: absolute;
-  inset: -6% -2% -14%;
+  inset: -4% -1% -10%;
   background:
-    url("../assets/desk-wood.jpg") center 52% / cover no-repeat,
-    #1c120c;
-  transform: perspective(1600px) rotateX(calc(22deg + var(--my) * 0.8deg)) rotateY(calc(var(--mx) * 0.5deg)) scale(1.08);
-  transform-origin: 50% 65%;
-  filter: contrast(1.02) saturate(0.78) brightness(0.72);
+    url("../assets/desk-wood.jpg?v=95") center 48% / cover no-repeat,
+    #1a100b;
+  transform: perspective(1800px) rotateX(calc(16deg + var(--my) * 0.35deg)) rotateY(calc(-1deg + var(--mx) * 0.25deg)) scale(1.06);
+  transform-origin: 50% 70%;
+  filter: contrast(1.04) saturate(0.72) brightness(0.78);
   pointer-events: none;
 }
 .desk-glow {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(46% 36% at 50% 58%, rgba(255, 220, 180, 0.2), transparent 70%),
-    radial-gradient(78% 68% at 50% 55%, transparent 28%, rgba(0, 0, 0, 0.78) 100%);
+    radial-gradient(42% 34% at 46% 52%, rgba(255, 214, 168, 0.22), transparent 72%),
+    radial-gradient(28% 24% at 72% 28%, rgba(255, 236, 210, 0.07), transparent 70%),
+    radial-gradient(80% 70% at 50% 58%, transparent 22%, rgba(0, 0, 0, 0.62) 100%);
   pointer-events: none;
   z-index: 1;
 }
@@ -379,8 +380,8 @@ body.home .brand img { height: 36px; }
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(62% 55% at 50% 48%, transparent 42%, rgba(0, 0, 0, 0.82) 100%),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, transparent 18%, transparent 82%, rgba(0, 0, 0, 0.5) 100%);
+    radial-gradient(68% 58% at 48% 50%, transparent 38%, rgba(0, 0, 0, 0.72) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.42) 0%, transparent 16%, transparent 86%, rgba(0, 0, 0, 0.48) 100%);
   pointer-events: none;
   z-index: 2;
 }
@@ -389,137 +390,166 @@ body.home .brand img { height: 36px; }
   inset: 0;
   z-index: 8;
   pointer-events: none;
-  opacity: 0.07;
-  mix-blend-mode: overlay;
-  background: url("../assets/film-grain.jpg") center / 420px auto repeat;
+  opacity: 0.11;
+  mix-blend-mode: soft-light;
+  background: url("../assets/film-grain.jpg") center / 380px auto repeat;
 }
 .desk-prop {
   position: absolute;
   z-index: 4;
   transform: rotate(var(--rot, 0deg));
-  filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.35));
   will-change: transform;
+  pointer-events: none;
 }
-.desk-prop img { width: 100%; height: auto; pointer-events: none; display: block; }
+.desk-prop::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(50% 55% at 50% 45%, rgba(0, 0, 0, 0.55), transparent 72%);
+  filter: blur(7px);
+}
+.desk-prop img { width: 100%; height: auto; pointer-events: none; display: block; user-select: none; }
 .desk-prop.prop-coffee {
-  right: 7%;
-  top: 14%;
-  width: clamp(120px, 13vw, 170px);
-  opacity: 0.92;
-  filter: drop-shadow(0 12px 10px rgba(0, 0, 0, 0.4)) blur(0.2px);
+  right: 3%;
+  top: 13%;
+  width: clamp(160px, 17vw, 220px);
+  opacity: 0.97;
+  filter: drop-shadow(6px 14px 10px rgba(0, 0, 0, 0.45)) saturate(0.82) brightness(0.86) contrast(0.96);
+}
+.desk-prop.prop-coffee::after {
+  left: 16%;
+  right: 10%;
+  bottom: -2%;
+  height: 22%;
+  opacity: 0.85;
 }
 .desk-prop.prop-stylus {
+  left: 5.5%;
+  bottom: 16%;
+  width: clamp(54px, 5.5vw, 78px);
+  opacity: 0.92;
+  filter: drop-shadow(3px 10px 7px rgba(0, 0, 0, 0.48)) brightness(0.88);
+}
+.desk-prop.prop-stylus::after {
   left: 8%;
-  bottom: 20%;
-  width: clamp(150px, 17vw, 220px);
-  opacity: 0.88;
-  filter: drop-shadow(0 8px 6px rgba(0, 0, 0, 0.35));
+  right: 18%;
+  bottom: -4%;
+  height: 12%;
+  transform: rotate(28deg);
+  opacity: 0.7;
 }
 
 .desk-intro {
   position: absolute;
-  left: clamp(20px, 5vw, 56px);
-  top: 20%;
+  left: clamp(18px, 4.5vw, 48px);
+  top: 18%;
   z-index: 6;
-  max-width: min(30ch, 32vw);
+  max-width: min(28ch, 30vw);
   will-change: opacity, transform;
 }
 .desk-intro h1 {
   margin: 0;
   font-family: var(--display);
-  font-size: clamp(26px, 3.2vw, 42px);
-  line-height: 1.05;
-  letter-spacing: -0.035em;
+  font-size: clamp(24px, 2.9vw, 38px);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
   font-weight: 600;
-  text-shadow: 0 6px 24px rgba(0, 0, 0, 0.55);
+  color: rgba(255, 252, 247, 0.94);
+  text-shadow: 0 8px 28px rgba(0, 0, 0, 0.65);
 }
 .desk-intro p {
-  margin: 12px 0 0;
-  color: rgba(244, 241, 234, 0.62);
-  font-size: 13px;
-  max-width: 30ch;
-  line-height: 1.5;
+  margin: 10px 0 0;
+  color: rgba(244, 241, 234, 0.52);
+  font-size: 12.5px;
+  max-width: 28ch;
+  line-height: 1.55;
   font-weight: 400;
 }
 .desk-hint {
   position: absolute;
   z-index: 7;
-  bottom: 22px;
+  bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
   margin: 0;
   font-family: var(--sans);
-  font-size: 11px;
-  letter-spacing: 0.18em;
+  font-size: 10px;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.38);
+  color: rgba(255, 255, 255, 0.32);
   white-space: nowrap;
   pointer-events: none;
 }
 
 .book-stage {
-  --tilt: 12deg;
+  --tilt: 9deg;
   position: relative;
   z-index: 5;
-  width: min(1120px, 90vw);
-  margin: 2vh auto 0;
-  transform: perspective(1700px) rotateX(calc(var(--tilt) + var(--my) * 0.6deg)) rotateY(calc(-1.5deg + var(--mx) * -0.5deg));
+  width: min(1180px, 92vw);
+  margin: 3vh auto 0;
+  transform: perspective(1800px) rotateX(calc(var(--tilt) + var(--my) * 0.3deg)) rotateY(calc(-2.2deg + var(--mx) * -0.28deg)) translate3d(1.2%, 0, 0);
   transform-style: preserve-3d;
 }
 .book-shadow {
   position: absolute;
-  left: 4%;
-  right: 4%;
-  bottom: -5%;
-  height: 12%;
-  background: radial-gradient(50% 65% at 50% 35%, rgba(0, 0, 0, 0.72), transparent 74%);
-  filter: blur(16px);
+  left: 6%;
+  right: 5%;
+  bottom: -7%;
+  height: 14%;
+  background: radial-gradient(48% 70% at 48% 30%, rgba(0, 0, 0, 0.78), transparent 76%);
+  filter: blur(18px);
   pointer-events: none;
   z-index: 0;
+  opacity: 0.9;
 }
 .book-edge {
   position: absolute;
-  left: 1.5%;
-  right: 1.5%;
-  bottom: -0.9%;
-  height: 1.6%;
-  border-radius: 0 0 2px 2px;
-  background: linear-gradient(180deg, #222226, #0a0a0c);
+  left: 1.2%;
+  right: 1.8%;
+  bottom: -1.1%;
+  height: 1.8%;
+  border-radius: 0 0 1px 1px;
+  background: linear-gradient(180deg, #2a2a2e, #0c0c0e 70%, #050506);
   z-index: 1;
   pointer-events: none;
-  opacity: 0.85;
+  opacity: 0.9;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 .hard-cover {
   position: absolute;
   z-index: 12;
   left: 50%;
   top: 50%;
-  width: min(68%, 720px);
-  aspect-ratio: 1.55 / 1;
+  width: min(70%, 760px);
+  aspect-ratio: 1.52 / 1;
   transform: translate(-50%, -50%) rotateY(0deg);
   transform-origin: left center;
   transform-style: preserve-3d;
   will-change: transform, opacity;
-  border-radius: 1px;
+  border-radius: 1px 2px 2px 1px;
   box-shadow:
-    0 28px 50px rgba(0, 0, 0, 0.55),
-    0 0 0 1px rgba(255, 255, 255, 0.03);
+    0 22px 42px rgba(0, 0, 0, 0.58),
+    0 2px 0 rgba(255, 255, 255, 0.035),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 .hard-cover-face {
   width: 100%;
   height: 100%;
-  border-radius: 1px;
+  border-radius: 1px 2px 2px 1px;
   display: grid;
   place-items: center;
   background:
-    url("../assets/paper-grain.jpg") center / 180px auto,
-    linear-gradient(165deg, #141416 0%, #080809 55%, #101012 100%);
+    url("../assets/paper-grain.jpg") center / 160px auto,
+    linear-gradient(152deg, #17171a 0%, #09090b 48%, #121214 100%);
   background-blend-mode: soft-light, normal;
+  box-shadow: inset -10px 0 18px rgba(0, 0, 0, 0.35);
 }
 .hard-cover-face img {
-  width: min(48%, 220px);
+  width: min(46%, 210px);
   height: auto;
-  opacity: 0.9;
+  opacity: 0.88;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
 }
 .book-stage[data-open="0"] .flip-root {
   opacity: 0;
@@ -1242,25 +1272,30 @@ td img { width: 72px; height: 48px; object-fit: cover; border-radius: 8px; }
     padding: 72px 10px 48px;
   }
   .desk-intro {
-    left: 50%;
-    top: 14%;
-    transform: translateX(-50%);
-    max-width: 90%;
-    text-align: center;
-    width: 90%;
+    left: clamp(14px, 4vw, 24px);
+    top: 13%;
+    max-width: min(30ch, 72vw);
+    text-align: left;
+    width: auto;
   }
-  .desk-intro h1 { font-size: clamp(24px, 7vw, 34px); }
-  .desk-intro p { margin-left: auto; margin-right: auto; }
-  .desk-prop.prop-stylus { display: none; }
+  .desk-intro h1 { font-size: clamp(22px, 6.2vw, 32px); }
+  .desk-intro p { margin-left: 0; margin-right: auto; }
+  .desk-prop.prop-stylus {
+    display: block;
+    left: -4%;
+    bottom: 11%;
+    width: clamp(32px, 8.5vw, 46px);
+    opacity: 0.75;
+  }
   .desk-prop.prop-coffee {
-    width: 96px;
-    right: 4%;
-    top: 12%;
-    opacity: 0.9;
+    width: clamp(108px, 28vw, 140px);
+    right: -8%;
+    top: 9%;
+    opacity: 0.94;
   }
   .book-stage {
     width: 96vw;
-    --tilt: 10deg;
+    --tilt: 8deg;
   }
   .sheet-face { padding: 16px; }
   .sheet-copy h3 { font-size: clamp(20px, 5.5vw, 30px); }

@@ -167,12 +167,12 @@
     };
     const onMove = (event) => {
       const rect = pin.getBoundingClientRect();
-      mx = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
-      my = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
+      mx = ((event.clientX - rect.left) / rect.width - 0.5) * 2 * 0.55;
+      my = ((event.clientY - rect.top) / rect.height - 0.5) * 2 * 0.55;
       pin.querySelectorAll(".desk-prop").forEach((prop) => {
         const depth = Number(prop.dataset.depth) || 6;
         const rot = prop.dataset.rot || "0";
-        prop.style.transform = `translate3d(${(mx * depth * 0.45).toFixed(1)}px, ${(my * depth * 0.25).toFixed(1)}px, 0) rotate(${rot}deg)`;
+        prop.style.transform = `translate3d(${(mx * depth * 0.35).toFixed(1)}px, ${(my * depth * 0.2).toFixed(1)}px, 0) rotate(${rot}deg)`;
       });
     };
     const onLeave = () => {
