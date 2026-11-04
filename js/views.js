@@ -85,18 +85,18 @@ function viewEdition(group) {
     </section>`;
 }
 
-function lookPage(opts) {
+function lookFace(opts) {
   const item = opts.item;
   const href = item ? `#/producto/${esc(item.id)}` : (opts.href || "#/catalogo");
   return `
-    <a class="folio-page ${opts.tone || ""}" href="${href}" style="--accent:${esc((item && item.accent) || opts.accent || "#E52C3B")}">
-      <div class="folio-copy">
-        <p class="folio-kicker">${esc(opts.kicker || "")}</p>
+    <a class="sheet-face ${opts.tone || ""}" href="${href}" style="--accent:${esc((item && item.accent) || opts.accent || "#E52C3B")}" tabindex="-1">
+      <div class="sheet-copy">
+        <p class="sheet-kicker">${esc(opts.kicker || "")}</p>
         <h3>${opts.title}</h3>
         ${opts.text ? `<p>${esc(opts.text)}</p>` : ""}
       </div>
-      ${item ? `<img class="folio-shot" src="${esc(cutoutSrc(item.image))}" alt="${esc(item.name)}" draggable="false">` : (opts.img ? `<img class="folio-shot" src="${esc(opts.img)}" alt="" draggable="false">` : "")}
-      ${opts.note ? `<span class="folio-note">${esc(opts.note)}</span>` : ""}
+      ${item ? `<img class="sheet-shot" src="${esc(cutoutSrc(item.image))}" alt="${esc(item.name)}" draggable="false">` : (opts.img ? `<img class="sheet-shot" src="${esc(opts.img)}" alt="" draggable="false">` : "")}
+      ${opts.note ? `<span class="sheet-note">${esc(opts.note)}</span>` : ""}
     </a>`;
 }
 
@@ -105,78 +105,87 @@ function lookSpreads() {
   const n = (VM.products || []).length;
   return [
     {
-      left: lookPage({ kicker: "Índice", title: "Vinicius<br>Molding.", text: "Cuidado capilar masculino. Somos la solución, no el problema.", tone: "light", href: "#/catalogo", accent: "#E52C3B", img: "assets/isotipo-red.png", note: `${n} piezas` }),
-      right: lookPage({ item: by("cera-brillo"), kicker: "Línea Molding", title: "Cada capa<br>cuenta.", text: "Ceras, pasta y pomada para armar el peinado." }),
+      left: lookFace({ kicker: "Índice", title: "Vinicius<br>Molding.", text: "Cuidado capilar masculino. Somos la solución, no el problema.", tone: "light", href: "#/catalogo", accent: "#E52C3B", img: "assets/isotipo-red.png", note: `${n} piezas` }),
+      right: lookFace({ item: by("cera-brillo"), kicker: "Línea Molding", title: "Cada capa<br>cuenta.", text: "Ceras, pasta y pomada para armar el peinado." }),
     },
     {
-      left: lookPage({ item: by("cera-fibra"), kicker: "Fibra", title: "Textura<br>viva.", text: "Agarre y volumen sin peso." }),
-      right: lookPage({ item: by("pasta"), kicker: "Pasta", title: "Mate<br>definido.", text: "Acabado seco para peinados diarios.", tone: "light" }),
+      left: lookFace({ item: by("cera-fibra"), kicker: "Fibra", title: "Textura<br>viva.", text: "Agarre y volumen sin peso." }),
+      right: lookFace({ item: by("pasta"), kicker: "Pasta", title: "Mate<br>definido.", text: "Acabado seco para peinados diarios.", tone: "light" }),
     },
     {
-      left: lookPage({ item: by("pasta-minoxidil"), kicker: "Ingeniería", title: "Una pieza<br>de oficio.", text: "Minoxidil, pantenol y romero a base de cera de abeja." }),
-      right: lookPage({ item: by("gel-cubre-canas"), kicker: "Acabado", title: "Canas bajo<br>control.", text: "Acabado húmedo brillante.", tone: "light" }),
+      left: lookFace({ item: by("pasta-minoxidil"), kicker: "Ingeniería", title: "Una pieza<br>de oficio.", text: "Minoxidil, pantenol y romero a base de cera de abeja." }),
+      right: lookFace({ item: by("gel-cubre-canas"), kicker: "Acabado", title: "Canas bajo<br>control.", text: "Acabado húmedo brillante.", tone: "light" }),
     },
     {
-      left: lookPage({ item: by("tonico"), kicker: "Tratamiento", title: "Tónico<br>orgánico.", text: "19 activos para el cuero cabelludo." }),
-      right: lookPage({ item: by("serum-barba"), kicker: "Barba", title: "Serum vivo<br>en la mesa.", text: "Argán, jojoba y aloe vera.", tone: "light" }),
+      left: lookFace({ item: by("tonico"), kicker: "Tratamiento", title: "Tónico<br>orgánico.", text: "19 activos para el cuero cabelludo." }),
+      right: lookFace({ item: by("serum-barba"), kicker: "Barba", title: "Serum vivo<br>en la mesa.", text: "Argán, jojoba y aloe vera.", tone: "light" }),
     },
     {
-      left: lookPage({ item: by("shampoo-proteccion"), kicker: "Limpieza", title: "Sin sal.<br>Con oficio.", text: "Protección capilar diaria." }),
-      right: lookPage({ item: by("ducha-intima"), kicker: "Cuerpo", title: "Ducha íntima<br>for men.", text: "Sin fragancia ni parabenos.", tone: "light" }),
+      left: lookFace({ item: by("shampoo-proteccion"), kicker: "Limpieza", title: "Sin sal.<br>Con oficio.", text: "Protección capilar diaria." }),
+      right: lookFace({ item: by("ducha-intima"), kicker: "Cuerpo", title: "Ducha íntima<br>for men.", text: "Sin fragancia ni parabenos.", tone: "light" }),
     },
     {
-      left: lookPage({ item: by("splash"), kicker: "Splash", title: "Body splash<br>for men.", text: "Eucalipto y mentol. 250 ml." }),
-      right: lookPage({ kicker: "Catálogo", title: "Toda la línea<br>en un clic.", text: "Abre el catálogo y elige la pieza.", href: "#/catalogo", accent: "#E52C3B", tone: "cta", img: "assets/isotipo-red.png", note: "Ver catálogo" }),
+      left: lookFace({ item: by("splash"), kicker: "Splash", title: "Body splash<br>for men.", text: "Eucalipto y mentol. 250 ml." }),
+      right: lookFace({ kicker: "Catálogo", title: "Toda la línea<br>en un clic.", text: "Abre el catálogo y elige la pieza.", href: "#/catalogo", accent: "#E52C3B", tone: "cta", img: "assets/isotipo-red.png", note: "Ver catálogo" }),
     },
   ];
 }
 
 function viewDesk() {
   const props = [
-    ["cera-brillo", "prop-a", "22", "-18"],
-    ["pomada", "prop-b", "16", "14"],
-    ["tonico", "prop-c", "28", "6"],
-    ["serum-barba", "prop-d", "14", "-10"],
-    ["pasta", "prop-e", "10", "8"],
-    ["cera-fibra", "prop-f", "12", "-22"],
+    ["cera-brillo", "prop-a", "26", "-18"],
+    ["pomada", "prop-b", "18", "14"],
+    ["tonico", "prop-c", "32", "6"],
+    ["serum-barba", "prop-d", "16", "-10"],
+    ["pasta", "prop-e", "12", "8"],
+    ["cera-fibra", "prop-f", "14", "-22"],
   ].map(([id, cls, depth, rot]) => {
     const item = productById(id);
     if (!item) return "";
     return `<a class="desk-prop ${cls}" href="#/producto/${esc(item.id)}" aria-label="${esc(item.name)}" data-depth="${depth}" data-rot="${rot}" style="--rot:${rot}deg"><img src="${esc(cutoutSrc(item.image))}" alt="" draggable="false"></a>`;
   }).join("");
   const spreads = lookSpreads();
+  const sheets = spreads.slice(0, -1).map((spread, i) => {
+    const next = spreads[i + 1];
+    return `
+      <div class="book-sheet" data-sheet="${i}">
+        <div class="sheet-side front">${spread.right}</div>
+        <div class="sheet-side back">${next.left}</div>
+      </div>`;
+  }).join("");
+  const vh = Math.max(7, spreads.length + 2);
   return `
-    <section class="desk" data-desk>
-      <div class="desk-wood" aria-hidden="true"></div>
-      <div class="desk-glow" aria-hidden="true"></div>
-      <div class="desk-vignette" aria-hidden="true"></div>
-      ${props}
-      <div class="desk-intro" data-desk-intro>
-        <h1>Lookbook interactivo<br>que puedes explorar</h1>
-        <p>Haz clic en el libro para abrirlo. Pasa el cursor y ve cómo se mueve la mesa.</p>
-      </div>
-      <div class="folio" data-folio data-open="0">
-        <button class="folio-cover" type="button" data-act="folio-open" aria-label="Abrir lookbook">
-          <span class="folio-cover-mark"><img src="assets/logo-white.png" alt=""></span>
-          <span class="folio-cover-hint">Abrir</span>
-        </button>
-        <div class="folio-book" data-lookbook>
-          <button class="folio-nav prev" type="button" data-act="look" data-dir="-1" aria-label="Página anterior"></button>
-          <div class="folio-stage">
-            <div class="folio-spine" aria-hidden="true"></div>
-            ${spreads.map((spread, i) => `
-              <article class="folio-spread ${i === 0 ? "on" : ""}" data-spread="${i}">
-                <div class="folio-leaf left">${spread.left}</div>
-                <div class="folio-leaf right">${spread.right}</div>
-              </article>`).join("")}
-            <div class="folio-flip" aria-hidden="true" data-folio-flip></div>
+    <section class="desk-rail">
+      <div class="desk" data-desk>
+        <div class="desk-wood" aria-hidden="true"></div>
+        <div class="desk-glow" aria-hidden="true"></div>
+        <div class="desk-vignette" aria-hidden="true"></div>
+        ${props}
+        <div class="desk-intro" data-desk-intro>
+          <h1>Lookbook interactivo<br>que puedes explorar</h1>
+          <p>Desliza la rueda del mouse. El libro se abre y las páginas giran con el scroll.</p>
+        </div>
+        <div class="book" data-book data-open="0">
+          <div class="book-shadow" aria-hidden="true"></div>
+          <div class="book-cover" data-cover>
+            <img src="assets/logo-white.png" alt="Vinicius Molding">
           </div>
-          <button class="folio-nav next" type="button" data-act="look" data-dir="1" aria-label="Página siguiente"></button>
-          <div class="folio-dots" role="tablist" aria-label="Páginas del lookbook">
-            ${spreads.map((_, i) => `<button type="button" data-act="look-dot" data-index="${i}" class="${i === 0 ? "on" : ""}" aria-label="Página ${i + 1}"></button>`).join("")}
+          <div class="book-open">
+            <div class="book-spine" aria-hidden="true"></div>
+            <div class="book-left">
+              ${spreads.map((spread, i) => `<div class="book-panel ${i === 0 ? "on" : ""}" data-left="${i}">${spread.left}</div>`).join("")}
+            </div>
+            <div class="book-right" data-book-under>
+              ${spreads.map((spread, i) => `<div class="book-panel ${i === 0 ? "on" : ""}" data-right="${i}">${spread.right}</div>`).join("")}
+            </div>
+            <div class="book-sheets" aria-hidden="true">
+              ${sheets}
+            </div>
           </div>
         </div>
+        <p class="desk-hint" data-desk-hint>Desliza para abrir el lookbook</p>
       </div>
+      <div class="desk-space" data-desk-space style="height:${vh * 100}vh" aria-hidden="true"></div>
     </section>`;
 }
 
