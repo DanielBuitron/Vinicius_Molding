@@ -103,6 +103,90 @@ function paint(html, bodyClass) {
   bindOrbits();
   if (typeof mountVolumes === "function") mountVolumes();
   bindShowcases();
+  bindReel();
+  bindLookbook();
+  bindDesk();
+}
+
+function stepLookbook(index) {
+  const root = document.querySelector("[data-lookbook]");
+  if (!root) return;
+  const spreads = [...root.querySelectorAll("[data-spread]")];
+  if (!spreads.length) return;
+  const current = Math.max(0, spreads.findIndex((item) => item.classList.contains("on")));
+  const next = ((index == null ? current : Number(index)) + spreads.length) % spreads.length;
+  spreads.forEach((item, i) => item.classList.toggle("on", i === next));
+  root.querySelectorAll(".look-dots button").forEach((dot, i) => dot.classList.toggle("on", i === next));
+}
+
+function bindLookbook() {
+  const root = document.querySelector("[data-lookbook]");
+  if (!root || root.dataset.bound === "1") return;
+  root.dataset.bound = "1";
+  let startX = null;
+  root.addEventListener("pointerdown", (event) => {
+    if (event.target.closest(".look-nav, .look-dots, a")) {
+      startX = null;
+      return;
+    }
+    startX = event.clientX;
+  });
+  root.addEventListener("pointerup", (event) => {
+    if (startX == null || event.target.closest(".look-nav, .look-dots, a")) return;
+    const delta = event.clientX - startX;
+    startX = null;
+    if (Math.abs(delta) < 48) return;
+    const current = [...root.querySelectorAll("[data-spread]")].findIndex((item) => item.classList.contains("on"));
+    stepLookbook(current + (delta < 0 ? 1 : -1));
+  });
+}
+
+function bindDesk() {
+  const desk = document.querySelector("[data-desk]");
+  if (!desk || desk.dataset.bound === "1") return;
+  desk.dataset.bound = "1";
+  const props = [...desk.querySelectorAll(".desk-prop")];
+  const onMove = (event) => {
+    const rect = desk.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
+    const y = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
+    desk.style.setProperty("--mx", x.toFixed(3));
+    desk.style.setProperty("--my", y.toFixed(3));
+    props.forEach((prop) => {
+      const depth = Number(prop.dataset.depth) || 12;
+      prop.style.transform = `translate3d(${(x * depth).toFixed(1)}px, ${(y * depth * 0.7).toFixed(1)}px, 0)`;
+    });
+  };
+  desk.addEventListener("pointermove", onMove);
+  desk.addEventListener("pointerleave", () => {
+    desk.style.setProperty("--mx", "0");
+    desk.style.setProperty("--my", "0");
+    props.forEach((prop) => { prop.style.transform = ""; });
+  });
+}
+
+function bindReel() {
+  const video = document.querySelector("[data-reel-video]");
+  const bar = document.querySelector("[data-reel-bar]");
+  const sound = document.querySelector("[data-act='reel-sound']");
+  if (!video) return;
+  video.muted = VM.reelMuted !== false;
+  const syncSound = () => {
+    if (!sound) return;
+    sound.textContent = video.muted ? "Toca para oír" : "Sonido on";
+    sound.classList.toggle("on", !video.muted);
+  };
+  syncSound();
+  video.addEventListener("timeupdate", () => {
+    if (bar && video.duration) bar.style.width = `${(100 * video.currentTime / video.duration).toFixed(2)}%`;
+  });
+  video.addEventListener("click", () => {
+    video.muted = !video.muted;
+    VM.reelMuted = video.muted;
+    if (video.paused) video.play().catch(() => {});
+    syncSound();
+  });
+  video.play().catch(() => {});
 }
 
 function bindOrbits() {
@@ -425,6 +509,23 @@ function bind() {
       render();
       return;
     }
+    if (act === "reel-sound") {
+      const video = document.querySelector("[data-reel-video]");
+      if (!video) return;
+      video.muted = !video.muted;
+      VM.reelMuted = video.muted;
+      if (video.paused) video.play().catch(() => {});
+      node.textContent = video.muted ? "Toca para oír" : "Sonido on";
+      node.classList.toggle("on", !video.muted);
+      return;
+    }
+    if (act === "reel-seek") {
+      const video = document.querySelector("[data-reel-video]");
+      if (!video) return;
+      video.currentTime = Number(node.dataset.t) || 0;
+      video.play().catch(() => {});
+      return;
+    }
     if (act === "slide") {
       const rail = node.closest("[data-carousel-wrap]")?.querySelector("[data-rail]");
       if (rail) rail.scrollBy({ left: Number(node.dataset.dir) * Math.min(rail.clientWidth * 0.86, 640), behavior: "smooth" });
@@ -435,6 +536,14 @@ function bind() {
       if (!root) return;
       if (act === "show") stepShowcase(root, Number(node.dataset.dir));
       else stepShowcase(root, 0, node.dataset.index);
+      return;
+    }
+    if (act === "look" || act === "look-dot") {
+      const root = node.closest("[data-lookbook]");
+      if (!root) return;
+      const current = [...root.querySelectorAll("[data-spread]")].findIndex((item) => item.classList.contains("on"));
+      if (act === "look") stepLookbook(current + Number(node.dataset.dir || 0));
+      else stepLookbook(Number(node.dataset.index));
       return;
     }
     if (act === "filter") {
