@@ -133,27 +133,21 @@ function lookSpreads() {
 
 function viewDesk() {
   const props = [
-    ["cera-brillo", "prop-a", "26", "-18"],
-    ["pomada", "prop-b", "18", "14"],
-    ["tonico", "prop-c", "32", "6"],
-    ["serum-barba", "prop-d", "16", "-10"],
-    ["pasta", "prop-e", "12", "8"],
-    ["cera-fibra", "prop-f", "14", "-22"],
+    ["cera-brillo", "prop-a", "14", "-14"],
+    ["tonico", "prop-c", "18", "8"],
+    ["serum-barba", "prop-d", "12", "-8"],
+    ["pomada", "prop-b", "10", "12"],
   ].map(([id, cls, depth, rot]) => {
     const item = productById(id);
     if (!item) return "";
     return `<a class="desk-prop ${cls}" href="#/producto/${esc(item.id)}" aria-label="${esc(item.name)}" data-depth="${depth}" data-rot="${rot}" style="--rot:${rot}deg"><img src="${esc(cutoutSrc(item.image))}" alt="" draggable="false"></a>`;
   }).join("");
   const spreads = lookSpreads();
-  const sheets = spreads.slice(0, -1).map((spread, i) => {
-    const next = spreads[i + 1];
-    return `
-      <div class="book-sheet" data-sheet="${i}">
-        <div class="sheet-side front">${spread.right}</div>
-        <div class="sheet-side back">${next.left}</div>
-      </div>`;
-  }).join("");
-  const vh = Math.max(7, spreads.length + 2);
+  const pages = spreads.flatMap((spread) => [
+    `<div class="flip-page">${spread.left}</div>`,
+    `<div class="flip-page">${spread.right}</div>`,
+  ]).join("");
+  const vh = Math.max(9, spreads.length + 4);
   return `
     <section class="desk-rail">
       <div class="desk" data-desk>
@@ -163,24 +157,17 @@ function viewDesk() {
         ${props}
         <div class="desk-intro" data-desk-intro>
           <h1>Lookbook interactivo<br>que puedes explorar</h1>
-          <p>Desliza la rueda del mouse. El libro se abre y las páginas giran con el scroll.</p>
+          <p>Desliza la rueda. El cuaderno se abre y las páginas giran como en papel.</p>
         </div>
-        <div class="book" data-book data-open="0">
+        <div class="book-stage" data-book-stage data-open="0">
           <div class="book-shadow" aria-hidden="true"></div>
-          <div class="book-cover" data-cover>
-            <img src="assets/logo-white.png" alt="Vinicius Molding">
+          <div class="hard-cover" data-hard-cover>
+            <div class="hard-cover-face">
+              <img src="assets/logo-white.png" alt="Vinicius Molding">
+            </div>
           </div>
-          <div class="book-open">
-            <div class="book-spine" aria-hidden="true"></div>
-            <div class="book-left">
-              ${spreads.map((spread, i) => `<div class="book-panel ${i === 0 ? "on" : ""}" data-left="${i}">${spread.left}</div>`).join("")}
-            </div>
-            <div class="book-right" data-book-under>
-              ${spreads.map((spread, i) => `<div class="book-panel ${i === 0 ? "on" : ""}" data-right="${i}">${spread.right}</div>`).join("")}
-            </div>
-            <div class="book-sheets" aria-hidden="true">
-              ${sheets}
-            </div>
+          <div class="flip-root" data-flip data-spreads="${spreads.length}">
+            ${pages}
           </div>
         </div>
         <p class="desk-hint" data-desk-hint>Desliza para abrir el lookbook</p>
