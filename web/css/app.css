@@ -351,28 +351,27 @@ body.home .brand img { height: 36px; }
   overflow: hidden;
   display: grid;
   place-items: center;
-  align-content: end;
-  padding: 64px 2vw 8vh;
-  background: #050302;
+  align-content: center;
+  padding: 72px 3vw 6vh;
+  background: #020201;
 }
 .desk-wood {
   position: absolute;
-  inset: -8% -4% -18%;
+  inset: -6% -2% -14%;
   background:
-    url("../assets/desk-wood.jpg") center 45% / cover no-repeat,
-    #2a1c12;
-  transform: perspective(1400px) rotateX(calc(32deg + var(--my) * 2deg)) rotateY(calc(var(--mx) * 1.2deg)) scale(1.15);
-  transform-origin: 50% 70%;
-  filter: contrast(1.08) saturate(0.95) brightness(0.85);
+    url("../assets/desk-wood.jpg") center 52% / cover no-repeat,
+    #1c120c;
+  transform: perspective(1600px) rotateX(calc(22deg + var(--my) * 0.8deg)) rotateY(calc(var(--mx) * 0.5deg)) scale(1.08);
+  transform-origin: 50% 65%;
+  filter: contrast(1.02) saturate(0.78) brightness(0.72);
   pointer-events: none;
 }
 .desk-glow {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(48% 38% at 50% 68%, rgba(255, 210, 160, 0.38), transparent 72%),
-    radial-gradient(30% 24% at 50% 62%, rgba(229, 44, 59, 0.12), transparent 70%),
-    radial-gradient(80% 70% at 50% 60%, transparent 18%, rgba(0, 0, 0, 0.72) 100%);
+    radial-gradient(46% 36% at 50% 58%, rgba(255, 220, 180, 0.2), transparent 70%),
+    radial-gradient(78% 68% at 50% 55%, transparent 28%, rgba(0, 0, 0, 0.78) 100%);
   pointer-events: none;
   z-index: 1;
 }
@@ -380,150 +379,147 @@ body.home .brand img { height: 36px; }
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(70% 58% at 50% 55%, transparent 38%, rgba(0, 0, 0, 0.78) 100%),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, transparent 22%, transparent 78%, rgba(0, 0, 0, 0.55) 100%);
+    radial-gradient(62% 55% at 50% 48%, transparent 42%, rgba(0, 0, 0, 0.82) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, transparent 18%, transparent 82%, rgba(0, 0, 0, 0.5) 100%);
   pointer-events: none;
   z-index: 2;
+}
+.desk-grain {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  background: url("../assets/film-grain.jpg") center / 420px auto repeat;
 }
 .desk-prop {
   position: absolute;
   z-index: 4;
   transform: rotate(var(--rot, 0deg));
-  filter: drop-shadow(0 18px 14px rgba(0, 0, 0, 0.55));
+  filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.35));
   will-change: transform;
 }
 .desk-prop img { width: 100%; height: auto; pointer-events: none; display: block; }
 .desk-prop.prop-coffee {
-  right: 5%;
-  top: 16%;
-  width: clamp(110px, 14vw, 190px);
-  transform: none;
+  right: 7%;
+  top: 14%;
+  width: clamp(120px, 13vw, 170px);
+  opacity: 0.92;
+  filter: drop-shadow(0 12px 10px rgba(0, 0, 0, 0.4)) blur(0.2px);
 }
 .desk-prop.prop-stylus {
-  left: 6%;
-  bottom: 18%;
-  width: clamp(140px, 18vw, 240px);
-  transform: rotate(-28deg);
-}
-.desk-prop.prop-product {
   left: 8%;
-  top: 22%;
-  width: clamp(56px, 6vw, 88px);
-}
-.desk-prop.prop-product-b {
-  right: 10%;
-  bottom: 16%;
-  width: clamp(44px, 5vw, 70px);
-}
-.desk-prop:hover {
-  z-index: 9;
-  filter: drop-shadow(0 22px 18px rgba(0, 0, 0, 0.65)) brightness(1.05);
+  bottom: 20%;
+  width: clamp(150px, 17vw, 220px);
+  opacity: 0.88;
+  filter: drop-shadow(0 8px 6px rgba(0, 0, 0, 0.35));
 }
 
 .desk-intro {
   position: absolute;
-  left: clamp(18px, 4.5vw, 48px);
-  top: 18%;
+  left: clamp(20px, 5vw, 56px);
+  top: 20%;
   z-index: 6;
-  max-width: min(32ch, 34vw);
+  max-width: min(30ch, 32vw);
   will-change: opacity, transform;
 }
 .desk-intro h1 {
   margin: 0;
   font-family: var(--display);
-  font-size: clamp(28px, 3.6vw, 48px);
-  line-height: 1.02;
-  letter-spacing: -0.04em;
-  font-weight: 650;
-  text-shadow: 0 10px 36px rgba(0, 0, 0, 0.65);
+  font-size: clamp(26px, 3.2vw, 42px);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  font-weight: 600;
+  text-shadow: 0 6px 24px rgba(0, 0, 0, 0.55);
 }
 .desk-intro p {
-  margin: 14px 0 0;
-  color: rgba(244, 241, 234, 0.72);
-  font-size: 14px;
-  max-width: 32ch;
-  line-height: 1.45;
+  margin: 12px 0 0;
+  color: rgba(244, 241, 234, 0.62);
+  font-size: 13px;
+  max-width: 30ch;
+  line-height: 1.5;
+  font-weight: 400;
 }
 .desk-hint {
   position: absolute;
   z-index: 7;
-  bottom: 28px;
+  bottom: 22px;
   left: 50%;
   transform: translateX(-50%);
   margin: 0;
-  font-family: var(--display);
+  font-family: var(--sans);
   font-size: 11px;
-  letter-spacing: 0.28em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.38);
   white-space: nowrap;
   pointer-events: none;
 }
 
 .book-stage {
-  --tilt: 14deg;
+  --tilt: 12deg;
   position: relative;
   z-index: 5;
-  width: min(1180px, 92vw);
-  margin: 0 auto;
-  transform: perspective(1500px) rotateX(calc(var(--tilt) + var(--my) * 1.5deg)) rotateY(calc(var(--mx) * -1.2deg));
+  width: min(1120px, 90vw);
+  margin: 2vh auto 0;
+  transform: perspective(1700px) rotateX(calc(var(--tilt) + var(--my) * 0.6deg)) rotateY(calc(-1.5deg + var(--mx) * -0.5deg));
   transform-style: preserve-3d;
 }
 .book-shadow {
   position: absolute;
-  left: 3%;
-  right: 3%;
-  bottom: -7%;
-  height: 16%;
-  background: radial-gradient(48% 70% at 50% 30%, rgba(0, 0, 0, 0.9), transparent 72%);
-  filter: blur(14px);
+  left: 4%;
+  right: 4%;
+  bottom: -5%;
+  height: 12%;
+  background: radial-gradient(50% 65% at 50% 35%, rgba(0, 0, 0, 0.72), transparent 74%);
+  filter: blur(16px);
   pointer-events: none;
   z-index: 0;
 }
 .book-edge {
   position: absolute;
-  left: 1%;
-  right: 1%;
-  bottom: -1.2%;
-  height: 2.2%;
-  border-radius: 0 0 3px 3px;
-  background: linear-gradient(180deg, #1a1a1c, #050505);
-  box-shadow: 0 2px 0 rgba(255, 255, 255, 0.04);
+  left: 1.5%;
+  right: 1.5%;
+  bottom: -0.9%;
+  height: 1.6%;
+  border-radius: 0 0 2px 2px;
+  background: linear-gradient(180deg, #222226, #0a0a0c);
   z-index: 1;
   pointer-events: none;
-  opacity: 0.95;
+  opacity: 0.85;
 }
 .hard-cover {
   position: absolute;
   z-index: 12;
   left: 50%;
   top: 50%;
-  width: min(70%, 760px);
+  width: min(68%, 720px);
   aspect-ratio: 1.55 / 1;
   transform: translate(-50%, -50%) rotateY(0deg);
   transform-origin: left center;
   transform-style: preserve-3d;
   will-change: transform, opacity;
-  border-radius: 2px;
+  border-radius: 1px;
   box-shadow:
-    0 40px 70px rgba(0, 0, 0, 0.7),
-    0 0 0 1px rgba(255, 255, 255, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    0 28px 50px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.03);
 }
 .hard-cover-face {
   width: 100%;
   height: 100%;
-  border-radius: 2px;
+  border-radius: 1px;
   display: grid;
   place-items: center;
   background:
-    radial-gradient(50% 40% at 50% 48%, rgba(229, 44, 59, 0.08), transparent 70%),
-    linear-gradient(160deg, #17171a 0%, #070708 52%, #121215 100%);
+    url("../assets/paper-grain.jpg") center / 180px auto,
+    linear-gradient(165deg, #141416 0%, #080809 55%, #101012 100%);
+  background-blend-mode: soft-light, normal;
 }
 .hard-cover-face img {
-  width: min(52%, 240px);
+  width: min(48%, 220px);
   height: auto;
-  opacity: 0.95;
+  opacity: 0.9;
 }
 .book-stage[data-open="0"] .flip-root {
   opacity: 0;
@@ -545,7 +541,7 @@ body.home .brand img { height: 36px; }
   margin: 0 auto;
 }
 .flip-page {
-  background: #0f0f12;
+  background: #101014;
   color: #f4f1ea;
   overflow: hidden;
 }
@@ -559,20 +555,26 @@ body.home .brand img { height: 36px; }
   padding: clamp(22px, 3vw, 42px);
   color: #f4f1ea;
   background:
-    radial-gradient(80% 70% at 72% 82%, color-mix(in srgb, var(--accent, var(--red)) 18%, transparent), transparent 70%),
+    url("../assets/paper-grain.jpg") center / 220px auto,
+    radial-gradient(80% 70% at 72% 82%, color-mix(in srgb, var(--accent, var(--red)) 12%, transparent), transparent 70%),
     #101014;
+  background-blend-mode: soft-light, normal, normal;
   overflow: hidden;
 }
 .sheet-face.light {
   background:
-    radial-gradient(70% 60% at 28% 78%, color-mix(in srgb, var(--accent, var(--red)) 14%, transparent), transparent 68%),
+    url("../assets/paper-grain.jpg") center / 220px auto,
+    radial-gradient(70% 60% at 28% 78%, color-mix(in srgb, var(--accent, var(--red)) 10%, transparent), transparent 68%),
     #f2eee6;
+  background-blend-mode: multiply, normal, normal;
   color: #141414;
 }
 .sheet-face.cta {
   background:
-    radial-gradient(70% 60% at 50% 70%, rgba(229, 44, 59, 0.3), transparent 70%),
+    url("../assets/paper-grain.jpg") center / 220px auto,
+    radial-gradient(70% 60% at 50% 70%, rgba(229, 44, 59, 0.22), transparent 70%),
     #121216;
+  background-blend-mode: soft-light, normal, normal;
 }
 .sheet-copy { position: relative; z-index: 2; max-width: 17ch; }
 .sheet-kicker {
@@ -1249,15 +1251,12 @@ td img { width: 72px; height: 48px; object-fit: cover; border-radius: 8px; }
   }
   .desk-intro h1 { font-size: clamp(24px, 7vw, 34px); }
   .desk-intro p { margin-left: auto; margin-right: auto; }
-  .desk-prop.prop-product,
-  .desk-prop.prop-product-b,
   .desk-prop.prop-stylus { display: none; }
   .desk-prop.prop-coffee {
-    display: block;
-    width: 88px;
-    right: 3%;
-    top: 14%;
-    opacity: 0.92;
+    width: 96px;
+    right: 4%;
+    top: 12%;
+    opacity: 0.9;
   }
   .book-stage {
     width: 96vw;
