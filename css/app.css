@@ -1344,7 +1344,16 @@ table { width: 100%; border-collapse: collapse; font-size: 14px; }
 th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
 th { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
 td img { width: 72px; height: 48px; object-fit: cover; border-radius: 8px; }
-.admin input, .admin select { background: #0c0c0e; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; color: #fff; }
+.admin input, .admin select, .admin textarea { background: #0c0c0e; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; color: #fff; width: 100%; }
+.inv-list { display: grid; gap: 14px; }
+.inv-card { display: grid; grid-template-columns: 220px 1fr; gap: 18px; align-items: start; }
+.inv-photo img { width: 100%; height: 300px; object-fit: cover; border-radius: 14px; background: #000; }
+.inv-photo .btn { margin-top: 10px; }
+.inv-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+.inv-fields label { display: flex; flex-direction: column; gap: 6px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.inv-fields label.wide, .inv-fields .btn { grid-column: 1 / -1; }
+.inv-fields input, .inv-fields textarea { text-transform: none; letter-spacing: 0; font-size: 15px; }
+@media (max-width: 800px) { .inv-card { grid-template-columns: 1fr; } }
 .status { border-radius: 99px; padding: 4px 8px; font-size: 12px; background: #2a2a2e; }
 .status.aprobado, .status.contactado { background: #07332b; color: var(--teal); }
 .status.nuevo, .status.pendiente_pago { background: #3a2a00; color: var(--gold); }

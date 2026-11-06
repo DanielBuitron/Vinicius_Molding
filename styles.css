@@ -41,6 +41,7 @@ background-image:repeating-linear-gradient(118deg,#0000 0 2.4cqw,#00000009 2.4cq
 #revista .pg.img .capline{position:absolute;left:0;right:0;bottom:0;z-index:4;display:flex;justify-content:space-between;align-items:flex-end;gap:3cqw;padding:9cqw 5.5cqw 4.2cqw;background:linear-gradient(#0000 0,#000c 42%,#000 100%)}
 #revista .pg.img .capline span{position:static;font:600 3.3cqw/1.15 Poppins;color:#fff;text-shadow:none}
 #revista .pg.img .px{font:700 5cqw/1 Poppins;color:#FFD300;letter-spacing:-.03em}
+#revista .pg.img.bleed img{object-fit:cover;object-position:center}
 #revista .cover{align-items:center;justify-content:center;text-align:center;background:url(assets/cover.jpg) center/cover;border-left:.5cqw solid #1d1d1f}#revista .cover.dk{background-image:url(assets/cover.jpg),none}
 #revista .cover img.iso{width:52cqw;margin-top:12cqw}#revista .cover img.lg{width:56cqw}#revista .cover small{font:300 2.7cqw Poppins;letter-spacing:.25em;color:#9a9da1;margin-top:3cqw;display:block}
 #revista .hd{display:flex;justify-content:space-between;align-items:center;font:400 2.3cqw Poppins;opacity:.7}
@@ -121,10 +122,11 @@ html.port #revista .idx b{font-size:4.6cqw}html.port #revista .idx i{font-size:3
 html.port #revista .hero{top:11vh;left:6vw;right:6vw;max-width:none}html.port #revista .hero h1{font-size:clamp(26px,8.4vw,42px)}
 html.port #revista .zc{grid-template-columns:1fr}html.port #revista .zi{max-height:34vh}html.port #revista .zi img{height:34vh}html.port #revista .zt{padding:18px}
 html.port #revista .ctl{bottom:2vh}
-#revista .pg.cover.brand-cover{display:flex;align-items:center;justify-content:center;padding:0 0 6cqw 8cqw;background:#050506;box-shadow:inset 0 2.4cqw 0 #E52C3B}
-#revista .pg.cover.brand-cover::before{content:"";position:absolute;left:0;top:0;bottom:0;width:8cqw;z-index:3;pointer-events:none;background:linear-gradient(#E52C3B 0 20%,#00C8C2 20% 40%,#FFD300 40% 60%,#A4D800 60% 80%,#585E65 80% 100%)}
-#revista .pg.cover.brand-cover::after{background:none;opacity:1;mix-blend-mode:normal}
-#revista .pg.cover.brand-cover .ph,#revista .pg.cover.brand-cover .shade,#revista .pg.cover.brand-cover .cl2{display:none}
-#revista .pg.cover.brand-cover .lg{position:relative;top:auto;left:auto;transform:none;width:62cqw;z-index:2;filter:drop-shadow(0 1.6cqw 1.2cqw rgba(0,0,0,.55))}
-#revista .brand-bars{position:absolute;left:8cqw;right:0;bottom:0;height:6.2cqw;z-index:4;border-radius:0;background:linear-gradient(90deg,#E52C3B 0 20%,#00C8C2 20% 40%,#FFD300 40% 60%,#A4D800 60% 80%,#585E65 80% 100%)}
+#revista .pg.cover.brand-cover{display:flex;align-items:center;justify-content:center;padding:0;background:linear-gradient(165deg,#1c1e26 0%,#090a0e 38%,#050506 100%);box-shadow:inset 0 0 10cqw rgba(0,0,0,.5)}
+#revista .pg.cover.brand-cover::before{content:"";position:absolute;inset:4.2cqw;width:auto;border:1px solid rgba(255,255,255,.16);background:none;z-index:1;pointer-events:none}
+#revista .pg.cover.brand-cover::after{content:"";position:absolute;inset:0;background:linear-gradient(118deg,#0000 36%,#ffffff2e 48%,#0000 60%);opacity:.85;mix-blend-mode:soft-light;z-index:5;pointer-events:none}
+#revista .pg.cover.brand-cover .ph,#revista .pg.cover.brand-cover .shade,#revista .pg.cover.brand-cover .cl2,#revista .brand-bars,#revista .rail{display:none}
+#revista .plate{position:relative;z-index:2;width:78cqw;padding:12cqw 7.5cqw;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#16181f 0%,#0a0b10 55%,#07080c 100%);box-shadow:inset 0 .22cqw 0 rgba(255,255,255,.34),inset 0 -.28cqw 0 #000,0 .35cqw 0 rgba(255,255,255,.04),0 2.2cqw 3.2cqw rgba(0,0,0,.72)}
+#revista .plate .frame{position:absolute;inset:3.4cqw;border:.42cqw solid transparent;border-image:linear-gradient(90deg,#E52C3B,#00C8C2,#FFD300,#A4D800,#585E65) 1;pointer-events:none}
+#revista .pg.cover.brand-cover .lg{position:relative;top:auto;left:auto;transform:none;width:100%;z-index:2;filter:drop-shadow(0 -.14cqw 0 rgba(255,255,255,.75)) drop-shadow(0 .32cqw 0 #000) drop-shadow(0 1.1cqw 1.3cqw rgba(0,0,0,.6))}
 #revista .book-light{position:absolute;left:50%;top:44%;width:calc(var(--pw)*.62);height:calc(var(--ph)*.38);transform:translate(-50%,-44%) translateZ(40px);pointer-events:none;mix-blend-mode:soft-light;background:radial-gradient(ellipse at 50% 42%,rgba(255,252,246,.45),rgba(255,252,246,0) 70%)}

@@ -419,6 +419,74 @@ async function payWithWompi(customer) {
   location.href = "https://checkout.wompi.co/p/?" + params.toString();
 }
 
+function catalogOverrides() {
+  try { return JSON.parse(localStorage.getItem("vm_catalog") || "{}"); } catch (err) { return {}; }
+}
+
+function mergeCatalog(list) {
+  const saved = catalogOverrides();
+  return (list || []).map((item) => {
+    const extra = saved[item.id];
+    if (!extra) return item;
+    const next = Object.assign({}, item, extra, { id: item.id });
+    if (typeof next.ingredients === "string") {
+      next.ingredients = next.ingredients.split(/[·,]/).map((part) => part.trim()).filter(Boolean);
+    }
+    return next;
+  });
+}
+
+function prepareSheetPhoto(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const width = 1500;
+      const height = 1920;
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      const scale = Math.max(width / img.width, height / img.height);
+      const w = img.width * scale;
+      const h = img.height * scale;
+      ctx.filter = "contrast(1.08) brightness(1.08) saturate(1.08)";
+      ctx.drawImage(img, (width - w) / 2, (height - h) / 2, w, h);
+      resolve(canvas.toDataURL("image/jpeg", 0.9));
+    };
+    img.onerror = () => reject(new Error("No se pudo leer la foto."));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+async function saveProduct(form, data) {
+  const id = form.dataset.id;
+  const file = form.querySelector('input[name="photo"]');
+  const patch = {
+    name: data.name,
+    price: Number(data.price || 0),
+    line: data.line,
+    finish: data.finish,
+    size: data.size,
+    sku: data.sku,
+    summary: data.summary,
+    description: data.description,
+    ingredients: String(data.ingredients || "").split(/[·,]/).map((part) => part.trim()).filter(Boolean),
+  };
+  if (file && file.files && file.files[0]) patch.image = await prepareSheetPhoto(file.files[0]);
+  const all = catalogOverrides();
+  all[id] = Object.assign({}, all[id] || {}, patch);
+  try {
+    localStorage.setItem("vm_catalog", JSON.stringify(all));
+  } catch (err) {
+    toast("La foto pesa demasiado para guardarla en este navegador.");
+    return;
+  }
+  VM.products = mergeCatalog(VM.products);
+  try { await api("/api/admin/products/" + id, { method: "PUT", body: patch }); } catch (err) { /* queda guardado en este navegador */ }
+  toast("Producto guardado. Recarga la revista para ver la foto en la hoja.");
+  render();
+}
+
 function formData(form) {
   const data = {};
   new FormData(form).forEach((value, key) => {
@@ -584,6 +652,11 @@ function bind() {
   });
 
   document.body.addEventListener("change", async (event) => {
+    const photo = event.target;
+    if (photo && photo.name === "photo" && photo.files && photo.files[0]) {
+      const preview = photo.closest(".inv-card") && photo.closest(".inv-card").querySelector("img");
+      if (preview) preview.src = URL.createObjectURL(photo.files[0]);
+    }
     const node = event.target.closest("[data-act='lead-status']");
     if (!node) return;
     try {
@@ -601,6 +674,10 @@ function bind() {
     const data = formData(form);
     const kind = form.dataset.form;
     try {
+      if (kind === "product") {
+        await saveProduct(form, data);
+        return;
+      }
       if (kind === "lead" || kind === "lead-mini") {
         await submitLead(data);
         return;
@@ -724,7 +801,7 @@ async function boot() {
       api("/api/config"),
       api("/api/me"),
     ]);
-    VM.products = catalog.products;
+    VM.products = mergeCatalog(catalog.products);
     VM.config = Object.assign({ whatsapp: SITE.whatsapp, city: SITE.city }, config);
     if (!VM.config.whatsapp) VM.config.whatsapp = SITE.whatsapp;
     VM.user = me.user;
@@ -737,7 +814,7 @@ async function boot() {
       VM.comments = JSON.parse(localStorage.getItem("vm_comments") || "[]");
     }
   } catch (err) {
-    VM.products = SITE.products;
+    VM.products = mergeCatalog(SITE.products);
     VM.config = { wompiReady: false, city: SITE.city, whatsapp: SITE.whatsapp, email: "" };
     applyLocalSettings();
     try { VM.comments = JSON.parse(localStorage.getItem("vm_comments") || "[]"); } catch (error) { VM.comments = []; }

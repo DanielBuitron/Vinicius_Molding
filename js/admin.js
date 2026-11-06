@@ -74,30 +74,27 @@ function viewDashboard(data) {
 }
 
 function viewInventory(payload) {
-  const rows = payload.products.map((product) => `
-    <tr class="${product.stock <= product.minStock ? "low" : ""}">
-      <td><img src="${esc(product.image)}" alt=""></td>
-      <td><strong>${esc(product.name)}</strong><div class="fine">${esc(product.sku)} · ${product.views || 0} vistas</div></td>
-      <td><input data-field="price" data-id="${esc(product.id)}" type="number" min="0" value="${product.price}"></td>
-      <td><input data-field="stock" data-id="${esc(product.id)}" type="number" min="0" value="${product.stock}"></td>
-      <td><input data-field="minStock" data-id="${esc(product.id)}" type="number" min="0" value="${product.minStock}"></td>
-      <td><button class="btn small" data-act="save-stock" data-id="${esc(product.id)}">Guardar</button></td>
-    </tr>`).join("");
-  const moves = (payload.movements || []).slice(0, 8).map((move) => `
-    <div class="sum-row"><span>${esc(move.name)} · ${esc(move.reason)}</span><span>${move.before} → ${move.after}</span></div>`).join("");
-  return adminShell("Inventario", `
-    <article class="panel-card">
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th></th><th>Producto</th><th>Precio</th><th>Stock</th><th>Mínimo</th><th></th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
+  const cards = payload.products.map((product) => `
+    <form class="inv-card form" data-form="product" data-id="${esc(product.id)}">
+      <div class="inv-photo">
+        <img src="${esc(product.image)}" alt="${esc(product.name)}">
+        <label class="btn small">Subir foto<input name="photo" type="file" accept="image/*" hidden></label>
+        <p class="fine">La foto se ajusta a la hoja, en Full HD y con mejor luz.</p>
       </div>
-    </article>
-    <article class="panel-card" style="margin-top:14px">
-      <h3>Movimientos</h3>
-      ${moves || `<p class="empty">Los ajustes y las ventas aprobadas quedan registrados aquí.</p>`}
-    </article>`);
+      <div class="inv-fields">
+        <label>Nombre<input name="name" required value="${esc(product.name)}"></label>
+        <label>Precio<input name="price" type="number" min="0" required value="${product.price}"></label>
+        <label>Línea<input name="line" value="${esc(product.line || "")}"></label>
+        <label>Acabado<input name="finish" value="${esc(product.finish || "")}"></label>
+        <label>Contenido<input name="size" value="${esc(product.size || "")}"></label>
+        <label>Referencia<input name="sku" value="${esc(product.sku || "")}"></label>
+        <label class="wide">Frase<input name="summary" value="${esc(product.summary || "")}"></label>
+        <label class="wide">Descripción<textarea name="description" rows="3">${esc(product.description || "")}</textarea></label>
+        <label class="wide">Contiene<input name="ingredients" value="${esc((product.ingredients || []).join(" · "))}"></label>
+        <button class="btn" type="submit">Guardar</button>
+      </div>
+    </form>`).join("");
+  return adminShell("Inventario", `<div class="inv-list">${cards}</div>`);
 }
 
 function viewTracking(payload) {
