@@ -20,15 +20,17 @@ const PR=[
 {id:'shaving',n:'Shaving Gel',sub:'For men · aloe vera',cap:'Shaving Gel For Men',c:'#FF6A00',v:'paper',d:'Gel de afeitar for men. Contiene aloe vera.',r:[['Contenido','250 ml'],['Contiene','Aloe vera · Eucalipto · Mentol'],['Uso','Afeitado']],img:'assets/products/shaving-gel.jpg'},
 {id:'splash',n:'Body Splash',sub:'For men',cap:'Body Splash For Men',c:'#4BA3DC',tx:'#061018',v:'color',d:'Splash corporal. Eucalipto y mentol. Se aplica en la zona del cuerpo que se requiera.',r:[['Contenido','250 ml'],['Contiene','Eucalipto · Mentol'],['Uso','Cuerpo']],img:'assets/products/splash.jpg'},
 {id:'ducha',n:'Ducha íntima',sub:'For men',cap:'Ducha Íntima For Men',c:'#A4D800',v:'dark',d:'Higiene masculina. Sin fragancia, sin colorantes y sin parabenos.',r:[['Contenido','180 g'],['Fórmula','Sin fragancia ni parabenos'],['Uso','Externo']],img:'assets/products/ducha-intima.jpg'}];
-PR.forEach((p,j)=>{p.ref=String(j+1).padStart(2,'0')});
+const PES={cera:24000,pasta:24000,pomada:24000,'cera-fibra':24000,kids:24000,anticaida:34000,carbon:32000,serum:20000,tonico:52000,'pasta-minoxidil':24000,'cubre-canas':24000,shaving:29000,splash:29000,ducha:29000};
+const cop=n=>'$'+Number(n).toLocaleString('es-CO');
+PR.forEach((p,j)=>{p.ref=String(j+1).padStart(2,'0');p.price=PES[p.id]||0;p.r.unshift(['Precio',cop(p.price)])});
 const hd=n=>`<div class="hd"><img src="assets/isotipo-rojo.png" alt=""><span>${n}</span></div>`;
 const rows=r=>r.map(x=>`<div><dt>${x[0]}</dt><dd>${x[1]}</dd></div>`).join('');
 const shot=p=>p.img||A('p-'+p.id+'.jpg');
-const imgP=j=>{const p=PR[j];return `<div class="pg img" data-p="${j}"><img src="${shot(p)}" alt="${p.cap}"><span>${p.cap}</span><b class="zm">+</b></div>`};
+const imgP=j=>{const p=PR[j];return `<div class="pg img" data-p="${j}"><img src="${shot(p)}" alt="${p.cap}"><div class="capline"><span>${p.cap}</span><b class="px">${cop(p.price)}</b></div><b class="zm">+</b></div>`};
 const infoP=(j,n)=>{const p=PR[j],cls=p.v==='color'?'pg col':p.v==='dark'?'pg dark':'pg',st=`--ac:${p.c}`+(p.v==='color'?`;--bg:${p.c};--fg:${p.tx}`:'');
  return `<div class="${cls}" style="${st}">${hd(n)}<div class="num">${p.ref}</div><h2 data-p="${j}">${p.n}<em>${p.sub}</em></h2><p>${p.d}</p><dl>${rows(p.r)}</dl><button class="more" data-p="${j}">Ver detalle +</button></div>`};
 const mini=a=>`<div class="mini">${a.map(r=>`<div><b>${r[0]}</b><span>${r[1]}</span></div>`).join('')}</div>`;
-const cover=`<div class="pg cover brand-cover"><span class="cover-frame" aria-hidden="true"></span><img class="lg" src="assets/logo.png" alt="Vinicius Molding"><span class="brand-bars" aria-hidden="true"></span></div>`;
+const cover=`<div class="pg cover brand-cover"><span class="rail" aria-hidden="true"></span><img class="lg" src="assets/logo.png" alt="Vinicius Molding"><span class="brand-bars" aria-hidden="true"></span></div>`;
 const back=`<div class="pg dark cover bk"><img class="iso" src="assets/isotipo.png" alt=""><small>@viniciusmolding</small></div>`;
 const S=[
 [`<div class="pg dark">${hd(2)}<h2>Quiénes somos</h2><p>Somos una marca de cuidado capilar masculino creada para hombres que no improvisan, que cuidan cada detalle y saben que el éxito también se construye desde el cuero cabelludo.</p><p>No vendemos promesas, entregamos resultados.</p></div>`,
