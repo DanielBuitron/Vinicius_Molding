@@ -61,8 +61,8 @@ const endP=s=>s===0?0:win(s-1)[1]+.004;
 let target=0,cur=0,state=-1;const sy=()=>stage.offsetHeight-innerHeight;
 const D=Math.PI/180;
 function setLeaf(i,p){const [a,b]=win(i),t=cl((p-a)/(b-a)),e=ease(t),L=leaves[i],key=i===N-1?'x':t.toFixed(4);if(L.key===key)return e>=.5;L.key=key;
- const sn=Math.sin(Math.PI*t),th=-180*e-3.2*(1-2*e),bb=.65*(1-2*e)+9*Math.pow(sn,.9);
- L.l.style.transform=`translateZ(${(e>=.5?i*.3:(N-i)*.3)+sn*16}px)`;
+ const sn=Math.sin(Math.PI*t),th=-180*e,bb=1.4*(1-2*e)+18*Math.pow(sn,.72);
+ L.l.style.transform=`translateZ(${(e>=.5?i*.3:(N-i)*.3)+sn*42}px)`;
  L.segs.forEach((s,k)=>{s.style.transform=`rotateY(${k?bb:th}deg)`;const ang=(th+k*bb)*D,c=Math.cos(ang),sf=s.children[0],sb=s.children[1];
   sf.style.setProperty('--sh',c>0?((1-c)*.7).toFixed(3):1);sb.style.setProperty('--sh',c<0?((1+c)*.7).toFixed(3):1)});
  return e>=.5}
@@ -76,10 +76,13 @@ function draw(p){
  let fl=0;leaves.forEach((_,i)=>{if(setLeaf(i,p))fl++});
  book.style.setProperty('--tl',(2+fl*1.1)+'px');book.style.setProperty('--tr',(2+(N-1-fl)*1.1)+'px');
  bar.style.width=p*100+'%';if(fl!==state){state=fl;cap.textContent=CAP[fl]}}
-function loop(){cur+=(target-cur)*.42;if(Math.abs(target-cur)<.0004)cur=target;draw(cur);if(cur!==target)requestAnimationFrame(loop)}
-const read=()=>{target=cl(scrollY/sy());loop()};
-const go=s=>{s=Math.max(0,Math.min(N-1,s));scrollTo({top:(window.PORT?steps()[s?2*s-1:0]:endP(s))*sy(),behavior:'auto'})};
-const nav=d=>{if(!window.PORT){go(state+d);return}const a=steps();let k=0;a.forEach((v,i)=>{if(Math.abs(v-target)<Math.abs(a[k]-target))k=i});k=Math.max(0,Math.min(a.length-1,k+d));scrollTo({top:a[k]*sy(),behavior:'auto'})};
+let flipJob=0,lock=0;
+function loop(){if(lock)return;cur+=(target-cur)*.2;if(Math.abs(target-cur)<.0004)cur=target;draw(cur);if(cur!==target)requestAnimationFrame(loop)}
+function playTo(p){const job=++flipJob,from=cur,t0=performance.now(),dur=920;lock=1;const step=now=>{if(job!==flipJob)return;const t=Math.min(1,(now-t0)/dur);cur=from+(p-from)*ease(t);draw(cur);if(t<1)requestAnimationFrame(step);else{cur=p;draw(p);lock=0}};requestAnimationFrame(step)}
+const read=()=>{if(lock)return;flipJob++;target=cl(scrollY/sy());loop()};
+const go=s=>{s=Math.max(0,Math.min(N-1,s));const p=window.PORT?steps()[s?2*s-1:0]:endP(s);if(Math.abs(p-cur)<.001)return;lock=1;scrollTo({top:p*sy(),behavior:'auto'});playTo(p)};
+const nav=d=>{if(!window.PORT){go(state+d);return}const a=steps();let k=0;a.forEach((v,i)=>{if(Math.abs(v-cur)<Math.abs(a[k]-cur))k=i});k=Math.max(0,Math.min(a.length-1,k+d));const p=a[k];lock=1;scrollTo({top:p*sy(),behavior:'auto'});playTo(p)};
+addEventListener('wheel',()=>{if(!lock)return;flipJob++;lock=0},{passive:true});
 document.getElementById('next').onclick=()=>nav(1);document.getElementById('prev').onclick=()=>nav(-1);
 // ---- detalle de producto
 const Z=document.getElementById('zoom'),$=id=>document.getElementById(id);let zi=0;
