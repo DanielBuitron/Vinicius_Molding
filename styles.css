@@ -129,14 +129,14 @@ html.port #revista .ctl{bottom:2vh}
 #revista .velvet{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:5cqw;text-align:center}
 #revista .velvet .mark{width:34cqw;height:auto;filter:none}
 #revista .velvet b{font:600 4.6cqw/1 Poppins;letter-spacing:.28em;color:#E52C3B;text-shadow:none}
-#revista .book-light{position:absolute;left:calc(50% + var(--pw) * .5 * (1 - var(--o, 0)));top:50%;width:calc(var(--pw) * (1.15 + var(--o, 0) * 1.55));height:calc(var(--ph) * 1.4);transform:translate(-50%,-50%) translateZ(70px);pointer-events:none;mix-blend-mode:soft-light;opacity:calc(var(--o, 0) * .35);background:radial-gradient(ellipse at 50% 50%,rgba(255,252,248,.55) 0%,rgba(255,252,248,.4) 82%,rgba(255,252,248,0) 100%)}
+#revista .book-light{position:absolute;left:calc(50% + var(--pw) * .5 * (1 - var(--o, 0)));top:50%;width:calc(var(--pw) * (1.08 + var(--o, 0) * 1.64));height:calc(var(--ph) * (1.12 + var(--o, 0) * .32));transform:translate(-50%,-50%) translateZ(70px);pointer-events:none;mix-blend-mode:screen;opacity:calc(.9 - var(--o, 0) * .58);background:radial-gradient(ellipse at 50% 46%,rgba(255,250,242,.4) 0%,rgba(255,250,242,.32) 68%,rgba(255,250,242,0) 100%)}
 #revista .icon-cart{position:relative;display:grid;place-items:center;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.45);color:#fff;text-decoration:none}
 #revista .icon-cart svg{width:18px;height:18px}
 #revista .icon-cart b{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;padding:0 4px;border-radius:99px;background:#E52C3B;color:#fff;font:700 10px/16px Poppins;text-align:center}
 .wa-fab{position:fixed;z-index:45;right:max(16px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;background:#25D366;color:#fff;display:grid;place-items:center;box-shadow:0 10px 28px rgba(0,0,0,.45)}
 .wa-fab svg{width:30px;height:30px}
 html.phone .wa-fab{bottom:max(76px,calc(env(safe-area-inset-bottom) + 68px))}
-html.phone #revista .book-light{opacity:calc(var(--o, 0) * .3)}
+html.phone #revista .book-light{opacity:calc(.82 - var(--o, 0) * .52)}
 #revista .short{display:none}
 body.mode-home{overflow-x:hidden}
 #revista .sticky{height:100vh;height:100dvh}
