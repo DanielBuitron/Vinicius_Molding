@@ -637,25 +637,29 @@ async function sendOrderWhatsapp(data) {
   const file = orderPdf(clean);
   const named = new File([file], "Pedido-" + ref + ".pdf", { type: "application/pdf" });
   const message = clean.join("\n");
-  let shared = false;
-  try {
-    if (navigator.canShare && navigator.canShare({ files: [named] })) {
-      await navigator.share({ files: [named], title: "Pedido " + ref, text: message.slice(0, 500) });
-      shared = true;
-    }
-  } catch (err) {
-    if (err && err.name === "AbortError") {
-      toast("Envío cancelado");
+  const caption = message.length > 900 ? message.slice(0, 900) + "…" : message;
+  const canFile = !!(navigator.canShare && navigator.canShare({ files: [named] }));
+  if (canFile) {
+    try {
+      await navigator.share({ files: [named], title: "Pedido " + ref, text: caption });
+      VM.cart = [];
+      saveCart();
+      toast("Envía el PDF al chat del asesor");
+      location.hash = "#/inicio";
       return;
+    } catch (err) {
+      if (err && err.name === "AbortError") {
+        toast("No se envió el PDF");
+        return;
+      }
     }
   }
-  if (!shared) {
-    downloadFile(named);
-    window.open(waHref(message + "\n\nAdjunta el PDF descargado: " + named.name), "_blank", "noopener");
-  }
+  downloadFile(named);
+  const chat = window.open(waHref(message), "_blank", "noopener");
+  if (!chat) location.href = waHref(message);
   VM.cart = [];
   saveCart();
-  toast(shared ? "Envía el PDF al asesor desde WhatsApp" : "PDF listo. Se abrió WhatsApp para el asesor");
+  toast("Se abrió el WhatsApp del asesor. Adjunta el PDF del pedido");
   location.hash = "#/inicio";
 }
 

@@ -470,18 +470,18 @@ function viewCheckout() {
     <section class="checkout-layout">
       <form class="form panel-card" data-form="checkout">
         <h3>Datos de contacto</h3>
-        <p class="fine">El asesor recibe un PDF con el pedido para verificarlo.</p>
+        <p class="fine">Al enviar, el PDF del pedido sale al WhatsApp del asesor.</p>
         <label>Nombre<input name="name" required></label>
         <label>Celular<input name="phone" required inputmode="tel"></label>
         <label>Ciudad<input name="city" value="Cali"></label>
         <label>Dirección<input name="address"></label>
         <label>Nota<textarea name="note" rows="3" placeholder="Horario, barrio o indicación"></textarea></label>
-        <button class="btn" type="submit">Enviar por WhatsApp</button>
+        <button class="btn" type="submit">Enviar PDF al asesor</button>
       </form>
       <aside class="summary">
         <h3>${money(cartTotal())}</h3>
         ${items.map((item) => `<div class="sum-row"><span>${item.qty} × ${esc(item.name)}</span><span>${money(item.price * item.qty)}</span></div>`).join("")}
-        <p class="fine">El PDF queda para que el asesor confirme productos, valor y entrega.</p>
+        <p class="fine">El asesor lo recibe en su WhatsApp para confirmar productos, valor y entrega.</p>
       </aside>
     </section>`;
 }
