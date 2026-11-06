@@ -126,13 +126,13 @@ html.phone #revista .idx li{padding:1.7cqw 0}
 html.port #revista .idx{overflow-y:auto;max-height:72cqh;-webkit-overflow-scrolling:touch}
 html.port #revista .zc{grid-template-columns:1fr}html.port #revista .zi{max-height:34vh}html.port #revista .zi img{height:34vh}html.port #revista .zt{padding:18px}
 html.port #revista .ctl{bottom:2vh}
-#revista .pg.cover.brand-cover{display:flex;align-items:center;justify-content:center;padding:0;background:linear-gradient(165deg,#1c1e26 0%,#090a0e 38%,#050506 100%);box-shadow:inset 0 0 10cqw rgba(0,0,0,.5)}
-#revista .pg.cover.brand-cover::before{content:"";position:absolute;inset:4.2cqw;width:auto;border:1px solid rgba(255,255,255,.16);background:none;z-index:1;pointer-events:none}
-#revista .pg.cover.brand-cover::after{content:"";position:absolute;inset:0;background:linear-gradient(118deg,#0000 36%,#ffffff2e 48%,#0000 60%);opacity:.85;mix-blend-mode:soft-light;z-index:5;pointer-events:none}
-#revista .pg.cover.brand-cover .ph,#revista .pg.cover.brand-cover .shade,#revista .pg.cover.brand-cover .cl2,#revista .brand-bars,#revista .rail{display:none}
-#revista .plate{position:relative;z-index:2;width:78cqw;padding:12cqw 7.5cqw;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#16181f 0%,#0a0b10 55%,#07080c 100%);box-shadow:inset 0 .22cqw 0 rgba(255,255,255,.34),inset 0 -.28cqw 0 #000,0 .35cqw 0 rgba(255,255,255,.04),0 2.2cqw 3.2cqw rgba(0,0,0,.72)}
-#revista .plate .frame{position:absolute;inset:3.4cqw;border:.42cqw solid transparent;border-image:linear-gradient(90deg,#E52C3B,#00C8C2,#FFD300,#A4D800,#585E65) 1;pointer-events:none}
-#revista .pg.cover.brand-cover .lg{position:relative;top:auto;left:auto;transform:none;width:100%;z-index:2;filter:drop-shadow(0 -.14cqw 0 rgba(255,255,255,.75)) drop-shadow(0 .32cqw 0 #000) drop-shadow(0 1.1cqw 1.3cqw rgba(0,0,0,.6))}
+#revista .pg.cover.brand-cover{display:flex;align-items:center;justify-content:center;padding:0;background:radial-gradient(ellipse at 50% 22%,#3a1418 0%,#12080a 28%,#070607 62%,#040404 100%);box-shadow:inset 0 0 18cqw rgba(0,0,0,.55)}
+#revista .pg.cover.brand-cover::before{content:"";position:absolute;inset:0;border:0;background:url(assets/grain.png);opacity:.45;mix-blend-mode:overlay;z-index:1;pointer-events:none}
+#revista .pg.cover.brand-cover::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 28%,rgba(255,60,70,.16),transparent 46%);opacity:1;mix-blend-mode:screen;z-index:3;pointer-events:none}
+#revista .pg.cover.brand-cover .ph,#revista .pg.cover.brand-cover .shade,#revista .pg.cover.brand-cover .cl2,#revista .brand-bars,#revista .rail,#revista .plate{display:none}
+#revista .velvet{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:5cqw;text-align:center}
+#revista .velvet .mark{width:34cqw;height:auto;filter:drop-shadow(0 0 1.6cqw rgba(229,44,59,.9)) drop-shadow(0 .45cqw .15cqw rgba(0,0,0,.85))}
+#revista .velvet b{font:600 4.6cqw/1 Poppins;letter-spacing:.28em;color:#ff2d36;text-shadow:0 0 1.6cqw rgba(229,44,59,.8),0 .28cqw 0 #4a0008,0 .7cqw .5cqw rgba(0,0,0,.7)}
 #revista .book-light{position:absolute;left:50%;top:48%;width:calc(var(--pw) * (0.78 + var(--o, 0) * 1.42));height:calc(var(--ph) * (0.7 + var(--o, 0) * 0.48));transform:translate(-50%,-50%) translateZ(70px);pointer-events:none;mix-blend-mode:screen;opacity:calc(.55 + var(--o, 0) * .45);background:radial-gradient(ellipse at 50% 46%,rgba(255,250,240,.42) 0%,rgba(255,246,230,.2) 48%,rgba(255,246,230,0) 78%)}
 #revista .icon-cart{position:relative;display:grid;place-items:center;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.45);color:#fff;text-decoration:none}
 #revista .icon-cart svg{width:18px;height:18px}
@@ -140,6 +140,7 @@ html.port #revista .ctl{bottom:2vh}
 .wa-fab{position:fixed;z-index:45;right:max(16px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;background:#25D366;color:#fff;display:grid;place-items:center;box-shadow:0 10px 28px rgba(0,0,0,.45)}
 .wa-fab svg{width:30px;height:30px}
 html.phone .wa-fab{bottom:max(76px,calc(env(safe-area-inset-bottom) + 68px))}
+html.phone #revista .book-light{opacity:.28}
 #revista .short{display:none}
 body.mode-home{overflow-x:hidden}
 #revista .sticky{height:100vh;height:100dvh}

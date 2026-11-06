@@ -123,10 +123,12 @@ const T={wood:deskSurface(),blob:cvTex(bc),cr1:cream([236,214,172],5,16),cr2:cre
 ['cera','pasta','pomada','fibra'].forEach(k=>{T['l_'+k]=tex(TEX['lid_'+k]);T['s_'+k]=tex(TEX['strip_'+k])});
 // ---- framebuffer MSAA + resolve
 let fbM,fbR,tR,rC,rD,fw=0,fh=0;
-function resize(){const d=Math.min(Math.max(devicePixelRatio||1,2),2.5);cv.width=Math.round(innerWidth*d);cv.height=Math.round(innerHeight*d);cv.style.width='100%';cv.style.height='100%';
+function resize(){const phone=innerWidth<760,d=phone?1:Math.min(Math.max(devicePixelRatio||1,1.5),2);cv.width=Math.round(innerWidth*d);cv.height=Math.round(innerHeight*d);cv.style.width='100%';cv.style.height='100%';
  if(fbM){gl.deleteFramebuffer(fbM);gl.deleteFramebuffer(fbR);gl.deleteTexture(tR);gl.deleteRenderbuffer(rC);gl.deleteRenderbuffer(rD)}
- fw=cv.width;fh=cv.height;rC=gl.createRenderbuffer();gl.bindRenderbuffer(gl.RENDERBUFFER,rC);gl.renderbufferStorageMultisample(gl.RENDERBUFFER,4,gl.RGBA8,fw,fh);
- rD=gl.createRenderbuffer();gl.bindRenderbuffer(gl.RENDERBUFFER,rD);gl.renderbufferStorageMultisample(gl.RENDERBUFFER,4,gl.DEPTH_COMPONENT24,fw,fh);
+ fw=cv.width;fh=cv.height;rC=gl.createRenderbuffer();gl.bindRenderbuffer(gl.RENDERBUFFER,rC);
+ if(phone)gl.renderbufferStorage(gl.RENDERBUFFER,gl.RGBA8,fw,fh);else gl.renderbufferStorageMultisample(gl.RENDERBUFFER,4,gl.RGBA8,fw,fh);
+ rD=gl.createRenderbuffer();gl.bindRenderbuffer(gl.RENDERBUFFER,rD);
+ if(phone)gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT24,fw,fh);else gl.renderbufferStorageMultisample(gl.RENDERBUFFER,4,gl.DEPTH_COMPONENT24,fw,fh);
  fbM=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,fbM);gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.RENDERBUFFER,rC);gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,rD);
  tR=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tR);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,fw,fh,0,gl.RGBA,gl.UNSIGNED_BYTE,null);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
  fbR=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,fbR);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tR,0)}
@@ -135,7 +137,7 @@ const emptyVao=gl.createVertexArray();
 const model=(p,a,t,s)=>{t=t||0;s=s||[1,1,1];const ca=Math.cos(a),sa=Math.sin(a),c=Math.cos(t),n=Math.sin(t);return new Float32Array([ca*s[0],sa*s[0],0,0,-sa*c*s[1],ca*c*s[1],n*s[1],0,sa*n*s[2],-ca*n*s[2],c*s[2],0,p[0],p[1],p[2],1])};
 function dr(m,o){gl.uniformMatrix4fv(pr.u('uModel'),false,model(o.p,o.a||0,o.t||0,o.s));gl.uniform1i(pr.u('uMode'),o.mode);gl.uniform3fv(pr.u('uCol'),o.col||[.06,.06,.065]);gl.uniform2fv(pr.u('uRep'),o.rep||[1,1]);gl.uniform1f(pr.u('uG'),o.g||1);gl.uniform1f(pr.u('uA'),o.a||0);
  gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,o.tex||T.blob);gl.uniform1i(pr.u('uTex'),0);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,o.nrm||T.blob);gl.uniform1i(pr.u('uNrm'),1);gl.bindVertexArray(M[m].vao);gl.drawElements(gl.TRIANGLES,M[m].n,gl.UNSIGNED_SHORT,0)}
-const ptr={x:0,y:0,tx:0,ty:0,on:0};addEventListener('pointermove',e=>{ptr.on=1;ptr.tx=e.clientX/innerWidth*2-1;ptr.ty=e.clientY/innerHeight*2-1});
+const ptr={x:0,y:0,tx:0,ty:0,on:0};addEventListener('pointermove',e=>{if(innerWidth<700)return;ptr.on=1;ptr.tx=e.clientX/innerWidth*2-1;ptr.ty=e.clientY/innerHeight*2-1});
 const tilt=document.getElementById('tilt');
 function frame(t){
  const sec=t/1000,k=window.CAMT||{rx:54,s:.86,tx:4,ty:-3,rz:-3},PORT=!!window.PORT;
@@ -152,15 +154,15 @@ function frame(t){
  for(let i=0;i<5;i++){rY=(.24*kk-.32-ndcY)*H/2;const py=(rY-tyPix)/Math.max(c,.2);kk=(Dcam-py*sn)/Dcam}
  const rX=ndcX*W/2,px=rX-txPix,py=(rY-tyPix)/Math.max(c,.2),qx=px/k.s,qy=py/k.s;
  let mx=Math.max(-1500,Math.min(1500,qx*cz+qy*sz)),my=Math.max(-1500,Math.min(1500,-qx*sz+qy*cz)); const hx=ptr.on?mx:4000,hy=ptr.on?my:4000,LP=[hx,hy,280],tg=[hx,hy,0],ax=[tg[0]-LP[0],tg[1]-LP[1],tg[2]-LP[2]],al=Math.hypot(...ax);
- const op=Math.max(0,Math.min(1,window.BOOKO||0));gl.uniform1f(u('uOpen'),op);
+ const op=Math.max(0,Math.min(1,window.BOOKO||0));gl.uniform1f(u('uOpen'),innerWidth<700?op*.4:op);
  const LP2=[0,.02*P*(1.-op),980.-260.*op],t2=[0,0,0],a2=[t2[0]-LP2[0],t2[1]-LP2[1],t2[2]-LP2[2]],l2=Math.hypot(...a2);gl.uniform3fv(u('uLP2'),LP2);gl.uniform3f(u('uAx2'),a2[0]/l2,a2[1]/l2,a2[2]/l2);
  gl.uniform3fv(u('uLP'),LP);gl.uniform3f(u('uAx'),ax[0]/al,ax[1]/al,ax[2]/al);gl.uniform3f(u('uEye'),0,1700*Math.sin(rx),1700*Math.cos(rx));
  const R=.165*P,Hb=.1*P,Hl=.045*P,Ho=Hb+Hl,Ro=.19*P,Hh=.15*P,st=.004*P,rec=.004*P,lw=.02*P;
  dr('quad',{p:[0,0,-8],s:[3200,3200,1],mode:0,tex:T.wood,rep:[7,7]});
  const shd=(x,y,r,h,a)=>{const dx=x-LP[0],dy=y-LP[1],l=Math.hypot(dx,dy),ux=dx/l,uy=dy/l,L=h*.9;[[0,1.08,.9],[.5,1.2,.5*a],[1,1.4,.28*a]].forEach(([f,s,al])=>dr('quad',{p:[x+ux*L*f,y+uy*L*f,-7],s:[r*s,r*s,1],mode:4,col:[al,0,0]}))};
  // disposición: nada invade el espacio de la revista (cerrada o abierta)
- const side=innerWidth<700?2.35:1.62;
- const L=PORT?{open:[{x:-side,y:.02,c:'cr1',s:'cera',g:.5,a:.5}],lid:[],closed:[{x:side,y:.06,k:'pomada',sp:.28,ph:4}]}
+ const side=1.62;
+ const L=innerWidth<700?{open:[],lid:[],closed:[]}:PORT?{open:[{x:-side,y:.02,c:'cr1',s:'cera',g:.5,a:.5}],lid:[],closed:[{x:side,y:.06,k:'pomada',sp:.28,ph:4}]}
   :{open:[{x:-1.32,y:.44,c:'cr1',s:'cera',g:.5,a:.5},{x:1.3,y:.74,c:'cr2',s:'fibra',g:.55,a:2.1}],lid:[{x:-1.74,y:.54,a:.6,t:0,k:'cera'},{x:1.3+.33,y:.74,a:Math.PI/2,t:.47,k:'fibra'}],closed:[{x:1.3,y:-.52,k:'pasta',sp:-.3,ph:2},{x:1.46,y:.1,k:'pomada',sp:.28,ph:4}]};
  L.closed.forEach(d=>shd(d.x*P,d.y*P,R,Ho,1));L.open.forEach(d=>shd(d.x*P,d.y*P,Ro,Hh,1));L.lid.forEach(d=>shd(d.x*P,d.y*P,R,d.t?Hl*3:Hl,1));
  L.closed.forEach(d=>{const a=sec*d.sp+d.ph,x=d.x*P,y=d.y*P;
