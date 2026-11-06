@@ -40,8 +40,8 @@ V=normalize(uEye-vW);
 float amb=uMode==0?.01:uMode==3?.9:.38;
 vec3 col=alb*vec3(amb)*ao;
 if(uMode!=0){float rim=pow(1.-max(dot(N,V),0.),2.4);col+=vec3(.42,.44,.48)*rim*.42*ao;}
-col+=lit(uLP,uAx,18.,vec3(1.,.98,.92),.42,.8);
-col+=lit(uLP2,uAx2,7.2,vec3(1.,.97,.93),.78,.95);
+col+=lit(uLP,uAx,9.5,vec3(1.,.98,.92),.84,.97);
+col+=lit(uLP2,uAx2,6.4,vec3(1.,.97,.93),.93,.982);
 float NV=max(dot(N,V),0.);float F=f0+(1.-f0)*pow(1.-NV,5.);float sm=smoothstep(.3,.9,dot(-normalize(uLP-vW),uAx));
 col+=env(reflect(-V,N),rg)*F*(.3+.7*sm)*ao*ek;
 col=col/(1.+col*.45);col=pow(col,vec3(.95));
@@ -135,7 +135,7 @@ const emptyVao=gl.createVertexArray();
 const model=(p,a,t,s)=>{t=t||0;s=s||[1,1,1];const ca=Math.cos(a),sa=Math.sin(a),c=Math.cos(t),n=Math.sin(t);return new Float32Array([ca*s[0],sa*s[0],0,0,-sa*c*s[1],ca*c*s[1],n*s[1],0,sa*n*s[2],-ca*n*s[2],c*s[2],0,p[0],p[1],p[2],1])};
 function dr(m,o){gl.uniformMatrix4fv(pr.u('uModel'),false,model(o.p,o.a||0,o.t||0,o.s));gl.uniform1i(pr.u('uMode'),o.mode);gl.uniform3fv(pr.u('uCol'),o.col||[.06,.06,.065]);gl.uniform2fv(pr.u('uRep'),o.rep||[1,1]);gl.uniform1f(pr.u('uG'),o.g||1);gl.uniform1f(pr.u('uA'),o.a||0);
  gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,o.tex||T.blob);gl.uniform1i(pr.u('uTex'),0);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,o.nrm||T.blob);gl.uniform1i(pr.u('uNrm'),1);gl.bindVertexArray(M[m].vao);gl.drawElements(gl.TRIANGLES,M[m].n,gl.UNSIGNED_SHORT,0)}
-const ptr={x:0,y:0,tx:0,ty:0};addEventListener('pointermove',e=>{ptr.tx=e.clientX/innerWidth*2-1;ptr.ty=e.clientY/innerHeight*2-1});
+const ptr={x:0,y:0,tx:0,ty:0,on:0};addEventListener('pointermove',e=>{ptr.on=1;ptr.tx=e.clientX/innerWidth*2-1;ptr.ty=e.clientY/innerHeight*2-1});
 const tilt=document.getElementById('tilt');
 function frame(t){
  const sec=t/1000,k=window.CAMT||{rx:54,s:.86,tx:4,ty:-3,rz:-3},PORT=!!window.PORT;
@@ -151,8 +151,8 @@ function frame(t){
  const ndcX=ptr.x,ndcY=-ptr.y;let kk=1,rY=0;
  for(let i=0;i<5;i++){rY=(.24*kk-.32-ndcY)*H/2;const py=(rY-tyPix)/Math.max(c,.2);kk=(Dcam-py*sn)/Dcam}
  const rX=ndcX*W/2,px=rX-txPix,py=(rY-tyPix)/Math.max(c,.2),qx=px/k.s,qy=py/k.s;
- let mx=Math.max(-1500,Math.min(1500,qx*cz+qy*sz)),my=Math.max(-1500,Math.min(1500,-qx*sz+qy*cz)); const LP=[mx,my,380],tg=[mx,my,0],ax=[tg[0]-LP[0],tg[1]-LP[1],tg[2]-LP[2]],al=Math.hypot(...ax);
- const LP2=[0,.06*P,760],t2=[0,.06*P,0],a2=[t2[0]-LP2[0],t2[1]-LP2[1],t2[2]-LP2[2]],l2=Math.hypot(...a2);gl.uniform3fv(u('uLP2'),LP2);gl.uniform3f(u('uAx2'),a2[0]/l2,a2[1]/l2,a2[2]/l2);
+ let mx=Math.max(-1500,Math.min(1500,qx*cz+qy*sz)),my=Math.max(-1500,Math.min(1500,-qx*sz+qy*cz)); const hx=ptr.on?mx:4000,hy=ptr.on?my:4000,LP=[hx,hy,280],tg=[hx,hy,0],ax=[tg[0]-LP[0],tg[1]-LP[1],tg[2]-LP[2]],al=Math.hypot(...ax);
+ const LP2=[0,.02*P,980],t2=[0,.02*P,0],a2=[t2[0]-LP2[0],t2[1]-LP2[1],t2[2]-LP2[2]],l2=Math.hypot(...a2);gl.uniform3fv(u('uLP2'),LP2);gl.uniform3f(u('uAx2'),a2[0]/l2,a2[1]/l2,a2[2]/l2);
  gl.uniform3fv(u('uLP'),LP);gl.uniform3f(u('uAx'),ax[0]/al,ax[1]/al,ax[2]/al);gl.uniform3f(u('uEye'),0,1700*Math.sin(rx),1700*Math.cos(rx));
  const R=.165*P,Hb=.1*P,Hl=.045*P,Ho=Hb+Hl,Ro=.19*P,Hh=.15*P,st=.004*P,rec=.004*P,lw=.02*P;
  dr('quad',{p:[0,0,-8],s:[3200,3200,1],mode:0,tex:T.wood,rep:[7,7]});
