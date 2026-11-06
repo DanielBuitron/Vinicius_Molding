@@ -1345,15 +1345,29 @@ th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--lin
 th { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
 td img { width: 72px; height: 48px; object-fit: cover; border-radius: 8px; }
 .admin input, .admin select, .admin textarea { background: #0c0c0e; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; color: #fff; width: 100%; }
-.inv-list { display: grid; gap: 14px; }
-.inv-card { display: grid; grid-template-columns: 220px 1fr; gap: 18px; align-items: start; }
+.inv-tools { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.inv-list { display: grid; gap: 8px; }
+.inv-row { display: grid; grid-template-columns: 72px 1fr auto; gap: 14px; align-items: center; width: 100%; text-align: left; background: #111113; color: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 10px 14px; }
+.inv-row img { width: 72px; height: 72px; object-fit: cover; border-radius: 12px; background: #000; }
+.inv-row strong { display: block; font-size: 16px; }
+.inv-row em { display: block; margin-top: 2px; font-style: normal; color: var(--muted); font-size: 12px; }
+.inv-row b { font-weight: 500; letter-spacing: .04em; color: var(--gold); }
+.inv-modal { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 18px; }
+.inv-back { position: absolute; inset: 0; border: 0; background: rgba(0,0,0,.72); }
+.inv-card { position: relative; z-index: 1; display: grid; grid-template-columns: 220px 1fr; gap: 18px; align-items: start; width: min(920px, 100%); max-height: min(92vh, 860px); overflow: auto; background: #101114; border: 1px solid var(--line); border-radius: 18px; padding: 16px; }
+.inv-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 10px; }
+.btn.ghost { background: transparent; color: #fff; border: 1px solid var(--line); }
 .inv-photo img { width: 100%; height: 300px; object-fit: cover; border-radius: 14px; background: #000; }
 .inv-photo .btn { margin-top: 10px; }
 .inv-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
 .inv-fields label { display: flex; flex-direction: column; gap: 6px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .inv-fields label.wide, .inv-fields .btn { grid-column: 1 / -1; }
 .inv-fields input, .inv-fields textarea { text-transform: none; letter-spacing: 0; font-size: 15px; }
-@media (max-width: 800px) { .inv-card { grid-template-columns: 1fr; } }
+@media (max-width: 800px) {
+  .inv-card, .inv-tools { grid-template-columns: 1fr; }
+  .inv-row { grid-template-columns: 64px 1fr; }
+  .inv-row b { grid-column: 2; }
+}
 .status { border-radius: 99px; padding: 4px 8px; font-size: 12px; background: #2a2a2e; }
 .status.aprobado, .status.contactado { background: #07332b; color: var(--teal); }
 .status.nuevo, .status.pendiente_pago { background: #3a2a00; color: var(--gold); }

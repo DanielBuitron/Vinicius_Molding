@@ -14,7 +14,7 @@ gl_Position=vec4(((uPO.x-uView.x*.5)*k+s.x)/(uView.x*.5),-((uPO.y-uView.y*.5)*k+
 const FS=`#version 300 es
 precision highp float;
 in vec3 vW;in vec3 vN;in vec2 vUv;
-uniform sampler2D uTex,uNrm;uniform int uMode;uniform vec3 uLP,uAx,uLP2,uAx2,uEye,uCol;uniform vec2 uRep;uniform float uG,uA;
+uniform sampler2D uTex,uNrm;uniform int uMode;uniform vec3 uLP,uAx,uLP2,uAx2,uEye,uCol;uniform vec2 uRep;uniform float uG,uA,uOpen;
 out vec4 o;
 vec3 N,V,alb;float ks,sh,k2,ao,rg,f0,ek;
 vec3 env(vec3 r,float w){
@@ -41,7 +41,7 @@ float amb=uMode==0?.01:uMode==3?.9:.38;
 vec3 col=alb*vec3(amb)*ao;
 if(uMode!=0){float rim=pow(1.-max(dot(N,V),0.),2.4);col+=vec3(.42,.44,.48)*rim*.42*ao;}
 col+=lit(uLP,uAx,9.5,vec3(1.,.98,.92),.84,.97);
-col+=lit(uLP2,uAx2,6.4,vec3(1.,.97,.93),.93,.982);
+col+=lit(uLP2,uAx2,mix(7.5,13.,uOpen),vec3(1.,.98,.94),mix(.9,.42,uOpen),mix(.972,.78,uOpen));
 float NV=max(dot(N,V),0.);float F=f0+(1.-f0)*pow(1.-NV,5.);float sm=smoothstep(.3,.9,dot(-normalize(uLP-vW),uAx));
 col+=env(reflect(-V,N),rg)*F*(.3+.7*sm)*ao*ek;
 col=col/(1.+col*.45);col=pow(col,vec3(.95));
@@ -152,7 +152,8 @@ function frame(t){
  for(let i=0;i<5;i++){rY=(.24*kk-.32-ndcY)*H/2;const py=(rY-tyPix)/Math.max(c,.2);kk=(Dcam-py*sn)/Dcam}
  const rX=ndcX*W/2,px=rX-txPix,py=(rY-tyPix)/Math.max(c,.2),qx=px/k.s,qy=py/k.s;
  let mx=Math.max(-1500,Math.min(1500,qx*cz+qy*sz)),my=Math.max(-1500,Math.min(1500,-qx*sz+qy*cz)); const hx=ptr.on?mx:4000,hy=ptr.on?my:4000,LP=[hx,hy,280],tg=[hx,hy,0],ax=[tg[0]-LP[0],tg[1]-LP[1],tg[2]-LP[2]],al=Math.hypot(...ax);
- const LP2=[0,.02*P,980],t2=[0,.02*P,0],a2=[t2[0]-LP2[0],t2[1]-LP2[1],t2[2]-LP2[2]],l2=Math.hypot(...a2);gl.uniform3fv(u('uLP2'),LP2);gl.uniform3f(u('uAx2'),a2[0]/l2,a2[1]/l2,a2[2]/l2);
+ const op=Math.max(0,Math.min(1,window.BOOKO||0));gl.uniform1f(u('uOpen'),op);
+ const LP2=[0,.02*P*(1.-op),980.-260.*op],t2=[0,0,0],a2=[t2[0]-LP2[0],t2[1]-LP2[1],t2[2]-LP2[2]],l2=Math.hypot(...a2);gl.uniform3fv(u('uLP2'),LP2);gl.uniform3f(u('uAx2'),a2[0]/l2,a2[1]/l2,a2[2]/l2);
  gl.uniform3fv(u('uLP'),LP);gl.uniform3f(u('uAx'),ax[0]/al,ax[1]/al,ax[2]/al);gl.uniform3f(u('uEye'),0,1700*Math.sin(rx),1700*Math.cos(rx));
  const R=.165*P,Hb=.1*P,Hl=.045*P,Ho=Hb+Hl,Ro=.19*P,Hh=.15*P,st=.004*P,rec=.004*P,lw=.02*P;
  dr('quad',{p:[0,0,-8],s:[3200,3200,1],mode:0,tex:T.wood,rep:[7,7]});

@@ -74,27 +74,45 @@ function viewDashboard(data) {
 }
 
 function viewInventory(payload) {
-  const cards = payload.products.map((product) => `
-    <form class="inv-card form" data-form="product" data-id="${esc(product.id)}">
-      <div class="inv-photo">
-        <img src="${esc(product.image)}" alt="${esc(product.name)}">
-        <label class="btn small">Subir foto<input name="photo" type="file" accept="image/*" hidden></label>
-        <p class="fine">La foto se ajusta a la hoja, en Full HD y con mejor luz.</p>
-      </div>
-      <div class="inv-fields">
-        <label>Nombre<input name="name" required value="${esc(product.name)}"></label>
-        <label>Precio<input name="price" type="number" min="0" required value="${product.price}"></label>
-        <label>Línea<input name="line" value="${esc(product.line || "")}"></label>
-        <label>Acabado<input name="finish" value="${esc(product.finish || "")}"></label>
-        <label>Contenido<input name="size" value="${esc(product.size || "")}"></label>
-        <label>Referencia<input name="sku" value="${esc(product.sku || "")}"></label>
-        <label class="wide">Frase<input name="summary" value="${esc(product.summary || "")}"></label>
-        <label class="wide">Descripción<textarea name="description" rows="3">${esc(product.description || "")}</textarea></label>
-        <label class="wide">Contiene<input name="ingredients" value="${esc((product.ingredients || []).join(" · "))}"></label>
-        <button class="btn" type="submit">Guardar</button>
-      </div>
-    </form>`).join("");
-  return adminShell("Inventario", `<div class="inv-list">${cards}</div>`);
+  const rows = payload.products.map((product) => `
+    <button type="button" class="inv-row" data-act="inv-open" data-id="${esc(product.id)}" data-name="${esc(product.name)}" data-line="${esc(product.line || "")}" data-sku="${esc(product.sku || "")}">
+      <img src="${esc(product.image)}" alt="">
+      <span><strong>${esc(product.name)}</strong><em>${esc(product.line || "")}</em></span>
+      <b>${esc(product.sku || "")}</b>
+    </button>`).join("");
+  const open = payload.products.find((product) => product.id === VM.invId);
+  const editor = open ? `
+    <div class="inv-modal">
+      <button type="button" class="inv-back" data-act="inv-close" aria-label="Cerrar"></button>
+      <form class="inv-card form" data-form="product" data-id="${esc(open.id)}">
+        <div class="inv-photo">
+          <img src="${esc(open.image)}" alt="${esc(open.name)}">
+          <label class="btn small">Subir foto<input name="photo" type="file" accept="image/*" hidden></label>
+          <p class="fine">La foto se ajusta a la hoja, en Full HD y con mejor luz.</p>
+        </div>
+        <div class="inv-fields">
+          <label>Nombre<input name="name" required value="${esc(open.name)}"></label>
+          <label>Precio<input name="price" type="number" min="0" required value="${open.price}"></label>
+          <label>Línea<input name="line" value="${esc(open.line || "")}"></label>
+          <label>Acabado<input name="finish" value="${esc(open.finish || "")}"></label>
+          <label>Contenido<input name="size" value="${esc(open.size || "")}"></label>
+          <label>Referencia<input name="sku" value="${esc(open.sku || "")}"></label>
+          <label class="wide">Frase<input name="summary" value="${esc(open.summary || "")}"></label>
+          <label class="wide">Descripción<textarea name="description" rows="3">${esc(open.description || "")}</textarea></label>
+          <label class="wide">Contiene<input name="ingredients" value="${esc((open.ingredients || []).join(" · "))}"></label>
+          <div class="inv-actions"><button class="btn ghost" type="button" data-act="inv-close">Cerrar</button><button class="btn" type="submit">Guardar</button></div>
+        </div>
+      </form>
+    </div>` : "";
+  return adminShell("Inventario", `
+    <div class="inv-tools">
+      <input data-inv-filter="name" placeholder="Buscar por nombre" aria-label="Buscar por nombre">
+      <input data-inv-filter="line" placeholder="Línea" aria-label="Buscar por línea">
+      <input data-inv-filter="sku" placeholder="Referencia" aria-label="Buscar por referencia">
+    </div>
+    <div class="inv-list">${rows}</div>
+    <p class="empty" id="inv-empty" hidden>Ningún producto coincide.</p>
+    ${editor}`);
 }
 
 function viewTracking(payload) {
