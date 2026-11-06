@@ -56,7 +56,7 @@ background-image:repeating-linear-gradient(118deg,#0000 0 2.4cqw,#00000009 2.4cq
 #revista .cta{display:inline-block;margin-top:3.2cqw;padding:1.6cqw 3.4cqw;border-radius:1.2cqw;background:var(--red);color:#fff;text-decoration:none;font-weight:500;width:max-content}
 #revista .cta.w{background:#fff;color:#000}
 #revista .vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 80% 66% at 50% 58%,#0000 0,#0002 62%,#0009 100%)}
-#revista .grain{position:absolute;inset:0;z-index:9;pointer-events:none;background:url(assets/grain.png);opacity:.09;mix-blend-mode:overlay}
+#revista .grain{position:absolute;inset:0;z-index:9;pointer-events:none;background:url(assets/grain.png);opacity:.018;mix-blend-mode:soft-light}
 #revista .ctl{position:absolute;z-index:15;left:50%;bottom:3.2vh;transform:translateX(-50%);display:flex;align-items:center;gap:1rem;font:400 13px Poppins;color:#d7d9dc}
 #revista .ctl button{width:36px;height:36px;border-radius:50%;border:1px solid #fff5;background:#0008;color:#fff;font-size:20px;cursor:pointer}
 #revista .ctl button:hover{background:var(--red);border-color:var(--red)}
@@ -113,13 +113,14 @@ background-image:repeating-linear-gradient(118deg,#0000 0 2.4cqw,#00000009 2.4cq
 #revista .pg.cover .shade{background:linear-gradient(#0000 55%,#000d)}
 #revista .pg.cover .lg{top:9cqw;width:76cqw}
 #revista .sf, #revista .sb{right:-2px}#revista .sb{left:-2px;right:0}
-#revista .grain{opacity:.035}#revista #stage{touch-action:pan-y}
+#revista .grain{opacity:.018}#revista #stage{touch-action:pan-y}
 html.port #revista .pg{font-size:4.3cqw}html.port #revista .hd{font-size:3cqw}html.port #revista .pg.img span{font-size:3.6cqw}html.port #revista .more{font-size:3.4cqw}
 html.port #revista .idx b{font-size:4.6cqw}html.port #revista .idx i{font-size:3.3cqw}html.port #revista .cl2 small{font-size:3cqw}html.port #revista .cl2 b{font-size:7cqw}
 html.port #revista .hero{top:11vh;left:6vw;right:6vw;max-width:none}html.port #revista .hero h1{font-size:clamp(26px,8.4vw,42px)}
 html.port #revista .zc{grid-template-columns:1fr}html.port #revista .zi{max-height:34vh}html.port #revista .zi img{height:34vh}html.port #revista .zt{padding:18px}
 html.port #revista .ctl{bottom:2vh}
-#revista .pg.cover.brand-cover{display:flex;align-items:center;justify-content:center;padding:0;background:radial-gradient(ellipse at 50% 42%,#3a1018 0%,#101114 46%,#050506 78%);background-image:radial-gradient(ellipse at 50% 42%,#3a1018 0%,#101114 46%,#050506 78%)}
+#revista .pg.cover.brand-cover{display:flex;align-items:center;justify-content:center;padding:0;background:#0c0d11;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),inset 0 0 8cqw rgba(0,0,0,.45)}
+#revista .pg.cover.brand-cover::after{background:url(assets/paper.png);opacity:.22;mix-blend-mode:overlay}
 #revista .pg.cover.brand-cover .ph,#revista .pg.cover.brand-cover .shade,#revista .pg.cover.brand-cover .cl2{display:none}
 #revista .pg.cover.brand-cover .lg{position:relative;top:auto;left:auto;transform:none;width:62cqw;filter:drop-shadow(0 1.4cqw 2.2cqw rgba(0,0,0,.45))}
 #revista .brand-bars{position:absolute;left:0;right:0;bottom:0;height:2.2cqw;z-index:3;background:linear-gradient(90deg,#E52C3B 0 26%,#00C8C2 26% 48%,#FFD300 48% 68%,#A4D800 68% 84%,#585E65 84% 100%)}
