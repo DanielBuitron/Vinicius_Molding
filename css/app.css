@@ -1274,19 +1274,28 @@ textarea { min-height: 90px; resize: vertical; }
   font-weight: 600;
 }
 
-.login-wrap { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; background: #000; }
+.login-wrap { min-height: 100vh; display: grid; grid-template-columns: 1.05fr .95fr; background: #050506; }
 .login-art {
-  padding: 36px;
+  position: relative;
+  padding: 56px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  background: radial-gradient(500px 280px at 80% 80%, rgba(229,44,59,.35), transparent 60%), #000;
+  justify-content: center;
+  gap: 22px;
+  overflow: hidden;
+  background:
+    radial-gradient(460px 260px at 18% 78%, rgba(229,44,59,.28), transparent 62%),
+    radial-gradient(420px 240px at 78% 18%, rgba(0,200,194,.16), transparent 64%),
+    #050506;
 }
-.login-art h2 { margin: 0; font-size: clamp(42px, 5vw, 72px); }
-.login-art img { height: 52px; }
-.login-side { display: grid; place-items: center; padding: 24px; }
-.login-card { width: min(420px, 100%); }
-.login-card h1 { margin: 0 0 8px; font-size: 48px; }
+.login-art img { width: min(300px, 72%); height: auto; max-height: 78px; object-fit: contain; object-position: left center; }
+.login-bars { display: block; width: min(210px, 46%); height: 5px; border-radius: 99px; background: linear-gradient(90deg, #E52C3B 0 22%, #00C8C2 22% 44%, #FFD300 44% 66%, #A4D800 66% 84%, #585E65 84% 100%); }
+.login-side { display: grid; place-items: center; padding: 28px; background: #000; }
+.login-card { width: min(420px, 100%); background: #101114; border: 1px solid rgba(255,255,255,.1); border-radius: 18px; box-shadow: 0 28px 70px rgba(0,0,0,.5); }
+.login-card .kicker { color: #FFD300; }
+.login-card h1 { margin: 0 0 8px; font-size: 48px; letter-spacing: -.03em; }
+.login-card .btn { width: 100%; margin-top: 10px; }
+.login-card input:focus { outline: none; border-bottom-color: #00C8C2; }
 .hint { color: var(--muted); font-size: 13px; }
 
 .admin { min-height: 100vh; display: grid; grid-template-columns: 240px 1fr; background: #09090b; }

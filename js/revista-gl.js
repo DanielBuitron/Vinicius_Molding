@@ -18,8 +18,8 @@ uniform sampler2D uTex,uNrm;uniform int uMode;uniform vec3 uLP,uAx,uLP2,uAx2,uEy
 out vec4 o;
 vec3 N,V,alb;float ks,sh,k2,ao,rg,f0,ek;
 vec3 env(vec3 r,float w){
- vec3 e=mix(vec3(.03,.03,.034),vec3(.22,.22,.24),smoothstep(-.05,.85,r.z));
- e+=vec3(1.15,1.08,.98)*smoothstep(.86-w,.99,dot(r,normalize(vec3(-.2,-.72,.62))));
+ vec3 e=mix(vec3(.012,.012,.014),vec3(.07,.072,.078),smoothstep(-.05,.9,r.z));
+ e+=vec3(.55,.52,.46)*smoothstep(.9-w,.99,dot(r,normalize(vec3(-.15,-.55,.75))));
  return e;}
 vec3 lit(vec3 LPv,vec3 ax,float I,vec3 lc,float c0,float c1){
  vec3 Lv=LPv-vW;float d=length(Lv);vec3 L=Lv/d;float spot=smoothstep(c0,c1,dot(-L,ax));float att=spot*I/(1.+pow(d/1800.,2.));
@@ -30,16 +30,18 @@ void main(){
 N=normalize(vN);alb=uCol;ks=.2;sh=20.;k2=0.;ao=1.;rg=.3;f0=.045;ek=1.;
 if(uMode==4){o=vec4(0.,0.,0.,texture(uTex,vUv).a*uCol.x);return;}
 vec4 t=texture(uTex,uMode==5?vec2(vUv.x,1.-vUv.y):vUv*uRep);
-if(uMode==0){alb=t.rgb;float lamp=smoothstep(1.35,.12,length(vW.xy)/980.);alb*=mix(vec3(.62,.63,.66),vec3(1.22,1.18,1.12),lamp);ks=.95;sh=180.;k2=.08;f0=.045;rg=.16;ek=.42;}
+if(uMode==0){alb=t.rgb;ks=.85;sh=170.;k2=.07;f0=.045;rg=.12;ek=.28;}
 else if(uMode==2){alb=t.rgb;ks=.6;sh=90.;k2=.06;f0=.05;rg=.25;}
 else if(uMode==5){alb=t.rgb;ks=.55;sh=45.;k2=.1;f0=.05;rg=.3;ao=mix(.55,1.,smoothstep(0.,.25,vUv.y));}
 else if(uMode==3){alb=t.rgb*.68;vec3 n=texture(uNrm,vUv).rgb*2.-1.;n.xy+=(vUv-.5)*.45;float c=cos(uA),s=sin(uA);N=normalize(vec3(n.x*c-n.y*s,n.x*s+n.y*c,n.z));
  ks=1.4*uG;sh=55.;k2=.45*uG;f0=.04;rg=.18+(1.-uG)*.5;ek=.8*uG+.15;float rr=length(vUv-.5)*2.;ao=1.-.55*smoothstep(.84,1.,rr);}
 else{ks=.8;sh=45.;k2=.14;f0=.045;rg=.35;}
 V=normalize(uEye-vW);
-vec3 col=alb*vec3(.2,.2,.21)*ao;
-col+=lit(uLP,uAx,5.2,vec3(1.,.98,.94),.16,.96);
-col+=lit(uLP2,uAx2,1.15,vec3(.86,.88,.92),.2,.92);
+float amb=uMode==0?.01:uMode==3?.9:.38;
+vec3 col=alb*vec3(amb)*ao;
+if(uMode!=0){float rim=pow(1.-max(dot(N,V),0.),2.4);col+=vec3(.42,.44,.48)*rim*.42*ao;}
+col+=lit(uLP,uAx,18.,vec3(1.,.98,.92),.42,.8);
+col+=lit(uLP2,uAx2,7.2,vec3(1.,.97,.93),.78,.95);
 float NV=max(dot(N,V),0.);float F=f0+(1.-f0)*pow(1.-NV,5.);float sm=smoothstep(.3,.9,dot(-normalize(uLP-vW),uAx));
 col+=env(reflect(-V,N),rg)*F*(.3+.7*sm)*ao*ek;
 col=col/(1.+col*.45);col=pow(col,vec3(.95));
@@ -52,7 +54,7 @@ float h(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
 void main(){float r=uAmt*smoothstep(.10,.60,abs(uv.y-uFy));vec3 acc=vec3(0.);float ws=0.;
 for(int i=0;i<28;i++){float a=float(i)*2.39996;float rr=sqrt((float(i)+.5)/28.)*r;vec3 s=texture(uScn,uv+vec2(cos(a),sin(a))*rr/uRes).rgb;float w=1.+dot(s,vec3(.5))*2.;acc+=s*w;ws+=w;}
 vec3 c=acc/ws;float l=dot(c,vec3(.3,.5,.2));c=mix(vec3(l),c,1.08);
-vec2 q=uv-.5;c*=1.-.12*dot(q,q);c+=(h(uv*uRes+fract(uT))-.5)*.0045;o=vec4(c,1.);}`;
+vec2 q=uv-.5;c*=1.-.55*dot(q,q);c+=(h(uv*uRes+fract(uT))-.5)*.003;o=vec4(c,1.);}`;
 const sh=(t,s)=>{const x=gl.createShader(t);gl.shaderSource(x,s);gl.compileShader(x);if(!gl.getShaderParameter(x,gl.COMPILE_STATUS))console.error(gl.getShaderInfoLog(x));return x};
 const prog=(v,f)=>{const p=gl.createProgram();gl.attachShader(p,sh(gl.VERTEX_SHADER,v));gl.attachShader(p,sh(gl.FRAGMENT_SHADER,f));gl.linkProgram(p);const U={};p.u=n=>U[n]||(U[n]=gl.getUniformLocation(p,n));return p};
 const pr=prog(VS,FS),pp=prog(PV,PF);
@@ -101,7 +103,7 @@ function cream(base,seed,sw){let s=seed;const rnd=()=>(s=(s*16807)%2147483647)/2
 const[bc,bg]=mk(128);{const r=bg.createRadialGradient(64,64,0,64,64,64);r.addColorStop(0,'rgba(0,0,0,1)');r.addColorStop(.4,'rgba(0,0,0,.6)');r.addColorStop(1,'rgba(0,0,0,0)');bg.fillStyle=r;bg.fillRect(0,0,128,128)}
 function deskSurface(){
  const N=2048,c=document.createElement('canvas');c.width=c.height=N;const g=c.getContext('2d');
- g.fillStyle='#14161c';g.fillRect(0,0,N,N);
+ g.fillStyle='#5c6070';g.fillRect(0,0,N,N);
  const img=g.getImageData(0,0,N,N),d=img.data;
  for(let i=0;i<d.length;i+=4){const n=(Math.random()-.5)*5;d[i]+=n;d[i+1]+=n;d[i+2]+=n+0.4}
  g.putImageData(img,0,0);
@@ -137,16 +139,20 @@ const ptr={x:0,y:0,tx:0,ty:0};addEventListener('pointermove',e=>{ptr.tx=e.client
 const tilt=document.getElementById('tilt');
 function frame(t){
  const sec=t/1000,k=window.CAMT||{rx:54,s:.86,tx:4,ty:-3,rz:-3},PORT=!!window.PORT;
- ptr.x+=(ptr.tx-ptr.x)*.05;ptr.y+=(ptr.ty-ptr.y)*.05;const pm=PORT?.4:1;
- const rxF=k.rx+Math.sin(sec*.45)*.2-ptr.y*.9*pm,rzF=k.rz+ptr.x*.6*pm+Math.sin(sec*.3)*.12,txF=k.tx-ptr.x*.5*pm,tyF=k.ty+Math.sin(sec*.6)*.06;
+ ptr.x+=(ptr.tx-ptr.x)*.45;ptr.y+=(ptr.ty-ptr.y)*.45;const pm=PORT?.35:1;
+ const rxF=k.rx+Math.sin(sec*.35)*.1,rzF=k.rz,txF=k.tx,tyF=k.ty;
  tilt.style.transform=`translate3d(${txF}vw,${tyF}vh,0) rotateX(${rxF}deg) rotateZ(${rzF}deg) scale(${k.s})`;
  const P=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pwpx'))||480,W=innerWidth,H=innerHeight,rx=rxF*Math.PI/180,rz=rzF*Math.PI/180,c=Math.cos(rx),sn=Math.sin(rx);
  build(P);
- gl.bindFramebuffer(gl.FRAMEBUFFER,fbM);gl.viewport(0,0,fw,fh);gl.clearColor(.012,.012,.016,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.useProgram(pr);
+ gl.bindFramebuffer(gl.FRAMEBUFFER,fbM);gl.viewport(0,0,fw,fh);gl.clearColor(.003,.003,.004,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.useProgram(pr);
  const u=pr.u;gl.uniform2f(u('uView'),W,H);gl.uniform2f(u('uT0'),W/2,H*.54);gl.uniform2f(u('uPO'),W/2,H*.38);gl.uniform2f(u('uT'),txF*W/100,tyF*H/100);
  gl.uniform1f(u('uD'),1700);gl.uniform1f(u('uS'),k.s);gl.uniform1f(u('uC'),c);gl.uniform1f(u('uSn'),sn);gl.uniform1f(u('uCz'),Math.cos(rz));gl.uniform1f(u('uSz'),Math.sin(rz));
- const LP=[-.55*P,-.85*P,2.15*P],tg=[0,.05*P,0],ax=[tg[0]-LP[0],tg[1]-LP[1],tg[2]-LP[2]],al=Math.hypot(...ax);
- const LP2=[1.35*P,-.15*P,1.55*P],t2=[.15*P,.2*P,0],a2=[t2[0]-LP2[0],t2[1]-LP2[1],t2[2]-LP2[2]],l2=Math.hypot(...a2);gl.uniform3fv(u('uLP2'),LP2);gl.uniform3f(u('uAx2'),a2[0]/l2,a2[1]/l2,a2[2]/l2);
+ const Dcam=1700,txPix=txF*W/100,tyPix=tyF*H/100,cz=Math.cos(rz),sz=Math.sin(rz);
+ const ndcX=ptr.x,ndcY=-ptr.y;let kk=1,rY=0;
+ for(let i=0;i<5;i++){rY=(.24*kk-.32-ndcY)*H/2;const py=(rY-tyPix)/Math.max(c,.2);kk=(Dcam-py*sn)/Dcam}
+ const rX=ndcX*W/2,px=rX-txPix,py=(rY-tyPix)/Math.max(c,.2),qx=px/k.s,qy=py/k.s;
+ let mx=Math.max(-1500,Math.min(1500,qx*cz+qy*sz)),my=Math.max(-1500,Math.min(1500,-qx*sz+qy*cz)); const LP=[mx,my,380],tg=[mx,my,0],ax=[tg[0]-LP[0],tg[1]-LP[1],tg[2]-LP[2]],al=Math.hypot(...ax);
+ const LP2=[0,.06*P,760],t2=[0,.06*P,0],a2=[t2[0]-LP2[0],t2[1]-LP2[1],t2[2]-LP2[2]],l2=Math.hypot(...a2);gl.uniform3fv(u('uLP2'),LP2);gl.uniform3f(u('uAx2'),a2[0]/l2,a2[1]/l2,a2[2]/l2);
  gl.uniform3fv(u('uLP'),LP);gl.uniform3f(u('uAx'),ax[0]/al,ax[1]/al,ax[2]/al);gl.uniform3f(u('uEye'),0,1700*Math.sin(rx),1700*Math.cos(rx));
  const R=.165*P,Hb=.1*P,Hl=.045*P,Ho=Hb+Hl,Ro=.19*P,Hh=.15*P,st=.004*P,rec=.004*P,lw=.02*P;
  dr('quad',{p:[0,0,-8],s:[3200,3200,1],mode:0,tex:T.wood,rep:[7,7]});
