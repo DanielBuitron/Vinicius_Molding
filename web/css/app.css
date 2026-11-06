@@ -1490,4 +1490,11 @@ td img { width: 72px; height: 48px; object-fit: cover; border-radius: 8px; }
 
 @media (max-width: 680px) {
   .stats, .swatches { grid-template-columns: 1fr 1fr; }
+  .login-card h1 { font-size: 34px; }
+  .login-art { min-height: 150px; padding: 28px 20px; }
+  .admin-main { padding: 14px 12px 32px; }
+  .admin-top { align-items: flex-start; flex-direction: column; }
+  .admin-top h1 { font-size: 32px; }
+  .inv-fields { grid-template-columns: 1fr; }
+  .site-header { padding: 0 14px; height: 64px; }
 }

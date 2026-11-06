@@ -158,7 +158,8 @@ function frame(t){
  dr('quad',{p:[0,0,-8],s:[3200,3200,1],mode:0,tex:T.wood,rep:[7,7]});
  const shd=(x,y,r,h,a)=>{const dx=x-LP[0],dy=y-LP[1],l=Math.hypot(dx,dy),ux=dx/l,uy=dy/l,L=h*.9;[[0,1.08,.9],[.5,1.2,.5*a],[1,1.4,.28*a]].forEach(([f,s,al])=>dr('quad',{p:[x+ux*L*f,y+uy*L*f,-7],s:[r*s,r*s,1],mode:4,col:[al,0,0]}))};
  // disposición: nada invade el espacio de la revista (cerrada o abierta)
- const L=PORT?{open:[{x:-.62,y:1.12,c:'cr1',s:'cera',g:.5,a:.5}],lid:[{x:.02,y:1.2,a:.6,t:0,k:'cera'}],closed:[{x:.68,y:1.1,k:'pomada',sp:.28,ph:4}]}
+ const side=innerWidth<700?2.35:1.62;
+ const L=PORT?{open:[{x:-side,y:.02,c:'cr1',s:'cera',g:.5,a:.5}],lid:[],closed:[{x:side,y:.06,k:'pomada',sp:.28,ph:4}]}
   :{open:[{x:-1.32,y:.44,c:'cr1',s:'cera',g:.5,a:.5},{x:1.3,y:.74,c:'cr2',s:'fibra',g:.55,a:2.1}],lid:[{x:-1.74,y:.54,a:.6,t:0,k:'cera'},{x:1.3+.33,y:.74,a:Math.PI/2,t:.47,k:'fibra'}],closed:[{x:1.3,y:-.52,k:'pasta',sp:-.3,ph:2},{x:1.46,y:.1,k:'pomada',sp:.28,ph:4}]};
  L.closed.forEach(d=>shd(d.x*P,d.y*P,R,Ho,1));L.open.forEach(d=>shd(d.x*P,d.y*P,Ro,Hh,1));L.lid.forEach(d=>shd(d.x*P,d.y*P,R,d.t?Hl*3:Hl,1));
  L.closed.forEach(d=>{const a=sec*d.sp+d.ph,x=d.x*P,y=d.y*P;
