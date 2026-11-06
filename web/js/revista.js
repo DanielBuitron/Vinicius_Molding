@@ -3,7 +3,7 @@ const WA='https://wa.me/573235835137',IG='https://instagram.com/viniciusmolding'
 const A=f=>(window.IMGS&&IMGS[f])||'assets/'+f;
 const PORTF=()=>innerWidth<innerHeight*.9;window.PORT=PORTF();
 const PW=()=>window.PORT?Math.min(innerWidth*.8,innerHeight*.5):Math.min(innerWidth*.38,innerHeight*.46);
-const sp=()=>{window.PORT=PORTF();const r=document.documentElement;r.classList.toggle('port',window.PORT);r.style.setProperty('--pwpx',PW());r.style.setProperty('--pw',PW()+'px');const st=document.getElementById('stage');if(st)st.style.height=window.PORT?'2300vh':'1500vh'};sp();addEventListener('resize',sp);
+const sp=()=>{window.PORT=PORTF();const r=document.documentElement;r.classList.toggle('port',window.PORT);r.style.setProperty('--pwpx',PW());r.style.setProperty('--pw',PW()+'px');const st=document.getElementById('stage');if(st)st.style.height=window.PORT?'1100vh':'720vh'};sp();addEventListener('resize',sp);
 const TIN='Keratina · Romero · Aloe vera',EXT='Romero · Keratina · Cebolla · Aloe vera · Zanahoria · Ácido hialurónico';
 const PR=[
 {id:'cera',n:'Cera',sub:'Moldeadora · brillo medio',cap:'Cera Moldeadora',c:'#E52C3B',v:'paper',d:'Define y moldea con brillo medio. Hecha con keratina, romero y aloe vera.',r:[['Contenido','150 g'],['Acabado','Brillo medio'],['Contiene',TIN]]},
@@ -28,7 +28,7 @@ const imgP=j=>{const p=PR[j];return `<div class="pg img" data-p="${j}"><img src=
 const infoP=(j,n)=>{const p=PR[j],cls=p.v==='color'?'pg col':p.v==='dark'?'pg dark':'pg',st=`--ac:${p.c}`+(p.v==='color'?`;--bg:${p.c};--fg:${p.tx}`:'');
  return `<div class="${cls}" style="${st}">${hd(n)}<div class="num">${p.ref}</div><h2 data-p="${j}">${p.n}<em>${p.sub}</em></h2><p>${p.d}</p><dl>${rows(p.r)}</dl><button class="more" data-p="${j}">Ver detalle +</button></div>`};
 const mini=a=>`<div class="mini">${a.map(r=>`<div><b>${r[0]}</b><span>${r[1]}</span></div>`).join('')}</div>`;
-const cover=`<div class="pg cover brand-cover"><span class="brand-bars" aria-hidden="true"></span><img class="lg" src="assets/logo.png" alt="Vinicius Molding"></div>`;
+const cover=`<div class="pg cover brand-cover"><span class="cover-frame" aria-hidden="true"></span><img class="lg" src="assets/logo.png" alt="Vinicius Molding"><span class="brand-bars" aria-hidden="true"></span></div>`;
 const back=`<div class="pg dark cover bk"><img class="iso" src="assets/isotipo.png" alt=""><small>@viniciusmolding</small></div>`;
 const S=[
 [`<div class="pg dark">${hd(2)}<h2>Quiénes somos</h2><p>Somos una marca de cuidado capilar masculino creada para hombres que no improvisan, que cuidan cada detalle y saben que el éxito también se construye desde el cuero cabelludo.</p><p>No vendemos promesas, entregamos resultados.</p></div>`,
@@ -47,16 +47,17 @@ const leaves=fr.map((f,i)=>{const l=document.createElement('div');l.className='l
   s.innerHTML=`<div class="sf${k?'':' g'}"><div class="cl" style="left:calc(var(--pw)/-6*${k})">${f}</div></div><div class="sb${k?'':' g'}"><div class="cl" style="left:calc(var(--pw)/-6*${SG-1-k})">${bk[i]}</div></div>`;
   par.appendChild(s);par=s;segs.push(s)}
  book.appendChild(l);return{l,segs,key:''}});
+const glow=document.createElement('i');glow.className='book-light';glow.setAttribute('aria-hidden','true');book.appendChild(glow);
 const N=leaves.length,stage=document.getElementById('stage'),tilt=document.getElementById('tilt'),hero=document.getElementById('hero'),desk=document.getElementById('desk');
 const vig=document.querySelector('.vig'),cap=document.getElementById('cap'),bar=document.getElementById('bar');
 const cl=x=>Math.max(0,Math.min(1,x)),ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
-const STEP=.77/(N-2),DUR=.068,KP=.87/(N-2);
-const win=i=>window.PORT?[.03+i*KP,.03+i*KP+.03]:(i===0?[.07,.19]:[.22+(i-1)*STEP,.22+(i-1)*STEP+DUR]);
+const STEP=.78/(N-2),DUR=.03,KP=.84/(N-2);
+const win=i=>window.PORT?[.02+i*KP,.02+i*KP+.02]:(i===0?[.03,.07]:[.1+(i-1)*STEP,.1+(i-1)*STEP+DUR]);
 function pan(p){if(!window.PORT)return 0;if(p<win(0)[0])return 0;
  for(let i=0;i<N-1;i++){const[a,b]=win(i);if(p>=a&&p<=b){const t=ease((p-a)/(b-a));return i===0?-t:1-2*t}
   const nx=i<N-2?win(i+1)[0]:1;if(p>b&&p<nx){const u=(p-b)/(nx-b);return u<.28?-1:u<.58?-1+2*ease((u-.28)/.3):1}}return 1}
 const steps=()=>{const a=[0];for(let s=1;s<N;s++){const b=win(s-1)[1],nx=s<N-1?win(s)[0]:1,pl=nx-b;a.push(b+pl*.14,b+pl*.8)}return a};
-const endP=s=>s===0?0:s===1?.205:win(s-1)[1]+.004;
+const endP=s=>s===0?0:win(s-1)[1]+.004;
 let target=0,cur=0,state=-1;const sy=()=>stage.offsetHeight-innerHeight;
 const D=Math.PI/180;
 function setLeaf(i,p){const [a,b]=win(i),t=cl((p-a)/(b-a)),e=ease(t),L=leaves[i],key=i===N-1?'x':t.toFixed(4);if(L.key===key)return e>=.5;L.key=key;
@@ -75,10 +76,10 @@ function draw(p){
  let fl=0;leaves.forEach((_,i)=>{if(setLeaf(i,p))fl++});
  book.style.setProperty('--tl',(2+fl*1.1)+'px');book.style.setProperty('--tr',(2+(N-1-fl)*1.1)+'px');
  bar.style.width=p*100+'%';if(fl!==state){state=fl;cap.textContent=CAP[fl]}}
-function loop(){cur+=(target-cur)*.1;if(Math.abs(target-cur)<.0002)cur=target;draw(cur);if(cur!==target)requestAnimationFrame(loop)}
+function loop(){cur+=(target-cur)*.42;if(Math.abs(target-cur)<.0004)cur=target;draw(cur);if(cur!==target)requestAnimationFrame(loop)}
 const read=()=>{target=cl(scrollY/sy());loop()};
-const go=s=>{s=Math.max(0,Math.min(N-1,s));scrollTo({top:(window.PORT?steps()[s?2*s-1:0]:endP(s))*sy(),behavior:'smooth'})};
-const nav=d=>{if(!window.PORT){go(state+d);return}const a=steps();let k=0;a.forEach((v,i)=>{if(Math.abs(v-target)<Math.abs(a[k]-target))k=i});k=Math.max(0,Math.min(a.length-1,k+d));scrollTo({top:a[k]*sy(),behavior:'smooth'})};
+const go=s=>{s=Math.max(0,Math.min(N-1,s));scrollTo({top:(window.PORT?steps()[s?2*s-1:0]:endP(s))*sy(),behavior:'auto'})};
+const nav=d=>{if(!window.PORT){go(state+d);return}const a=steps();let k=0;a.forEach((v,i)=>{if(Math.abs(v-target)<Math.abs(a[k]-target))k=i});k=Math.max(0,Math.min(a.length-1,k+d));scrollTo({top:a[k]*sy(),behavior:'auto'})};
 document.getElementById('next').onclick=()=>nav(1);document.getElementById('prev').onclick=()=>nav(-1);
 // ---- detalle de producto
 const Z=document.getElementById('zoom'),$=id=>document.getElementById(id);let zi=0;

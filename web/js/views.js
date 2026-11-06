@@ -503,8 +503,8 @@ function viewLogin() {
   return `
     <div class="login-wrap">
       <div class="login-art">
-        <img src="assets/logo-white.png" alt="Vinicius Molding">
-        <h2>El control también se administra.</h2>
+        <img src="assets/logo.png" alt="Vinicius Molding">
+        <span class="login-bars" aria-hidden="true"></span>
       </div>
       <div class="login-side">
         <form class="login-card form" data-form="login">
