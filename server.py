@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Sitio comercial Vinicius Molding. Sirve la web y la API local."""
 
+import base64
 import hashlib
 import json
 import secrets
@@ -898,10 +899,24 @@ class Handler(BaseHTTPRequestHandler):
                     self.send_json(400, {"error": "El precio no puede ser negativo."})
                     return
                 product["price"] = price
-            if "minStock" in body:
-                product["minStock"] = max(0, int(body.get("minStock") or 0))
-            if "stock" in body:
-                product["stock"] = max(0, int(body.get("stock") or 0))
+            for key in ("name", "line", "finish", "size", "summary", "description", "sku"):
+                if key in body:
+                    product[key] = str(body.get(key) or "").strip()[:800]
+            if "ingredients" in body:
+                raw = body.get("ingredients")
+                if isinstance(raw, list):
+                    parts = [str(item).strip() for item in raw]
+                else:
+                    parts = str(raw or "").replace("·", ",").split(",")
+                product["ingredients"] = [part[:80] for part in parts if part.strip()][:16]
+            image = str(body.get("image") or "")
+            if image.startswith("data:image"):
+                payload = image.split(",", 1)[1]
+                blob = base64.b64decode(payload)
+                dest = WEB / "assets" / "products" / f"{product_id}.jpg"
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                dest.write_bytes(blob)
+                product["image"] = f"assets/products/{product_id}.jpg"
             if "active" in body:
                 product["active"] = bool(body.get("active"))
             if product["stock"] != before:
