@@ -40,8 +40,8 @@ V=normalize(uEye-vW);
 float amb=uMode==0?.01:uMode==3?.9:.38;
 vec3 col=alb*vec3(amb)*ao;
 if(uMode!=0){float rim=pow(1.-max(dot(N,V),0.),2.4);col+=vec3(.42,.44,.48)*rim*.42*ao;}
-col+=lit(uLP,uAx,15.,vec3(1.,.985,.94),.52,.82);
-col+=lit(uLP2,uAx2,mix(7.5,13.,uOpen),vec3(1.,.98,.94),mix(.9,.42,uOpen),mix(.972,.78,uOpen));
+col+=lit(uLP,uAx,26.,vec3(1.,.99,.96),.8,.955);
+col+=lit(uLP2,uAx2,mix(.6,8.,uOpen),vec3(1.,.985,.95),mix(.96,.62,uOpen),mix(.99,.9,uOpen));
 float NV=max(dot(N,V),0.);float F=f0+(1.-f0)*pow(1.-NV,5.);float sm=smoothstep(.3,.9,dot(-normalize(uLP-vW),uAx));
 col+=env(reflect(-V,N),rg)*F*(.3+.7*sm)*ao*ek;
 col=col/(1.+col*.45);col=pow(col,vec3(.95));
@@ -54,7 +54,7 @@ float h(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
 void main(){float r=uAmt*smoothstep(.10,.60,abs(uv.y-uFy));vec3 acc=vec3(0.);float ws=0.;
 for(int i=0;i<28;i++){float a=float(i)*2.39996;float rr=sqrt((float(i)+.5)/28.)*r;vec3 s=texture(uScn,uv+vec2(cos(a),sin(a))*rr/uRes).rgb;float w=1.+dot(s,vec3(.5))*2.;acc+=s*w;ws+=w;}
 vec3 c=acc/ws;float l=dot(c,vec3(.3,.5,.2));c=mix(vec3(l),c,1.08);
-vec2 q=uv-.5;c*=1.-.55*dot(q,q);c+=(h(uv*uRes+fract(uT))-.5)*.003;o=vec4(c,1.);}`;
+vec2 q=uv-.5;c*=1.-.2*dot(q,q);c+=(h(uv*uRes+fract(uT))-.5)*.003;o=vec4(c,1.);}`;
 const sh=(t,s)=>{const x=gl.createShader(t);gl.shaderSource(x,s);gl.compileShader(x);if(!gl.getShaderParameter(x,gl.COMPILE_STATUS))console.error(gl.getShaderInfoLog(x));return x};
 const prog=(v,f)=>{const p=gl.createProgram();gl.attachShader(p,sh(gl.VERTEX_SHADER,v));gl.attachShader(p,sh(gl.FRAGMENT_SHADER,f));gl.linkProgram(p);const U={};p.u=n=>U[n]||(U[n]=gl.getUniformLocation(p,n));return p};
 const pr=prog(VS,FS),pp=prog(PV,PF);
@@ -153,7 +153,7 @@ function frame(t){
  const ndcX=ptr.x,ndcY=-ptr.y;let kk=1,rY=0;
  for(let i=0;i<5;i++){rY=(.24*kk-.32-ndcY)*H/2;const py=(rY-tyPix)/Math.max(c,.2);kk=(Dcam-py*sn)/Dcam}
  const rX=ndcX*W/2,px=rX-txPix,py=(rY-tyPix)/Math.max(c,.2),qx=px/k.s,qy=py/k.s;
- let mx=Math.max(-1500,Math.min(1500,qx*cz+qy*sz)),my=Math.max(-1500,Math.min(1500,-qx*sz+qy*cz)); const hx=ptr.on?mx:4000,hy=ptr.on?my:4000,LP=[hx,hy,460],tg=[hx,hy,0],ax=[tg[0]-LP[0],tg[1]-LP[1],tg[2]-LP[2]],al=Math.hypot(...ax);
+ let mx=Math.max(-1500,Math.min(1500,qx*cz+qy*sz)),my=Math.max(-1500,Math.min(1500,-qx*sz+qy*cz)); const hx=ptr.on?mx:4000,hy=ptr.on?my:4000,LP=[hx,hy,300],tg=[hx,hy,0],ax=[tg[0]-LP[0],tg[1]-LP[1],tg[2]-LP[2]],al=Math.hypot(...ax);
  const op=Math.max(0,Math.min(1,window.BOOKO||0));gl.uniform1f(u('uOpen'),innerWidth<700?op*.4:op);
  const LP2=[0,.02*P*(1.-op),980.-260.*op],t2=[0,0,0],a2=[t2[0]-LP2[0],t2[1]-LP2[1],t2[2]-LP2[2]],l2=Math.hypot(...a2);gl.uniform3fv(u('uLP2'),LP2);gl.uniform3f(u('uAx2'),a2[0]/l2,a2[1]/l2,a2[2]/l2);
  gl.uniform3fv(u('uLP'),LP);gl.uniform3f(u('uAx'),ax[0]/al,ax[1]/al,ax[2]/al);gl.uniform3f(u('uEye'),0,1700*Math.sin(rx),1700*Math.cos(rx));
