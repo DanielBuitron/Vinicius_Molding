@@ -65,7 +65,7 @@ background-image:repeating-linear-gradient(118deg,#0000 0 2.4cqw,#00000009 2.4cq
 #revista .ctl button:hover{background:var(--red);border-color:var(--red)}
 #revista #cap{min-width:14ch;text-align:center}
 #revista .bar{position:absolute;left:0;bottom:0;height:3px;width:100%;background:#fff1}#revista .bar b{display:block;height:100%;width:0;background:var(--red)}
-@media (max-aspect-ratio:1/1){:root{--pw:44vw}#revista .zoom .zc{grid-template-columns:1fr}#revista .hero{top:12vh}#revista .prop{width:20vw}}
+@media (max-aspect-ratio:1/1){#revista .zoom .zc{grid-template-columns:1fr}#revista .hero{top:12vh}#revista .prop{width:20vw}}
 @media (prefers-reduced-motion:reduce){#revista .hero{transition:none}}
 #revista .prop, #revista .pen{opacity:var(--po,1)}
 #revista .bsh{position:absolute;top:0;height:100%;left:calc(50% - var(--pw)*var(--o,0));width:calc(var(--pw)*(1 + var(--o,0)));box-shadow:.6vw 1.5vw 2.4vw .2vw #000d,.1vw .25vw .5vw #000;transform:translateZ(-3px);border-radius:4px;background:#0006}
@@ -117,9 +117,9 @@ background-image:repeating-linear-gradient(118deg,#0000 0 2.4cqw,#00000009 2.4cq
 #revista .pg.cover .lg{top:9cqw;width:76cqw}
 #revista .sf, #revista .sb{right:-2px}#revista .sb{left:-2px;right:0}
 #revista .grain{opacity:.018}#revista #stage{touch-action:pan-y}
-html.port #revista .pg{font-size:4.3cqw}html.port #revista .hd{font-size:3cqw}html.port #revista .pg.img span{font-size:3.6cqw}html.port #revista .more{font-size:3.4cqw}
-html.port #revista .idx b{font-size:4.6cqw}html.port #revista .idx i{font-size:3.3cqw}html.port #revista .cl2 small{font-size:3cqw}html.port #revista .cl2 b{font-size:7cqw}
 html.port #revista .hero{top:11vh;left:6vw;right:6vw;max-width:none}html.port #revista .hero h1{font-size:clamp(26px,8.4vw,42px)}
+html.phone #revista .idx li{padding:1.7cqw 0}
+html.port #revista .idx{overflow-y:auto;max-height:72cqh;-webkit-overflow-scrolling:touch}
 html.port #revista .zc{grid-template-columns:1fr}html.port #revista .zi{max-height:34vh}html.port #revista .zi img{height:34vh}html.port #revista .zt{padding:18px}
 html.port #revista .ctl{bottom:2vh}
 #revista .pg.cover.brand-cover{display:flex;align-items:center;justify-content:center;padding:0;background:linear-gradient(165deg,#1c1e26 0%,#090a0e 38%,#050506 100%);box-shadow:inset 0 0 10cqw rgba(0,0,0,.5)}
@@ -130,3 +130,22 @@ html.port #revista .ctl{bottom:2vh}
 #revista .plate .frame{position:absolute;inset:3.4cqw;border:.42cqw solid transparent;border-image:linear-gradient(90deg,#E52C3B,#00C8C2,#FFD300,#A4D800,#585E65) 1;pointer-events:none}
 #revista .pg.cover.brand-cover .lg{position:relative;top:auto;left:auto;transform:none;width:100%;z-index:2;filter:drop-shadow(0 -.14cqw 0 rgba(255,255,255,.75)) drop-shadow(0 .32cqw 0 #000) drop-shadow(0 1.1cqw 1.3cqw rgba(0,0,0,.6))}
 #revista .book-light{position:absolute;left:50%;top:44%;width:calc(var(--pw)*.62);height:calc(var(--ph)*.38);transform:translate(-50%,-44%) translateZ(40px);pointer-events:none;mix-blend-mode:soft-light;background:radial-gradient(ellipse at 50% 42%,rgba(255,252,246,.45),rgba(255,252,246,0) 70%)}
+#revista .short{display:none}
+body.mode-home{overflow-x:hidden}
+#revista .sticky{height:100vh;height:100dvh}
+html.port #revista .top{padding:max(12px,env(safe-area-inset-top)) 14px 8px;gap:8px}
+html.port #revista .brand{height:30px;width:auto;max-width:46vw}
+html.port #revista .btn{font-size:12px;padding:.5em .85em}
+html.port #revista .ctl{bottom:max(12px,env(safe-area-inset-bottom));gap:.6rem}
+html.port #revista .ctl button{width:42px;height:42px}
+html.port #revista #cap{min-width:0;max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html.phone #revista .short{display:inline}
+html.phone #revista .long{display:none}
+html.phone #revista .top{padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
+html.phone #revista .brand{height:24px;max-width:38vw}
+html.phone #revista .btn{font-size:11px;padding:.48em .7em}
+html.phone #revista .zoom{padding:max(10px,env(safe-area-inset-top)) 10px max(10px,env(safe-area-inset-bottom))}
+html.phone #revista .zc{width:100%;max-height:100%;border-radius:14px}
+html.phone #revista .zrow{flex-direction:column}
+html.phone #revista .zrow .cta,html.phone #revista .zrow button{width:100%;text-align:center}
+html.tab #revista .brand{height:34px}
