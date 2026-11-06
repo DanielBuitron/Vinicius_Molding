@@ -28,7 +28,7 @@ const imgP=j=>{const p=PR[j];return `<div class="pg img" data-p="${j}"><img src=
 const infoP=(j,n)=>{const p=PR[j],cls=p.v==='color'?'pg col':p.v==='dark'?'pg dark':'pg',st=`--ac:${p.c}`+(p.v==='color'?`;--bg:${p.c};--fg:${p.tx}`:'');
  return `<div class="${cls}" style="${st}">${hd(n)}<div class="num">${p.ref}</div><h2 data-p="${j}">${p.n}<em>${p.sub}</em></h2><p>${p.d}</p><dl>${rows(p.r)}</dl><button class="more" data-p="${j}">Ver detalle +</button></div>`};
 const mini=a=>`<div class="mini">${a.map(r=>`<div><b>${r[0]}</b><span>${r[1]}</span></div>`).join('')}</div>`;
-const cover=`<div class="pg cover"><img class="ph" src="${A('p-cera.jpg')}" alt=""><div class="shade"></div><img class="lg" src="assets/logo.png" alt="Vinicius Molding"><div class="cl2"><small>CATÁLOGO DE PRODUCTOS</small><b>Cuidado capilar masculino</b></div></div>`;
+const cover=`<div class="pg cover brand-cover"><span class="brand-bars" aria-hidden="true"></span><img class="lg" src="assets/logo.png" alt="Vinicius Molding"></div>`;
 const back=`<div class="pg dark cover bk"><img class="iso" src="assets/isotipo.png" alt=""><small>@viniciusmolding</small></div>`;
 const S=[
 [`<div class="pg dark">${hd(2)}<h2>Quiénes somos</h2><p>Somos una marca de cuidado capilar masculino creada para hombres que no improvisan, que cuidan cada detalle y saben que el éxito también se construye desde el cuero cabelludo.</p><p>No vendemos promesas, entregamos resultados.</p></div>`,
