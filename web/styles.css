@@ -30,9 +30,7 @@ body.gl #revista .desk{display:none}#revista #gl{position:absolute;inset:0;width
 #revista .face{container-type:size;position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden}
 #revista .face.b{transform:rotateY(180deg)}
 #revista .face::after{content:"";position:absolute;inset:0;pointer-events:none;background:#000;opacity:var(--sh,0)}
-#revista .f::before, #revista .b::before{content:"";position:absolute;top:0;bottom:0;width:14%;z-index:3;pointer-events:none}
-#revista .f::before{left:0;background:linear-gradient(90deg,#0007,#0000)}
-#revista .b::before{right:0;background:linear-gradient(270deg,#0007,#0000)}
+#revista .f::before, #revista .b::before{content:none}
 #revista .pg{position:absolute;inset:0;font-size:3.05cqw;line-height:1.55;display:flex;flex-direction:column;padding:8cqw 8cqw 7cqw;background:#f3f2ef;color:#0b0b0c;
 background-image:repeating-linear-gradient(118deg,#0000 0 2.4cqw,#00000009 2.4cqw 2.5cqw)}
 #revista .pg.dark{background-color:#0c0c0d;color:#fff;background-image:repeating-linear-gradient(118deg,#0000 0 2.4cqw,#ffffff0d 2.4cqw 2.5cqw)}
@@ -70,8 +68,7 @@ background-image:repeating-linear-gradient(118deg,#0000 0 2.4cqw,#00000009 2.4cq
 #revista .prop, #revista .pen{opacity:var(--po,1)}
 #revista .bsh{position:absolute;top:0;height:100%;left:calc(50% - var(--pw)*var(--o,0));width:calc(var(--pw)*(1 + var(--o,0)));box-shadow:.6vw 1.5vw 2.4vw .2vw #000d,.1vw .25vw .5vw #000;transform:translateZ(-3px);border-radius:4px;background:#0006}
 
-#revista .pg::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(135deg,#fff3 0,#0000 38%,#0004 100%)}
-#revista .pg.dark::after, #revista .pg.red::after{background:linear-gradient(135deg,#fff2 0,#0000 40%,#0005 100%)}
+#revista .pg::after,#revista .pg.dark::after,#revista .pg.red::after{content:none}
 #revista .cover::before{content:'';position:absolute;inset:0;background:linear-gradient(115deg,#0000 30%,#ffffff1c 46%,#0000 60%)}
 
 
@@ -80,8 +77,7 @@ background-image:repeating-linear-gradient(118deg,#0000 0 2.4cqw,#00000009 2.4cq
 #revista .sf, #revista .sb{position:absolute;inset:0;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden}
 #revista .sb{transform:rotateY(180deg)}
 #revista .sf::after, #revista .sb::after{content:"";position:absolute;inset:0;background:#000;opacity:var(--sh,0);pointer-events:none;z-index:6}
-#revista .sf.g::before, #revista .sb.g::before{content:"";position:absolute;top:0;bottom:0;width:100%;z-index:5;pointer-events:none}
-#revista .sf.g::before{left:0;background:linear-gradient(90deg,#0009,#0000)}#revista .sb.g::before{right:0;background:linear-gradient(270deg,#0009,#0000)}
+#revista .sf.g::before, #revista .sb.g::before{content:none}
 #revista .cl{position:absolute;top:0;width:var(--pw);height:100%;container-type:size}
 #revista .edge{position:absolute;top:100%;transform-origin:top;transform:rotateX(-90deg);background:linear-gradient(#0b0b0c 0 2px,#0000 2px calc(100% - 2px),#0b0b0c calc(100% - 2px)),repeating-linear-gradient(180deg,#d9d4c8 0 1px,#bfb9ab 1px 2px);filter:brightness(.55)}
 #revista .er{left:50%;width:var(--pw);height:var(--tr,8px)}#revista .el{left:0;width:var(--pw);height:var(--tl,8px);opacity:var(--o,0)}
@@ -133,7 +129,7 @@ html.port #revista .ctl{bottom:2vh}
 #revista .velvet{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:5cqw;text-align:center}
 #revista .velvet .mark{width:34cqw;height:auto;filter:drop-shadow(0 0 1.6cqw rgba(229,44,59,.9)) drop-shadow(0 .45cqw .15cqw rgba(0,0,0,.85))}
 #revista .velvet b{font:600 4.6cqw/1 Poppins;letter-spacing:.28em;color:#ff2d36;text-shadow:0 0 1.6cqw rgba(229,44,59,.8),0 .28cqw 0 #4a0008,0 .7cqw .5cqw rgba(0,0,0,.7)}
-#revista .book-light{position:absolute;left:50%;top:48%;width:calc(var(--pw) * (0.78 + var(--o, 0) * 1.42));height:calc(var(--ph) * (0.7 + var(--o, 0) * 0.48));transform:translate(-50%,-50%) translateZ(70px);pointer-events:none;mix-blend-mode:screen;opacity:calc(.55 + var(--o, 0) * .45);background:radial-gradient(ellipse at 50% 46%,rgba(255,250,240,.42) 0%,rgba(255,246,230,.2) 48%,rgba(255,246,230,0) 78%)}
+#revista .book-light{position:absolute;left:50%;top:48%;width:calc(var(--pw) * (1.05 + var(--o, 0) * 1.85));height:calc(var(--ph) * (1.05 + var(--o, 0) * 0.72));transform:translate(-50%,-50%) translateZ(70px);pointer-events:none;mix-blend-mode:screen;opacity:calc(.5 + var(--o, 0) * .4);background:radial-gradient(ellipse at 50% 48%,rgba(255,250,240,.34) 0%,rgba(255,246,230,.28) 72%,rgba(255,246,230,.14) 94%,rgba(255,246,230,0) 100%)}
 #revista .icon-cart{position:relative;display:grid;place-items:center;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.45);color:#fff;text-decoration:none}
 #revista .icon-cart svg{width:18px;height:18px}
 #revista .icon-cart b{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;padding:0 4px;border-radius:99px;background:#E52C3B;color:#fff;font:700 10px/16px Poppins;text-align:center}
