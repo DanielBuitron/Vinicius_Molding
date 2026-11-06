@@ -431,7 +431,7 @@ function viewAsesor(done) {
 
 function viewCart() {
   const items = cartDetailed();
-  if (!items.length) return `<section class="page"><h2 class="block-title">El carrito está vacío.</h2><a class="btn" href="#/catalogo">Ver el catálogo</a></section>`;
+  if (!items.length) return `<section class="page"><h2 class="block-title">El carrito está vacío.</h2><a class="btn" href="#/inicio">Volver a la revista</a></section>`;
   return `
     <section class="cart-layout">
       <div>
@@ -458,7 +458,7 @@ function viewCart() {
         <h3>Total</h3>
         <div class="sum-row"><strong>${money(cartTotal())}</strong></div>
         <p class="fine">Pesos colombianos. El envío se coordina desde Cali.</p>
-        <a class="btn full" href="#/pago">Continuar al pago</a>
+        <a class="btn full" href="#/pago">Enviar pedido</a>
       </aside>
     </section>`;
 }
@@ -466,22 +466,22 @@ function viewCart() {
 function viewCheckout() {
   const items = cartDetailed();
   if (!items.length) return viewCart();
-  const ready = VM.config.wompiReady;
   return `
     <section class="checkout-layout">
       <form class="form panel-card" data-form="checkout">
-        <h3>Pago</h3>
+        <h3>Datos de contacto</h3>
+        <p class="fine">El asesor recibe un PDF con el pedido para verificarlo.</p>
         <label>Nombre<input name="name" required></label>
         <label>Celular<input name="phone" required inputmode="tel"></label>
-        <label>Correo<input name="email" type="email" placeholder="opcional"></label>
         <label>Ciudad<input name="city" value="Cali"></label>
         <label>Dirección<input name="address"></label>
-        <button class="btn" type="submit">${ready ? "Pagar con Wompi" : "Crear pedido"}</button>
+        <label>Nota<textarea name="note" rows="3" placeholder="Horario, barrio o indicación"></textarea></label>
+        <button class="btn" type="submit">Enviar por WhatsApp</button>
       </form>
       <aside class="summary">
         <h3>${money(cartTotal())}</h3>
         ${items.map((item) => `<div class="sum-row"><span>${item.qty} × ${esc(item.name)}</span><span>${money(item.price * item.qty)}</span></div>`).join("")}
-        <div class="pay-badges"><span>Tarjetas</span><span>PSE</span><span>Nequi</span><span>Bancolombia</span></div>
+        <p class="fine">El PDF queda para que el asesor confirme productos, valor y entrega.</p>
       </aside>
     </section>`;
 }

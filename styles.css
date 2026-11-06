@@ -96,6 +96,10 @@ background-image:repeating-linear-gradient(118deg,#0000 0 2.4cqw,#00000009 2.4cq
 #revista .pg.col{background-color:var(--bg);background-image:none;color:var(--fg)}#revista .pg.col .num{opacity:.12}#revista .pg.col h2 em{border-color:var(--fg)}#revista .pg.col .hd img{filter:brightness(0)}#revista .pg.col dl div{border-color:#0004}
 #revista h2[data-p]{cursor:pointer}
 #revista .more{margin-top:4cqw;align-self:flex-start;background:none;border:1px solid currentColor;color:inherit;padding:1.4cqw 3.4cqw;border-radius:99px;font:500 2.6cqw Poppins;cursor:pointer}
+#revista .buy{margin-top:3.4cqw;display:flex;align-items:center;gap:1.8cqw}
+#revista .buy .q{width:7.4cqw;height:7.4cqw;min-width:28px;min-height:28px;border-radius:50%;border:1px solid currentColor;background:transparent;color:inherit;font:600 4cqw/1 Poppins;cursor:pointer}
+#revista .buy b{min-width:3.2cqw;text-align:center;font:600 3.4cqw/1 Poppins}
+#revista .buy .add{margin-left:1cqw;background:#E52C3B;color:#fff;border:0;border-radius:99px;padding:1.7cqw 3.2cqw;font:600 2.7cqw/1 Poppins;cursor:pointer}
 #revista .lids{display:grid;grid-template-columns:1fr 1fr;gap:4cqw;width:58cqw;margin:6cqw auto 0}#revista .lids img{width:100%;border-radius:50%;box-shadow:0 1.5cqw 3cqw #000a}
 #revista .idx{list-style:none;padding:0;margin-top:6cqw}#revista .idx li{display:grid;grid-template-columns:1fr auto;padding:2.5cqw 0;border-top:1px solid #8884;cursor:pointer}
 #revista .idx b{font-weight:500;font-size:3.5cqw}#revista .idx i{font-style:normal;opacity:.6;font-size:2.6cqw}#revista .idx span{grid-row:1/3;grid-column:2;align-self:center;font:700 4.4cqw var(--display);color:var(--red)}
@@ -129,7 +133,13 @@ html.port #revista .ctl{bottom:2vh}
 #revista .plate{position:relative;z-index:2;width:78cqw;padding:12cqw 7.5cqw;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#16181f 0%,#0a0b10 55%,#07080c 100%);box-shadow:inset 0 .22cqw 0 rgba(255,255,255,.34),inset 0 -.28cqw 0 #000,0 .35cqw 0 rgba(255,255,255,.04),0 2.2cqw 3.2cqw rgba(0,0,0,.72)}
 #revista .plate .frame{position:absolute;inset:3.4cqw;border:.42cqw solid transparent;border-image:linear-gradient(90deg,#E52C3B,#00C8C2,#FFD300,#A4D800,#585E65) 1;pointer-events:none}
 #revista .pg.cover.brand-cover .lg{position:relative;top:auto;left:auto;transform:none;width:100%;z-index:2;filter:drop-shadow(0 -.14cqw 0 rgba(255,255,255,.75)) drop-shadow(0 .32cqw 0 #000) drop-shadow(0 1.1cqw 1.3cqw rgba(0,0,0,.6))}
-#revista .book-light{position:absolute;left:50%;top:44%;width:calc(var(--pw)*.62);height:calc(var(--ph)*.38);transform:translate(-50%,-44%) translateZ(40px);pointer-events:none;mix-blend-mode:soft-light;background:radial-gradient(ellipse at 50% 42%,rgba(255,252,246,.45),rgba(255,252,246,0) 70%)}
+#revista .book-light{position:absolute;left:50%;top:48%;width:calc(var(--pw) * (0.78 + var(--o, 0) * 1.42));height:calc(var(--ph) * (0.7 + var(--o, 0) * 0.48));transform:translate(-50%,-50%) translateZ(70px);pointer-events:none;mix-blend-mode:screen;opacity:calc(.55 + var(--o, 0) * .45);background:radial-gradient(ellipse at 50% 46%,rgba(255,250,240,.42) 0%,rgba(255,246,230,.2) 48%,rgba(255,246,230,0) 78%)}
+#revista .icon-cart{position:relative;display:grid;place-items:center;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.45);color:#fff;text-decoration:none}
+#revista .icon-cart svg{width:18px;height:18px}
+#revista .icon-cart b{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;padding:0 4px;border-radius:99px;background:#E52C3B;color:#fff;font:700 10px/16px Poppins;text-align:center}
+.wa-fab{position:fixed;z-index:45;right:max(16px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;background:#25D366;color:#fff;display:grid;place-items:center;box-shadow:0 10px 28px rgba(0,0,0,.45)}
+.wa-fab svg{width:30px;height:30px}
+html.phone .wa-fab{bottom:max(76px,calc(env(safe-area-inset-bottom) + 68px))}
 #revista .short{display:none}
 body.mode-home{overflow-x:hidden}
 #revista .sticky{height:100vh;height:100dvh}

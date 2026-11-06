@@ -30,7 +30,7 @@ const LINK={cera:'cera-brillo',pasta:'pasta',pomada:'pomada','cera-fibra':'cera-
 try{const saved=JSON.parse(localStorage.getItem('vm_catalog')||'{}');PR.forEach(p=>{const s=saved[LINK[p.id]||p.id];if(!s)return;if(s.name)p.n=s.name;if(s.finish)p.sub=s.finish;if(s.description)p.d=s.description;if(s.image){p.img=s.image;p.bleed=1}if(s.price!=null){p.price=Number(s.price);const row=p.r.find(x=>x[0]==='Precio');if(row)row[1]=cop(p.price)}if(s.size){const row=p.r.find(x=>x[0]==='Contenido');if(row)row[1]=s.size}if(s.ingredients){const txt=Array.isArray(s.ingredients)?s.ingredients.join(' · '):s.ingredients;const row=p.r.find(x=>x[0]==='Contiene');if(row)row[1]=txt}})}catch(e){}
 const imgP=j=>{const p=PR[j];return `<div class="pg img${p.bleed?' bleed':''}" data-p="${j}"><img src="${shot(p)}" alt="${p.cap}"><div class="capline"><span>${p.cap}</span><b class="px">${cop(p.price)}</b></div><b class="zm">+</b></div>`};
 const infoP=(j,n)=>{const p=PR[j],cls=p.v==='color'?'pg col':p.v==='dark'?'pg dark':'pg',st=`--ac:${p.c}`+(p.v==='color'?`;--bg:${p.c};--fg:${p.tx}`:'');
- return `<div class="${cls}" style="${st}">${hd(n)}<div class="num">${p.ref}</div><h2 data-p="${j}">${p.n}<em>${p.sub}</em></h2><p>${p.d}</p><dl>${rows(p.r)}</dl><button class="more" data-p="${j}">Ver detalle +</button></div>`};
+ return `<div class="${cls}" style="${st}">${hd(n)}<div class="num">${p.ref}</div><h2 data-p="${j}">${p.n}<em>${p.sub}</em></h2><p>${p.d}</p><dl>${rows(p.r)}</dl><div class="buy"><button type="button" class="q" data-mag="q" data-p="${j}" data-dir="-1" aria-label="Menos">−</button><b data-mag-qty="${j}">1</b><button type="button" class="q" data-mag="q" data-p="${j}" data-dir="1" aria-label="Más">+</button><button type="button" class="add" data-mag="add" data-p="${j}">Añadir al carrito</button></div></div>`};
 const mini=a=>`<div class="mini">${a.map(r=>`<div><b>${r[0]}</b><span>${r[1]}</span></div>`).join('')}</div>`;
 const cover=`<div class="pg cover brand-cover"><div class="plate"><span class="frame" aria-hidden="true"></span><img class="lg" src="assets/logo.png" alt="Vinicius Molding"></div></div>`;
 const back=`<div class="pg dark cover bk"><img class="iso" src="assets/isotipo.png" alt=""><small>@viniciusmolding</small></div>`;
@@ -76,7 +76,7 @@ function draw(p){
  const deskRx=innerHeight<780?44:56,deskDrop=innerHeight<780?14:22;
  window.CAMT=window.PORT?{rx:(phone?8:24)-(phone?0:4)*cP,s:sc,tx:px,ty:phone?-4:-2*cP,rz:phone?0:-.6+.6*cP}:{rx:deskRx-deskDrop*c,s:sc,tx:3*(1-c),ty:-3*(1-c)-2.5*c,rz:-3+2.4*c};
  if(!window.GLon)tilt.style.transform=`translate3d(${CAMT.tx}vw,${CAMT.ty}vh,0) rotateX(${CAMT.rx}deg) rotateZ(${CAMT.rz}deg) scale(${CAMT.s})`;
- book.style.setProperty('--o',o);book.style.transform=`translateX(calc(var(--pw)*${-.5*(1-o)}))`;
+ book.style.setProperty('--o',o);window.BOOKO=o;book.style.transform=`translateX(calc(var(--pw)*${-.5*(1-o)}))`;
  vig.style.opacity=1-.85*ease(cl((p-.04)/.2));hero.style.opacity=1-cl((p-.02)/.08);hero.style.transform=`translateY(${-cl(p/.12)*30}px)`;
  let fl=0;leaves.forEach((_,i)=>{if(setLeaf(i,p))fl++});
  book.style.setProperty('--tl',(2+fl*1.1)+'px');book.style.setProperty('--tr',(2+(N-1-fl)*1.1)+'px');
@@ -101,9 +101,12 @@ zi_.addEventListener('pointermove',e=>{const r=zi_.getBoundingClientRect();$('zi
 addEventListener('keydown',e=>{if(!Z.hidden){if(e.key==='Escape')closeZ();if(e.key==='ArrowRight')$('zn').click();if(e.key==='ArrowLeft')$('zp').click();return}
  if(e.key==='ArrowRight'||e.key==='ArrowDown')nav(1);if(e.key==='ArrowLeft'||e.key==='ArrowUp')nav(-1)});
 // ---- clic en el libro: abrir, pasar página, ampliar producto
-book.addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g){go(+g.dataset.go);return}
+const magQty={};
+function setMagQty(j,dir){magQty[j]=Math.max(1,Math.min(20,(magQty[j]||1)+dir));document.querySelectorAll('[data-mag-qty="'+j+'"]').forEach(el=>{el.textContent=magQty[j]})}
+book.addEventListener('click',e=>{const mag=e.target.closest('[data-mag]');if(mag){const j=+mag.dataset.p;if(mag.dataset.mag==='q')setMagQty(j,+mag.dataset.dir);else if(window.addToCart)window.addToCart(LINK[PR[j].id]||PR[j].id,magQty[j]||1);return}
+ const g=e.target.closest('[data-go]');if(g){go(+g.dataset.go);return}
  if(e.target.closest('a'))return;if(state===0){nav(1);return}
- const z=e.target.closest('[data-p]');if(z&&z.matches('button,h2')){openZ(+z.dataset.p);return}
+ const z=e.target.closest('[data-p]');if(z&&z.matches('h2')){openZ(+z.dataset.p);return}
  const r=book.getBoundingClientRect(),x=(e.clientX-r.left)/r.width;
  if(!window.PORT){if(x>.94){nav(1);return}if(x<.06){nav(-1);return}}
  if(z)openZ(+z.dataset.p)});

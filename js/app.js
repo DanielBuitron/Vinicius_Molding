@@ -95,6 +95,12 @@ function syncMagazine(home) {
   if (css) css.media = home ? "not all" : "all";
   document.body.classList.toggle("mode-home", !!home);
   document.body.classList.toggle("mode-app", !home);
+  const badge = document.getElementById("mag-count");
+  if (badge) {
+    const count = cartCount();
+    badge.textContent = String(count);
+    badge.hidden = count < 1;
+  }
   if (home && window.GLon) document.body.classList.add("gl");
   const login = document.getElementById("login-link");
   if (login) {
@@ -484,6 +490,7 @@ async function saveProduct(form, data) {
   VM.products = mergeCatalog(VM.products);
   try { await api("/api/admin/products/" + id, { method: "PUT", body: patch }); } catch (err) { /* queda guardado en este navegador */ }
   toast("Producto guardado. Recarga la revista para ver la foto en la hoja.");
+  VM.invId = "";
   render();
 }
 
@@ -539,6 +546,118 @@ function addToCart(id, qty) {
   toast(product.name + " en el carrito");
   render();
 }
+window.addToCart = addToCart;
+
+const PDF_LATIN = { "á":"\xE1","é":"\xE9","í":"\xED","ó":"\xF3","ú":"\xFA","ñ":"\xF1","ü":"\xFC","Á":"\xC1","É":"\xC9","Í":"\xCD","Ó":"\xD3","Ú":"\xDA","Ñ":"\xD1","Ü":"\xDC","¿":"\xBF","¡":"\xA1" };
+
+function pdfText(value) {
+  return String(value || "").replace(/[^\x00-\x7F]/g, (ch) => PDF_LATIN[ch] || "?").replace(/[\\()]/g, (ch) => "\\" + ch);
+}
+
+function orderPdf(lines) {
+  const body = ["BT", "/F1 11 Tf", "48 790 Td", "15 TL"];
+  lines.forEach((line, index) => {
+    const text = "(" + pdfText(line) + ") Tj";
+    body.push(index ? "T* " + text : text);
+  });
+  body.push("ET");
+  const stream = body.join("\n");
+  const objects = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
+    "<< /Length " + stream.length + " >>\nstream\n" + stream + "\nendstream",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+  ];
+  let pdf = "%PDF-1.4\n";
+  const offsets = [0];
+  objects.forEach((object, index) => {
+    offsets.push(pdf.length);
+    pdf += (index + 1) + " 0 obj\n" + object + "\nendobj\n";
+  });
+  const xref = pdf.length;
+  pdf += "xref\n0 " + (objects.length + 1) + "\n";
+  pdf += "0000000000 65535 f \n";
+  offsets.slice(1).forEach((offset) => {
+    pdf += String(offset).padStart(10, "0") + " 00000 n \n";
+  });
+  pdf += "trailer << /Size " + (objects.length + 1) + " /Root 1 0 R >>\nstartxref\n" + xref + "\n%%EOF";
+  const bytes = new Uint8Array(pdf.length);
+  for (let i = 0; i < pdf.length; i += 1) bytes[i] = pdf.charCodeAt(i) & 255;
+  return new File([bytes], "pedido.pdf", { type: "application/pdf" });
+}
+
+function downloadFile(file) {
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(file);
+  link.download = file.name;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(link.href), 4000);
+}
+
+async function sendOrderWhatsapp(data) {
+  const name = String(data.name || "").trim();
+  const phone = String(data.phone || "").replace(/\D/g, "");
+  if (name.length < 2) {
+    toast("Escribe tu nombre");
+    return;
+  }
+  if (phone.length < 7) {
+    toast("Escribe un celular válido");
+    return;
+  }
+  const items = cartDetailed();
+  if (!items.length) {
+    toast("El carrito está vacío");
+    return;
+  }
+  const ref = "VM-" + Date.now().toString(36).toUpperCase();
+  const lines = [
+    "VINICIUS MOLDING",
+    "Pedido " + ref,
+    new Date().toLocaleString("es-CO"),
+    "",
+    "Cliente: " + name,
+    "Celular: " + phone,
+    "Ciudad: " + (String(data.city || "").trim() || "-"),
+    "Direccion: " + (String(data.address || "").trim() || "-"),
+    String(data.note || "").trim() ? "Nota: " + String(data.note).trim() : "",
+    "",
+    "Productos",
+  ];
+  items.forEach((item) => {
+    lines.push(item.qty + " x " + item.name + "  " + (item.sku || ""));
+    lines.push("   " + money(item.price) + " c/u   =   " + money(item.price * item.qty));
+  });
+  lines.push("");
+  lines.push("TOTAL  " + money(cartTotal()));
+  lines.push("");
+  lines.push("Asesor: verificar productos, valor y datos de entrega.");
+  const clean = lines.filter((line) => line !== "");
+  const file = orderPdf(clean);
+  const named = new File([file], "Pedido-" + ref + ".pdf", { type: "application/pdf" });
+  const message = clean.join("\n");
+  let shared = false;
+  try {
+    if (navigator.canShare && navigator.canShare({ files: [named] })) {
+      await navigator.share({ files: [named], title: "Pedido " + ref, text: message.slice(0, 500) });
+      shared = true;
+    }
+  } catch (err) {
+    if (err && err.name === "AbortError") {
+      toast("Envío cancelado");
+      return;
+    }
+  }
+  if (!shared) {
+    downloadFile(named);
+    window.open(waHref(message + "\n\nAdjunta el PDF descargado: " + named.name), "_blank", "noopener");
+  }
+  VM.cart = [];
+  saveCart();
+  toast(shared ? "Envía el PDF al asesor desde WhatsApp" : "PDF listo. Se abrió WhatsApp para el asesor");
+  location.hash = "#/inicio";
+}
 
 function bind() {
   document.body.addEventListener("click", async (event) => {
@@ -586,6 +705,16 @@ function bind() {
     }
     if (act === "add") {
       addToCart(node.dataset.id, node.dataset.qty);
+      return;
+    }
+    if (act === "inv-open") {
+      VM.invId = node.dataset.id;
+      render();
+      return;
+    }
+    if (act === "inv-close") {
+      VM.invId = "";
+      render();
       return;
     }
     if (act === "qty") {
@@ -649,6 +778,28 @@ function bind() {
         toast(err.message);
       }
     }
+  });
+
+  document.body.addEventListener("input", (event) => {
+    const field = event.target;
+    if (!field || !field.dataset || !field.dataset.invFilter) return;
+    const read = (key) => {
+      const node = document.querySelector(`[data-inv-filter="${key}"]`);
+      return node ? node.value.trim().toLowerCase() : "";
+    };
+    const name = read("name");
+    const line = read("line");
+    const sku = read("sku");
+    let visible = 0;
+    document.querySelectorAll(".inv-row").forEach((row) => {
+      const ok = row.dataset.name.toLowerCase().includes(name)
+        && row.dataset.line.toLowerCase().includes(line)
+        && row.dataset.sku.toLowerCase().includes(sku);
+      row.hidden = !ok;
+      if (ok) visible += 1;
+    });
+    const empty = document.getElementById("inv-empty");
+    if (empty) empty.hidden = visible > 0;
   });
 
   document.body.addEventListener("change", async (event) => {
@@ -753,25 +904,7 @@ function bind() {
         return;
       }
       if (kind === "checkout") {
-        const items = cartDetailed().map((item) => ({ id: item.id, qty: item.qty }));
-        try {
-          const result = await api("/api/checkout", {
-            method: "POST",
-            body: { items, customer: data },
-          });
-          checkoutOrder = result.order;
-          VM.cart = [];
-          saveCart();
-          if (result.checkoutUrl) {
-            location.href = result.checkoutUrl;
-            return;
-          }
-          location.hash = `#/pedido?ref=${encodeURIComponent(result.reference)}&token=${encodeURIComponent(result.order.token)}`;
-          return;
-        } catch (err) {
-          if (!(VM.config.wompi && VM.config.wompi.publicKey && VM.config.wompi.integritySecret)) throw err;
-        }
-        await payWithWompi(data);
+        await sendOrderWhatsapp(data);
         return;
       }
     } catch (err) {
