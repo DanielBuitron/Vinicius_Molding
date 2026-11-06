@@ -1,32 +1,60 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Vinicius Molding · Cuidado capilar masculino</title>
-  <meta name="description" content="Vinicius Molding. Cuidado capilar masculino hecho en Cali. Somos la solución, no el problema.">
+  <title>Vinicius Molding · Catálogo interactivo</title>
+  <meta name="description" content="Catálogo interactivo de Vinicius Molding: cuidado capilar masculino. Abre el libro y recorre los productos.">
   <meta name="theme-color" content="#000000">
-  <link rel="icon" type="image/png" href="assets/favicon.png?v=200">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/app.css?v=200">
+  <link rel="icon" type="image/png" href="assets/favicon.png?v=213">
+  <link rel="stylesheet" href="styles.css?v=213">
+  <link id="store-css" rel="stylesheet" href="css/app.css?v=213" media="not all">
 </head>
-<body class="site">
-  <div id="app">
-    <div class="boot">
-      <img src="assets/isotipo-red.png" alt="">
-      <p>Vinicius Molding</p>
-    </div>
+<body class="mode-home">
+<div id="revista">
+<header class="top">
+  <a href="#/inicio"><img src="assets/logo.png" alt="Vinicius Molding" class="brand"></a>
+  <div class="top-actions">
+    <a class="btn login" id="login-link" href="#/login">Iniciar sesión</a>
+    <a class="btn" href="https://wa.me/573235835137?text=Hola%2C%20quiero%20el%20cat%C3%A1logo%20de%20Vinicius%20Molding" target="_blank" rel="noopener">Pedir catálogo</a>
   </div>
-  <script src="js/three.min.js?v=200"></script>
-  <script src="js/page-flip.browser.js?v=200"></script>
-  <script src="js/volume.js?v=200"></script>
-  <script src="js/site.js?v=200"></script>
-  <script src="js/api.js?v=200"></script>
-  <script src="js/views.js?v=200"></script>
-  <script src="js/desk.js?v=200"></script>
-  <script src="js/admin.js?v=200"></script>
-  <script src="js/app.js?v=200"></script>
+</header>
+<main id="stage">
+  <div class="sticky">
+    <div class="hero" id="hero">
+      <h1>Una revista que puedes abrir</h1>
+      <p>Haz clic en la portada o desplázate para pasar sus páginas.</p>
+    </div>
+    <canvas id="gl"></canvas>
+    <div class="scene">
+      <div class="tilt" id="tilt">
+        <div class="desk" id="desk"></div>
+        <div class="book" id="book" aria-hidden="true"></div>
+      </div>
+    </div>
+    <div class="vig"></div><div class="grain"></div>
+    <nav class="ctl" aria-label="Navegación del catálogo">
+      <button id="prev" aria-label="Página anterior">‹</button>
+      <span id="cap">Cubierta</span>
+      <button id="next" aria-label="Página siguiente">›</button>
+    </nav>
+    <div class="bar"><b id="bar"></b></div>
+  </div>
+</main>
+<div class="zoom" id="zoom" hidden role="dialog" aria-modal="true" aria-label="Detalle del producto"><div class="zc"><div class="zi"><img id="zimg" alt=""></div><div class="zt"><small id="zref"></small><h3 id="zname"></h3><span id="zsub"></span><p id="zdesc"></p><dl id="zrows"></dl><div class="zrow"><a id="zwa" class="cta" target="_blank" rel="noopener">Pedir por WhatsApp</a><button id="zp" aria-label="Producto anterior">‹</button><button id="zn" aria-label="Producto siguiente">›</button><button id="zx">Cerrar</button></div></div></div></div>
+</div>
+<div id="app" hidden></div>
+<script src="js/textures.js?v=213"></script>
+<script src="js/revista.js?v=213"></script>
+<script src="js/revista-gl.js?v=213"></script>
+<script src="js/three.min.js?v=213"></script>
+<script src="js/page-flip.browser.js?v=213"></script>
+<script src="js/volume.js?v=213"></script>
+<script src="js/site.js?v=213"></script>
+<script src="js/api.js?v=213"></script>
+<script src="js/views.js?v=213"></script>
+<script src="js/desk.js?v=213"></script>
+<script src="js/admin.js?v=213"></script>
+<script src="js/app.js?v=213"></script>
 </body>
 </html>

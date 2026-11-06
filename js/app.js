@@ -86,12 +86,36 @@ function bindShowcases() {
   });
 }
 
+function syncMagazine(home) {
+  const revista = document.getElementById("revista");
+  const app = document.getElementById("app");
+  const css = document.getElementById("store-css");
+  if (revista) revista.hidden = !home;
+  if (app) app.hidden = home;
+  if (css) css.media = home ? "not all" : "all";
+  document.body.classList.toggle("mode-home", !!home);
+  document.body.classList.toggle("mode-app", !home);
+  if (home && window.GLon) document.body.classList.add("gl");
+  const login = document.getElementById("login-link");
+  if (login) {
+    if (VM.user) {
+      login.textContent = "Panel";
+      login.setAttribute("href", "#/panel/resumen");
+    } else {
+      login.textContent = "Iniciar sesión";
+      login.setAttribute("href", "#/login");
+    }
+  }
+}
+
 function paint(html, bodyClass) {
   const page = (VM.parts && VM.parts[0]) || "inicio";
   const extras = [];
+  const keepGl = document.body.classList.contains("gl");
   if (bodyClass === "site" && (page === "inicio" || !page)) extras.push("home");
   if (bodyClass === "site" && page === "producto") extras.push("product-page");
   document.body.className = [bodyClass, ...extras].join(" ");
+  if (keepGl) document.body.classList.add("gl");
   document.getElementById("app").innerHTML = html;
   const route = location.hash || "#/inicio";
   if (route !== paintedRoute) {
@@ -212,6 +236,7 @@ async function render() {
   VM.qs = route.qs;
   titles();
   const page = VM.parts[0];
+  syncMagazine(page === "inicio");
 
   if (page === "login") {
     if (VM.user) {
@@ -261,6 +286,11 @@ async function render() {
     }
     if (seq !== renderSeq) return;
     paint(shellPublic(viewOrder(order, false)), "site");
+    trackView();
+    return;
+  }
+
+  if (page === "inicio") {
     trackView();
     return;
   }
