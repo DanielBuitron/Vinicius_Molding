@@ -32,6 +32,7 @@ function shellPublic(content) {
         <a href="#/catalogo">${t("nav.catalog")}</a>
         <a href="#/inicio">${t("nav.home")}</a>
         <a href="#/catalogo/molding">${t("footer.lineMolding")}</a>
+        <a href="#/catalogo/kits">${t("footer.kits")}</a>
         <a href="#/catalogo/limpieza">${t("footer.cleaning")}</a>
         <a href="#/catalogo/tratamiento">${t("footer.treatment")}</a>
         <a href="#/catalogo/kids">${t("footer.kids")}</a>
@@ -277,14 +278,16 @@ function catalogGroups() {
 
 function catalogCard(item) {
   const name = productField(item, "name") || item.name;
+  const summary = productField(item, "summary") || item.summary || "";
   return `
     <article class="sku folio-sku" style="--accent:${esc(item.accent)}">
       <a class="sku-shot" href="#/producto/${esc(item.id)}">
         <img src="${esc(cutoutSrc(item.image))}" alt="${esc(name)}" decoding="async" draggable="false">
       </a>
       <div class="sku-body">
-        <p class="kicker">${esc(item.catName || item.size)}</p>
+        <p class="kicker">${esc(item.finish || item.size)}</p>
         <h3><a href="#/producto/${esc(item.id)}">${esc(name)}</a></h3>
+        <p class="sku-sum">${esc(summary)}</p>
         <div class="sku-row">
           <span class="price">${money(item.price)}</span>
           <button class="btn small" data-act="add" data-id="${esc(item.id)}" ${item.stock ? "" : "disabled"}>${t("catalog.add")}</button>
@@ -293,11 +296,32 @@ function catalogCard(item) {
     </article>`;
 }
 
+function sortCatalogItems(items, mode) {
+  const list = items.slice();
+  if (mode === "price-asc") list.sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
+  else if (mode === "price-desc") list.sort((a, b) => Number(b.price || 0) - Number(a.price || 0));
+  else list.sort((a, b) => String(productField(a, "name") || a.name || "").localeCompare(String(productField(b, "name") || b.name || ""), "es"));
+  return list;
+}
+
 function viewCatalog() {
   const focus = VM.parts[1] || "";
-  const all = catalogGroups();
+  const q = String((VM.catalogQuery || "")).trim().toLowerCase();
+  const sort = VM.catalogSort || "name";
+  const all = catalogGroups().map((group) => ({
+    ...group,
+    items: sortCatalogItems(group.items.filter((item) => {
+      if (!q) return true;
+      const blob = [item.name, item.summary, item.description, item.finish, item.line, item.sku]
+        .concat(item.ingredients || [])
+        .join(" ")
+        .toLowerCase();
+      return blob.includes(q);
+    }), sort),
+  })).filter((group) => group.items.length);
   const groups = focus ? all.filter((group) => group.id === focus) : all;
-  const total = all.reduce((count, group) => count + group.items.length, 0);
+  const total = (VM.products || []).length;
+  const visible = groups.reduce((count, group) => count + group.items.length, 0);
   return `
     <section class="section catalog desk-page">
       <div class="catalog-intro">
@@ -306,14 +330,39 @@ function viewCatalog() {
           <h2>${t("catalog.title")}</h2>
           <p class="catalog-lede">${t("catalog.lede")}</p>
         </div>
-        <div class="filters">
-          <a class="chip ${focus ? "" : "on"}" href="#/catalogo">${t("catalog.all")} <span>${total}</span></a>
-          ${all.map((group) => `<a class="chip ${focus === group.id ? "on" : ""}" href="#/catalogo/${esc(group.id)}">${esc(group.name)} <span>${group.items.length}</span></a>`).join("")}
+        <div class="catalog-tools">
+          <label class="catalog-search">
+            <span class="sr-only">${t("catalog.search")}</span>
+            <input type="search" data-catalog-q placeholder="${esc(t("catalog.search"))}" value="${esc(VM.catalogQuery || "")}">
+          </label>
+          <label class="catalog-sort">
+            <span>${t("catalog.sort")}</span>
+            <select data-catalog-sort>
+              <option value="name" ${sort === "name" ? "selected" : ""}>${t("catalog.sort.name")}</option>
+              <option value="price-asc" ${sort === "price-asc" ? "selected" : ""}>${t("catalog.sort.priceAsc")}</option>
+              <option value="price-desc" ${sort === "price-desc" ? "selected" : ""}>${t("catalog.sort.priceDesc")}</option>
+            </select>
+          </label>
         </div>
+        <div class="filters" role="tablist" aria-label="${t("catalog.title")}">
+          <a class="chip ${focus ? "" : "on"}" href="#/catalogo">${t("catalog.all")} <span>${total}</span></a>
+          ${catalogGroups().map((group) => `<a class="chip ${focus === group.id ? "on" : ""}" href="#/catalogo/${esc(group.id)}">${esc(group.name)} <span>${group.items.length}</span></a>`).join("")}
+        </div>
+        <p class="catalog-count">${t("catalog.count", { n: visible })}</p>
       </div>
-      <div class="sku-grid">
-        ${groups.flatMap((group) => group.items.map((item) => catalogCard({ ...item, catName: group.name }))).join("")}
-      </div>
+      ${groups.length ? groups.map((group) => `
+        <section class="catalog-block" data-cat="${esc(group.id)}" id="cat-${esc(group.id)}">
+          <div class="catalog-head">
+            <div>
+              <h3>${esc(group.name)}</h3>
+              <p>${esc(group.blurb || "")}</p>
+            </div>
+            <span class="catalog-head-count">${group.items.length}</span>
+          </div>
+          <div class="sku-grid">
+            ${group.items.map((item) => catalogCard(item)).join("")}
+          </div>
+        </section>`).join("") : `<p class="catalog-empty">${t("catalog.lede")}</p>`}
     </section>`;
 }
 

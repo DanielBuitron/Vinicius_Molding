@@ -476,9 +476,22 @@ async function render() {
   }[page];
   paint(shellPublic(content ? content() : viewHome()), "site");
   const focus = VM.parts[1];
-  if (focus && (page === "catalogo" || page === "linea")) {
+  if (focus && (page === "catalogo" || page === "linea") && !VM.catalogQuery) {
     const block = document.querySelector(`[data-cat="${focus}"]`);
     if (block) block.scrollIntoView({ block: "start" });
+  }
+  if (page === "catalogo" || page === "linea") {
+    const qInput = document.querySelector("[data-catalog-q]");
+    if (qInput && document.activeElement && document.activeElement.hasAttribute && document.activeElement.hasAttribute("data-catalog-q")) {
+      const pos = document.activeElement.selectionStart;
+      qInput.focus();
+      if (typeof pos === "number") qInput.setSelectionRange(pos, pos);
+    } else if (qInput && VM._catalogKeepFocus) {
+      const pos = VM._catalogCaret;
+      qInput.focus();
+      if (typeof pos === "number") qInput.setSelectionRange(pos, pos);
+      VM._catalogKeepFocus = false;
+    }
   }
   trackView();
 }
@@ -1079,6 +1092,14 @@ function bind() {
 
   document.body.addEventListener("input", (event) => {
     const field = event.target;
+    if (field && field.hasAttribute("data-catalog-q")) {
+      VM.catalogQuery = field.value || "";
+      VM._catalogKeepFocus = true;
+      VM._catalogCaret = field.selectionStart;
+      clearTimeout(VM._catalogTimer);
+      VM._catalogTimer = setTimeout(() => render(), 180);
+      return;
+    }
     if (!field || !field.dataset || !field.dataset.invFilter) return;
     const read = (key) => {
       const node = document.querySelector(`[data-inv-filter="${key}"]`);
@@ -1100,6 +1121,12 @@ function bind() {
   });
 
   document.body.addEventListener("change", async (event) => {
+    const sort = event.target && event.target.closest("[data-catalog-sort]");
+    if (sort) {
+      VM.catalogSort = sort.value || "name";
+      render();
+      return;
+    }
     const photo = event.target;
     if (photo && photo.name === "photo" && photo.files && photo.files[0]) {
       const preview = photo.closest(".inv-card") && photo.closest(".inv-card").querySelector("img");
