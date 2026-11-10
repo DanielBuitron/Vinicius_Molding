@@ -970,8 +970,26 @@ def wa_norm(text):
         "maneja": "manejan",
         "tienes": "tienen",
         "tine": "tienen",
+        "teneis": "tienen",
         "catalog": "catalogo",
         "katalogo": "catalogo",
+        "caras": "ceras",
+        "cara": "cera",
+        "zeras": "ceras",
+        "sera": "cera",
+        "seras": "ceras",
+        "pomda": "pomada",
+        "minoxodil": "minoxidil",
+        "minoxidil": "minoxidil",
+        "indicame": "indica",
+        "indicas": "indica",
+        "digame": "dime",
+        "pasame": "pasa",
+        "mandame": "manda",
+        "enviame": "envia",
+        "muestrame": "muestra",
+        "ensename": "ensena",
+        "enseñame": "ensena",
     }
     words = []
     for word in raw.split():
@@ -1011,12 +1029,26 @@ def wa_product_file(product):
 
 
 WA_CATEGORY_HINTS = {
-    "molding": ("cera", "ceras", "pomada", "pasta", "moldear", "fijacion", "molding", "cubre canas", "minoxidil pasta"),
+    "molding": (
+        "cera", "ceras", "pomada", "pomadas", "pasta", "pastas", "moldear", "moldeadora",
+        "fijacion", "fijador", "molding", "cubre canas", "cubrecanas", "minoxidil pasta",
+        "cera moldeadora", "cera fibra", "cera brillo",
+    ),
     "kits": ("kit", "kits", "combo", "combos", "paquete", "paquetes"),
     "limpieza": ("shampoo", "shampoos", "champu", "champus", "limpieza", "caspa", "carbon"),
     "tratamiento": ("tonico", "tonicos", "serum", "tratamiento", "crecimiento", "barba"),
     "kids": ("kids", "ninos", "nino", "infantil"),
     "cuerpo": ("splash", "afeitar", "shaving", "cuerpo", "ducha"),
+}
+
+
+WA_CATEGORY_TITLES = {
+    "molding": "Estas son las ceras y fijadores",
+    "kits": "Estos son los kits y combos",
+    "limpieza": "Estos son los de limpieza",
+    "tratamiento": "Estos son los tratamientos",
+    "kids": "Esta es la línea kids",
+    "cuerpo": "Estos son los de cuerpo",
 }
 
 
@@ -1554,14 +1586,11 @@ def wa_bridge_deliver(phone, jid, text="", media=None):
     return bridge_request("/send", method="POST", body=payload, timeout=90)
 
 
-def wa_attach_product_image(result, product, reply=None):
+def wa_append_product_image(result, product):
     image = wa_product_file(product)
-    result["productId"] = product.get("id")
     if image is None:
-        result["reply"] = reply or ("Ese producto no tiene foto ahora. ¿Te lo cotizo igual?")
         return False
-    result["reply"] = reply or ("Aquí tienes %s ✨ Si te late, dime “quiero 1”." % (product.get("name") or "el producto"))
-    result["media"].append({
+    result.setdefault("media", []).append({
         "type": "image",
         "path": str(image),
         "caption": "%s · %s · %s" % (
@@ -1574,45 +1603,128 @@ def wa_attach_product_image(result, product, reply=None):
     return True
 
 
+def wa_attach_product_image(result, product, reply=None):
+    result["productId"] = product.get("id")
+    ok = wa_append_product_image(result, product)
+    if not ok:
+        result["reply"] = reply or ("Ese producto no tiene foto ahora. ¿Te lo cotizo igual?")
+        return False
+    result["reply"] = reply or ("Aquí tienes %s ✨ Si te late, dime “quiero 1”." % (product.get("name") or "el producto"))
+    return True
+
+
+def wa_attach_category_gallery(result, products, limit=8):
+    count = 0
+    for product in (products or [])[:limit]:
+        if wa_append_product_image(result, product):
+            count += 1
+            if not result.get("productId"):
+                result["productId"] = product.get("id")
+    return count
+
+
+def wa_attach_catalog_pdf(result, products):
+    try:
+        pdf = wa_catalog_pdf(products)
+    except Exception:
+        return False
+    result.setdefault("media", []).append({
+        "type": "document",
+        "path": str(pdf),
+        "filename": "Catalogo-Vinicius-Molding.pdf",
+        "caption": "Catálogo Vinicius Molding",
+        "mimetype": "application/pdf",
+    })
+    return True
+
+
+def wa_push_notification(store, kind, title, body, href="#/panel/whatsapp", meta=None):
+    rows = store.setdefault("notifications", [])
+    note = {
+        "id": "n_" + secrets.token_hex(6),
+        "type": kind or "info",
+        "title": title or "Aviso",
+        "body": body or "",
+        "href": href or "#/panel/whatsapp",
+        "at": now_iso(),
+        "read": False,
+        "meta": meta or {},
+    }
+    rows.insert(0, note)
+    store["notifications"] = rows[:120]
+    return note
+
+
 def wa_bot_answer(text, products, phone, last_product_id=None, cart=None, customer_name=""):
     q = wa_norm(text)
     phone = phone or "573235835137"
     cart = wa_cart_clone(cart)
-    result = {"reply": "", "media": [], "productId": last_product_id, "cart": cart, "openShop": False}
+    result = {
+        "reply": "",
+        "media": [],
+        "productId": last_product_id,
+        "cart": cart,
+        "openShop": False,
+        "needsAdvisor": False,
+        "pauseBot": False,
+    }
+    category = wa_match_category(q)
+    specific_product = bool(re.search(
+        r"\b(fibra|brillo|moldeadora|pomada|pasta|kids|shampoo|champu|tonico|serum|cubre|canas|minoxidil|kit|carbon|barba|splash|afeitar|ducha|organico|restaurador|crecimiento)\b",
+        q,
+    ))
+    browse_intent = bool(re.search(
+        r"\b(ver|mira|mirar|muestra|ensena|indica|mostrar|mostrarles|pasa|manda|envia|fotos?|imagen|imagenes|picture)\b",
+        q,
+    )) or any(k in q for k in ("quiero ver", "necesito ver", "me muestra", "me indica", "me ense"))
     wants_catalog = (
         "catalogo" in q
         or "todo el catalogo" in q
         or (("ver todo" in q or "muestra todo" in q) and "cotiz" not in q)
     ) and "cotiz" not in q
     wants_image = any(k in q for k in (
-        "foto", "fotos", "imagen", "image", "picture", "muestrame", "muestra",
-        "ensename", "enseñame", "mandame", "enviame", "pasa foto", "pasa la foto",
-    ))
+        "foto", "fotos", "imagen", "imagenes", "image", "picture", "muestra", "ensena",
+        "manda", "envia", "pasa foto", "pasa la foto", "mandame foto", "enviame foto",
+    )) or (browse_intent and category)
     retry_image = any(k in q for k in (
-        "no veo", "no me llega", "no llego", "no llegó", "no llega", "sin foto",
-        "no aparece", "no salio", "no salió", "otra vez la foto", "reenvia", "reenviar",
+        "no veo", "no me llega", "no llego", "no llega", "sin foto",
+        "no aparece", "no salio", "otra vez la foto", "reenvia", "reenviar",
     ))
     wants_list = any(k in q for k in (
-        "tipos", "tipo", "cuales", "cuáles", "que tienen", "qué tienen", "que manejan",
-        "qué manejan", "manejan", "ofrecen", "hay", "opciones", "variedades", "lineas", "líneas",
-    ))
+        "tipos", "tipo", "cuales", "que tienen", "que manejan", "manejan", "ofrecen",
+        "hay", "opciones", "variedades", "lineas", "indica", "diga", "dime que",
+        "que venden", "que productos", "lista",
+    )) or (browse_intent and category and not specific_product)
     wants_quote = any(k in q for k in (
         "cotizacion", "cotizar", "cotiza", "presupuesto", "confirmar pedido",
-        "confirma pedido", "cerrar pedido", "enviar cotizacion", "pdf cotizacion",
+        "confirma pedido", "cerrar pedido", "enviar cotizacion", "pdf cotizacion", "manda pdf", "envia pdf", "el pdf",
     ))
+    wants_pdf = any(k in q for k in ("pdf", "documento", "archivo")) and ("catalogo" in q or "cotiz" in q or wants_quote)
     wants_cart_view = any(k in q for k in ("carrito", "que llevo", "mi pedido", "resumen"))
     wants_clear = any(k in q for k in ("vaciar", "limpiar carrito", "borra todo", "borrar todo", "cancelar pedido"))
     wants_remove = any(k in q for k in ("quita", "quitar", "elimina", "eliminar", "sacar"))
-    wants_add = any(k in q for k in (
-        "quiero", "queremos", "necesito", "agrega", "agregar", "añade", "anade", "añadir", "anadir",
-        "suma", "ponme", "dame", "al carrito", "en el carrito",
-    )) or bool(re.search(r"\b\d+\s*(x|de)?\s*\w+", q))
+    wants_human = any(k in q for k in (
+        "asesor", "humano", "persona real", "agente", "atencion humana", "hablar con alguien",
+        "quiero hablar", "habla conmigo un", "no bot", "no automatico",
+    ))
+    explicit_add = any(k in q for k in (
+        "agrega", "agregar", "añade", "anade", "añadir", "anadir", "suma", "ponme",
+        "al carrito", "en el carrito", "meteme", "llevame",
+    )) or bool(re.search(r"\b\d+\s*(x|de)\s*\w+", q)) or bool(re.search(r"\b(quiero|necesito|dame|regalame)\s+\d+\b", q))
+    soft_add = bool(re.search(r"\b(quiero|queremos|necesito|dame|regalame)\b", q)) and not browse_intent and not wants_list
+    wants_add = (explicit_add or soft_add) and not browse_intent and not wants_list and not wants_image
 
     if not q or re.match(r"^(hola|buenas|buen dia|buenos dias|buenas tardes|buenas noches|hey|hi)\b", q):
         result["reply"] = "¡Hola! 😊 ¿Quieres ver el catálogo o te interesa un producto en especial?"
         return result
     if re.match(r"^(gracias|perfecto|listo|ok|dale)\b", q) and len(q) < 40 and not wants_quote and not cart:
         result["reply"] = "Con gusto. Cuando quieras seguimos."
+        return result
+
+    if wants_human:
+        result["needsAdvisor"] = True
+        result["pauseBot"] = True
+        result["reply"] = "Perfecto. Un asesor de Vinicius te escribe en un momento. Mientras, si quieres, deja tu ciudad o el producto que buscas."
         return result
 
     if wants_clear:
@@ -1630,7 +1742,7 @@ def wa_bot_answer(text, products, phone, last_product_id=None, cart=None, custom
         result["reply"] = "¿Cuál quito?"
         return result
 
-    if wants_quote:
+    if wants_quote or (wants_pdf and "cotiz" in q):
         if not cart:
             result["reply"] = "Aún no hay productos. Dime qué quieres, por ejemplo “quiero 2 cera fibra”."
             return result
@@ -1650,28 +1762,22 @@ def wa_bot_answer(text, products, phone, last_product_id=None, cart=None, custom
         result["reply"] = wa_cart_text(cart)
         return result
 
-    if wants_catalog:
+    if wants_catalog or (wants_pdf and "catalogo" in q):
         result["openShop"] = True
-        result["reply"] = "Claro 😊 Aquí tienes el catálogo:"
+        result["reply"] = "Claro 😊 Te mando el catálogo en PDF y el enlace de la tienda:"
+        wa_attach_catalog_pdf(result, products)
         return result
 
-    # Preguntas de categoría: “qué tipos de ceras manejan”
-    category = wa_match_category(q)
-    if wants_list and category:
+    # Categoría abierta: listar + fotos (no si ya nombró un producto concreto)
+    if category and not specific_product and (wants_list or (browse_intent and not wants_add)):
         group = wa_products_in_category(products, category)
         if group:
-            titles = {
-                "molding": "Estas son las ceras y fijadores",
-                "kits": "Estos son los kits y combos",
-                "limpieza": "Estos son los de limpieza",
-                "tratamiento": "Estos son los tratamientos",
-                "kids": "Esta es la línea kids",
-                "cuerpo": "Estos son los de cuerpo",
-            }
-            result["reply"] = wa_list_products(group, titles.get(category, "Estos son"))
+            title = WA_CATEGORY_TITLES.get(category, "Estos son")
+            result["reply"] = wa_list_products(group, title) + "\nTe mando las fotos ahora."
+            wa_attach_category_gallery(result, group)
             return result
 
-    if wants_add and not wants_image:
+    if wants_add:
         items = wa_extract_cart_items(q, products, last_product_id)
         if items:
             for product, qty in items:
@@ -1679,21 +1785,24 @@ def wa_bot_answer(text, products, phone, last_product_id=None, cart=None, custom
                 result["productId"] = product.get("id")
             result["cart"] = cart
             added = ", ".join(["%sx %s" % (qty, product.get("name")) for product, qty in items])
-            result["reply"] = "Listo, agregué %s.\n%s" % (added, wa_cart_text(cart))
+            result["reply"] = "Listo, agregué %s.\n%s\nCuando quieras el PDF escribe “cotización”." % (added, wa_cart_text(cart))
             return result
 
     best, score = wa_find_product(q, products, last_product_id)
     if wants_image or retry_image:
-        target = best if score >= 2 else None
-        if target is None and last_product_id:
+        target = best if score >= 3 or (specific_product and score >= 2) else None
+        if target is None and last_product_id and not category:
             target = next((item for item in (products or []) if item.get("id") == last_product_id), None)
-        if target is None and category:
+        if target is None and category and not specific_product:
+            group = wa_products_in_category(products, category)
+            if group:
+                result["reply"] = wa_list_products(group, WA_CATEGORY_TITLES.get(category, "Estos son")) + "\nTe mando las fotos."
+                wa_attach_category_gallery(result, group)
+                return result
+        if target is None and category and specific_product:
             group = wa_products_in_category(products, category)
             if len(group) == 1:
                 target = group[0]
-            elif group:
-                result["reply"] = wa_list_products(group, "Claro, ¿de cuál te mando la foto?")
-                return result
         if target is None:
             result["reply"] = "Claro, ¿de cuál producto te mando la foto?"
             return result
@@ -1703,54 +1812,48 @@ def wa_bot_answer(text, products, phone, last_product_id=None, cart=None, custom
         wa_attach_product_image(result, target, reply=reply)
         return result
 
-    # Producto concreto (no pregunta abierta de categoría)
-    if best and score >= 4 and not wants_list:
+    if best and score >= 5 and not wants_list:
         result["productId"] = best.get("id")
-        result["reply"] = "%s · %s · %s\n¿Te mando la foto o te agrego una?" % (
+        result["reply"] = "%s · %s · %s\nTe mando la foto." % (
             best.get("name") or "",
             best.get("size") or "",
             wa_money(best.get("price")),
         )
+        wa_attach_product_image(result, best, reply=result["reply"])
         return result
 
-    if category and not wants_add:
+    if category:
         group = wa_products_in_category(products, category)
         if group:
-            titles = {
-                "molding": "Estas son las ceras y fijadores",
-                "kits": "Estos son los kits y combos",
-                "limpieza": "Estos son los de limpieza",
-                "tratamiento": "Estos son los tratamientos",
-                "kids": "Esta es la línea kids",
-                "cuerpo": "Estos son los de cuerpo",
-            }
-            result["reply"] = wa_list_products(group, titles.get(category, "Estos son"))
+            result["reply"] = wa_list_products(group, WA_CATEGORY_TITLES.get(category, "Estos son")) + "\nTe mando las fotos."
+            wa_attach_category_gallery(result, group)
             return result
 
     if best and score >= 3:
         result["productId"] = best.get("id")
-        result["reply"] = "%s · %s · %s\n¿Te mando la foto o te agrego una?" % (
+        result["reply"] = "%s · %s · %s\nTe mando la foto. Si quieres, dime “quiero 1”." % (
             best.get("name") or "",
             best.get("size") or "",
             wa_money(best.get("price")),
         )
+        wa_attach_product_image(result, best, reply=result["reply"])
         return result
 
-    if any(k in q for k in ("precio", "cuesta", "cuanto", "valores")):
+    if any(k in q for k in ("precio", "cuesta", "cuanto", "valores", "vale")):
         result["reply"] = "Precios:\n" + "\n".join(
             ["• %s %s" % (item.get("name"), wa_money(item.get("price"))) for item in (products or [])[:18]]
         )
         return result
-    if any(k in q for k in ("envio", "entrega", "domicilio", "cali", "enviar")):
+    if any(k in q for k in ("envio", "entrega", "domicilio", "cali")) and "enviar" not in q:
         result["reply"] = "Coordinamos entrega desde Cali. ¿Para qué ciudad sería?"
         return result
-    if any(k in q for k in ("horario", "abren", "atienden", "whatsapp")):
+    if any(k in q for k in ("horario", "abren", "atienden")):
         result["reply"] = "Te atendemos por este WhatsApp. ¿Buscas un producto o el catálogo completo?"
         return result
-    if any(k in q for k in ("donde quedan", "ubicacion", "dirección", "direccion", "tienda fisica")):
+    if any(k in q for k in ("donde quedan", "ubicacion", "direccion", "tienda fisica")):
         result["reply"] = "Somos Vinicius Molding en Cali. ¿Te armo pedido a domicilio o te paso el catálogo?"
         return result
-    result["reply"] = "Puedo ayudarte con catálogo, fotos, precios, kits o armar tu pedido. ¿Qué necesitas?"
+    result["reply"] = "Puedo ayudarte con catálogo, fotos, precios, kits o armar tu pedido. También puedes escribir “asesor” para hablar con una persona. ¿Qué necesitas?"
     return result
 
 
@@ -2198,6 +2301,14 @@ class Handler(BaseHTTPRequestHandler):
             self.whatsapp_admin_logout()
             return
 
+        if path == "/api/admin/notifications" and method == "GET":
+            self.notifications_admin_get()
+            return
+
+        if path == "/api/admin/notifications" and method == "POST":
+            self.notifications_admin_save()
+            return
+
         if path == "/api/auth/login" and method == "POST":
             self.login()
             return
@@ -2566,6 +2677,14 @@ class Handler(BaseHTTPRequestHandler):
                 "at": now_iso(),
             })
             store["whatsappQuotes"] = quotes[:80]
+            wa_push_notification(
+                store,
+                "quote",
+                "Cotización desde tienda",
+                "%s · %s · %s" % (ref, chat.get("name") or phone, wa_money(wa_cart_total(cart))),
+                "#/panel/notificaciones",
+                {"phone": phone, "ref": ref, "source": "shop"},
+            )
             save_store(store)
             deliver = {
                 "phone": phone,
@@ -2638,7 +2757,18 @@ class Handler(BaseHTTPRequestHandler):
                 "text": text,
                 "at": now_iso(),
             })
-            if api["autoReply"]:
+            is_new_chat = len(chat.get("messages") or []) <= 1
+            if is_new_chat:
+                wa_push_notification(
+                    store,
+                    "chat",
+                    "Chat nuevo",
+                    "%s escribió: %s" % (chat.get("name") or phone, text[:120]),
+                    "#/panel/whatsapp",
+                    {"phone": phone},
+                )
+            chat_auto = chat.get("autoReply", True)
+            if api["autoReply"] and chat_auto:
                 answer = wa_bot_answer(
                     text,
                     store.get("products") or [],
@@ -2657,6 +2787,14 @@ class Handler(BaseHTTPRequestHandler):
                     token, shop_url = wa_open_shop(store, phone, chat.get("jid") or jid, chat.get("name") or name)
                     chat["shopToken"] = token
                     reply = (reply + "\n" + shop_url).strip()
+                    wa_push_notification(
+                        store,
+                        "shop",
+                        "Catálogo abierto",
+                        "%s abrió la tienda WhatsApp" % (chat.get("name") or phone),
+                        "#/panel/whatsapp",
+                        {"phone": phone, "token": token},
+                    )
                 if answer.get("quoteRef"):
                     chat["lastQuoteRef"] = answer.get("quoteRef")
                     quotes = store.setdefault("whatsappQuotes", [])
@@ -2669,6 +2807,29 @@ class Handler(BaseHTTPRequestHandler):
                         "at": now_iso(),
                     })
                     store["whatsappQuotes"] = quotes[:80]
+                    wa_push_notification(
+                        store,
+                        "quote",
+                        "Nueva cotización",
+                        "%s · %s · %s" % (
+                            answer.get("quoteRef"),
+                            chat.get("name") or phone,
+                            wa_money(wa_cart_total(chat.get("cart") or [])),
+                        ),
+                        "#/panel/notificaciones",
+                        {"phone": phone, "ref": answer.get("quoteRef")},
+                    )
+                if answer.get("needsAdvisor") or answer.get("pauseBot"):
+                    chat["autoReply"] = False
+                    chat["needsAdvisor"] = True
+                    wa_push_notification(
+                        store,
+                        "advisor",
+                        "Pide hablar con un asesor",
+                        "%s quiere atención humana" % (chat.get("name") or phone),
+                        "#/panel/whatsapp",
+                        {"phone": phone},
+                    )
                 chat["messages"].append({
                     "id": "b_" + secrets.token_hex(6),
                     "from": "out",
@@ -2677,6 +2838,15 @@ class Handler(BaseHTTPRequestHandler):
                     "bot": True,
                     "hasFile": bool(media),
                 })
+            elif not api["autoReply"] or not chat_auto:
+                wa_push_notification(
+                    store,
+                    "advisor",
+                    "Bot en pausa · responde tú",
+                    "%s escribió: %s" % (chat.get("name") or phone, text[:100]),
+                    "#/panel/whatsapp",
+                    {"phone": phone},
+                )
             chat["updatedAt"] = now_iso()
             chat["messages"] = chat["messages"][-80:]
             save_store(store)
@@ -2826,8 +2996,66 @@ class Handler(BaseHTTPRequestHandler):
                 wa["verifyToken"] = str(body.get("verifyToken") or "vinicius-wa").strip()[:80] or "vinicius-wa"
             if "autoReply" in body:
                 wa["autoReply"] = str(body.get("autoReply")).lower() in ("1", "true", "yes", "on", "si", "sí")
+            if "chatId" in body and "chatAutoReply" in body:
+                phone = "".join(ch for ch in str(body.get("chatId") or "") if ch.isdigit())
+                chats = store.setdefault("whatsappChats", {})
+                chat = chats.get(phone)
+                if chat is not None:
+                    chat["autoReply"] = str(body.get("chatAutoReply")).lower() in ("1", "true", "yes", "on", "si", "sí")
+                    if chat["autoReply"]:
+                        chat["needsAdvisor"] = False
             write_config(cfg)
+            save_store(store)
         self.send_json(200, {"ok": True, "ready": wa_ready(cfg)})
+
+    def notifications_admin_get(self):
+        with LOCK:
+            store = load_store()
+            if not self.require_user(store):
+                return
+            cfg = read_config()
+            api = wa_cfg(cfg)
+            notes = store.get("notifications") or []
+            quotes = store.get("whatsappQuotes") or []
+            chats = list((store.get("whatsappChats") or {}).values())
+            unread = sum(1 for n in notes if not n.get("read"))
+            advisor = sum(1 for c in chats if c.get("needsAdvisor") or c.get("autoReply") is False)
+            self.send_json(200, {
+                "ok": True,
+                "autoReply": api["autoReply"],
+                "unread": unread,
+                "advisorWaiting": advisor,
+                "notifications": notes[:80],
+                "quotes": quotes[:40],
+            })
+
+    def notifications_admin_save(self):
+        body = self.read_json()
+        with LOCK:
+            store = load_store()
+            if not self.require_user(store):
+                return
+            cfg = read_config()
+            if "autoReply" in body:
+                wa = cfg.setdefault("whatsappApi", {})
+                wa["autoReply"] = str(body.get("autoReply")).lower() in ("1", "true", "yes", "on", "si", "sí")
+                write_config(cfg)
+            notes = store.setdefault("notifications", [])
+            if body.get("markAll"):
+                for note in notes:
+                    note["read"] = True
+            note_id = str(body.get("id") or "").strip()
+            if note_id:
+                for note in notes:
+                    if note.get("id") == note_id:
+                        note["read"] = True
+                        break
+            if body.get("clearRead"):
+                store["notifications"] = [n for n in notes if not n.get("read")]
+            save_store(store)
+            api = wa_cfg(cfg)
+            unread = sum(1 for n in (store.get("notifications") or []) if not n.get("read"))
+        self.send_json(200, {"ok": True, "autoReply": api["autoReply"], "unread": unread})
 
     def whatsapp_admin_send(self):
         body = self.read_json()
@@ -2852,6 +3080,7 @@ class Handler(BaseHTTPRequestHandler):
                 "updatedAt": now_iso(),
             })
             chat_jid = chat.get("jid") or ""
+            chat["autoReply"] = False
             chat["messages"].append({
                 "id": "o_" + secrets.token_hex(6),
                 "from": "out",

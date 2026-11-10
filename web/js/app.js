@@ -138,6 +138,79 @@ function waChatsFingerprint(data) {
   }).join("|");
 }
 
+function stopNotificationsPoll() {
+  if (VM.notifPollTimer) {
+    clearInterval(VM.notifPollTimer);
+    VM.notifPollTimer = null;
+  }
+}
+
+function ensureNotifToastHost() {
+  let host = document.getElementById("notif-toasts");
+  if (!host) {
+    host = document.createElement("div");
+    host.id = "notif-toasts";
+    host.className = "notif-toasts";
+    document.body.appendChild(host);
+  }
+  return host;
+}
+
+function pushNotifToast(note) {
+  if (!note || note.read) return;
+  const host = ensureNotifToastHost();
+  const seen = VM.notifSeen || (VM.notifSeen = {});
+  if (seen[note.id]) return;
+  seen[note.id] = true;
+  const el = document.createElement("button");
+  el.type = "button";
+  el.className = `notif-toast type-${esc(note.type || "info")}`;
+  el.innerHTML = `<strong>${esc(note.title || "Aviso")}</strong><span>${esc(note.body || "")}</span>`;
+  el.addEventListener("click", () => {
+    location.hash = note.href || "#/panel/notificaciones";
+    el.remove();
+  });
+  host.prepend(el);
+  setTimeout(() => el.classList.add("show"), 20);
+  setTimeout(() => {
+    el.classList.remove("show");
+    setTimeout(() => el.remove(), 380);
+  }, 7000);
+}
+
+async function pollNotificationsOnce() {
+  if (!VM.user || !VM.token) return;
+  try {
+    const data = await api("/api/admin/notifications");
+    const prevUnread = Number(VM.notifUnread || 0);
+    VM.notifData = data;
+    VM.notifUnread = Number(data.unread || 0);
+    const notes = data.notifications || [];
+    notes.filter((n) => !n.read).slice(0, 5).reverse().forEach(pushNotifToast);
+    const badge = document.querySelector(".side a[href='#/panel/notificaciones'] .side-badge");
+    if (badge) badge.textContent = String(VM.notifUnread || "");
+    else if (VM.notifUnread && document.querySelector(".side a[href='#/panel/notificaciones']")) {
+      const link = document.querySelector(".side a[href='#/panel/notificaciones']");
+      if (link && !link.querySelector(".side-badge")) {
+        const span = document.createElement("span");
+        span.className = "side-badge";
+        span.textContent = String(VM.notifUnread);
+        link.appendChild(span);
+      }
+    }
+    if ((VM.parts && VM.parts[0] === "panel" && VM.parts[1] === "notificaciones") && VM.notifUnread !== prevUnread) {
+      /* la vista se refresca solo si el usuario está ahí y cambió */
+    }
+  } catch (err) { /* panel offline */ }
+}
+
+function startNotificationsPoll() {
+  stopNotificationsPoll();
+  if (!VM.user || !VM.token) return;
+  pollNotificationsOnce();
+  VM.notifPollTimer = setInterval(pollNotificationsOnce, 4000);
+}
+
 function startWhatsappPoll() {
   stopWhatsappPoll();
   if (!whatsappRoute()) return;
@@ -359,6 +432,7 @@ async function render() {
       const html = await adminView();
       if (seq !== renderSeq) return;
       paint(html, "admin-body");
+      startNotificationsPoll();
     } catch (err) {
       if (err.status === 401) {
         VM.user = null;
@@ -431,6 +505,16 @@ async function render() {
 
 async function adminView() {
   const tab = VM.parts[1] || "resumen";
+  if (tab === "notificaciones") {
+    try {
+      VM.notifData = await api("/api/admin/notifications");
+      VM.notifUnread = Number(VM.notifData.unread || 0);
+    } catch (err) {
+      VM.notifData = { notifications: [], quotes: [], unread: 0, autoReply: true, advisorWaiting: 0 };
+    }
+    startNotificationsPoll();
+    return viewNotifications(VM.notifData);
+  }
   if (tab === "clave" || tab === "wompi" || tab === "asesor" || tab === "contacto" || tab === "whatsapp") {
     try {
       const settings = await api("/api/admin/settings");
@@ -990,6 +1074,57 @@ function bind() {
     if (act === "wa-settings") {
       VM.waSettings = !VM.waSettings;
       render();
+      return;
+    }
+    if (act === "wa-auto-global") {
+      const on = Boolean(node.checked);
+      try {
+        await api("/api/admin/notifications", { method: "POST", body: { autoReply: on } });
+        if (VM.waData) VM.waData.autoReply = on;
+        if (VM.notifData) VM.notifData.autoReply = on;
+        toast(on ? "Bot automático activado" : "Bot en pausa: ya no responde solo");
+      } catch (err) {
+        toast(err.message || "No se pudo cambiar el bot");
+        node.checked = !on;
+      }
+      return;
+    }
+    if (act === "wa-chat-auto") {
+      const on = Boolean(node.checked);
+      const id = node.dataset.id || "";
+      try {
+        await api("/api/admin/whatsapp", { method: "POST", body: { chatId: id, chatAutoReply: on } });
+        const chat = ((VM.waData && VM.waData.chats) || []).find((row) => row.id === id);
+        if (chat) {
+          chat.autoReply = on;
+          if (on) chat.needsAdvisor = false;
+        }
+        toast(on ? "Bot activo en este chat" : "Bot pausado en este chat");
+        render();
+      } catch (err) {
+        toast(err.message || "No se pudo cambiar este chat");
+        node.checked = !on;
+      }
+      return;
+    }
+    if (act === "notif-open") {
+      const id = node.dataset.id || "";
+      const href = node.dataset.href || "#/panel/whatsapp";
+      try {
+        if (id) await api("/api/admin/notifications", { method: "POST", body: { id } });
+      } catch (err) { /* igual navegamos */ }
+      location.hash = href;
+      return;
+    }
+    if (act === "notif-read-all") {
+      try {
+        await api("/api/admin/notifications", { method: "POST", body: { markAll: true } });
+        VM.notifUnread = 0;
+        toast("Notificaciones leídas");
+        render();
+      } catch (err) {
+        toast(err.message || "No se pudieron marcar");
+      }
       return;
     }
     if (act === "qty") {
