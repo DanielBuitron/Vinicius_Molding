@@ -157,26 +157,26 @@ function viewHome() {
 }
 
 function viewTestimonials() {
-  const verified = getLang() === "en" ? "Verified purchase" : "Compra verificada";
-  const stars = getLang() === "en" ? "5 stars" : "5 estrellas";
+  const lang = getLang();
+  const textOf = (value) => (lang === "es" ? value : ensureTextTranslated(value, lang));
   return `
     <section class="voices">
       <div class="voices-stats">
-        <p class="kicker">${getLang() === "en" ? "Testimonials" : "Testimonios"}</p>
-        <div><strong>+1000</strong><span>${getLang() === "en" ? "Orders delivered to clients nationwide." : "Órdenes entregadas a clientes en todo el país."}</span></div>
-        <div><strong>4.9★</strong><span>${getLang() === "en" ? "Average rating from our clients." : "Calificación promedio de nuestros clientes."}</span></div>
-        <div><strong>100%</strong><span>${getLang() === "en" ? "Original professional hair-care products." : "Productos originales de cuidado capilar profesional."}</span></div>
+        <p class="kicker">${t("voices.kicker")}</p>
+        <div><strong>+1000</strong><span>${t("voices.orders")}</span></div>
+        <div><strong>4.9★</strong><span>${t("voices.rating")}</span></div>
+        <div><strong>100%</strong><span>${t("voices.original")}</span></div>
       </div>
       <div class="voices-grid">
         ${TESTIMONIOS.map((item) => `
           <article class="voice-card">
-            <p class="stars" aria-label="${stars}">★★★★★</p>
-            <p>“${esc(getLang() === "en" ? ensureTextEn(item.text) : item.text)}”</p>
+            <p class="stars" aria-label="${t("voices.stars")}">★★★★★</p>
+            <p>“${esc(textOf(item.text))}”</p>
             <div class="voice-who">
               <b>${esc(item.initials)}</b>
               <div>
                 <strong>${esc(item.name)}</strong>
-                <span>${esc(getLang() === "en" ? ensureTextEn(item.product) : item.product)} · ${verified}</span>
+                <span>${esc(textOf(item.product))} · ${t("voices.verified")}</span>
               </div>
             </div>
           </article>`).join("")}
