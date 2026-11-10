@@ -177,6 +177,33 @@ function waTime(iso) {
   return d.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
 }
 
+function viewVincularWhatsapp(data) {
+  const info = data || {};
+  const qrUrl = "/api/whatsapp/qr?mode=session&t=" + Date.now();
+  const ready = Boolean(info.sessionReady);
+  const statusLabel = ready
+    ? "Vinculado"
+    : (info.sessionStatus === "qr" || info.hasQr ? "Escanea el código" : "Preparando QR…");
+  return `
+    <section class="wa-app">
+      <div class="wa-link">
+        <div class="wa-link-copy">
+          <h2>Vincula WhatsApp</h2>
+          <ol>
+            <li>Abre WhatsApp en tu celular</li>
+            <li>Menú · <b>Dispositivos vinculados</b> · Vincular un dispositivo</li>
+            <li>Escanea este código</li>
+          </ol>
+          <p class="wa-link-note">Estado: <b>${esc(statusLabel)}</b>${info.bridgeError ? " · " + esc(info.bridgeError) : ""}</p>
+        </div>
+        <div class="wa-link-qr">
+          <div class="wa-qr-frame" id="wa-qr" data-wa-qr="" data-wa-qr-img="${esc(qrUrl)}" data-wa-session="1"></div>
+          <p>${ready ? "Sesión conectada" : "QR de dispositivos vinculados"}</p>
+        </div>
+      </div>
+    </section>`;
+}
+
 function viewWhatsapp(payload) {
   const data = payload || VM.waData || {};
   const phone = data.phone || VM.config.whatsapp || SITE.whatsapp || "573235835137";
@@ -184,7 +211,7 @@ function viewWhatsapp(payload) {
   const activeId = VM.waChatId || (chats[0] && chats[0].id) || "";
   const active = chats.find((chat) => chat.id === activeId) || null;
   const openUrl = data.openUrl || ("https://api.whatsapp.com/send/?phone=" + phone + "&text=&type=phone_number&app_absent=0");
-  const qrUrl = data.qrUrl || ("/api/whatsapp/qr?mode=session&t=" + Date.now());
+  const qrUrl = "/api/whatsapp/qr?mode=session&t=" + Date.now();
   const sessionReady = Boolean(data.sessionReady);
   const linked = Boolean(sessionReady || data.ready || VM.waLinked || chats.length);
   const list = chats.map((chat) => {

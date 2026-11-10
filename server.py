@@ -753,6 +753,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
+        self.send_header("Access-Control-Allow-Origin", "*")
         for key, value in (extra_headers or {}).items():
             self.send_header(key, value)
         self.end_headers()
@@ -764,7 +765,14 @@ class Handler(BaseHTTPRequestHandler):
         if configured:
             return configured
         host = self.headers.get("Host") or "127.0.0.1:8080"
-        return "http://" + host
+        forwarded = (self.headers.get("X-Forwarded-Proto") or "").split(",")[0].strip().lower()
+        if forwarded in ("http", "https"):
+            proto = forwarded
+        elif "trycloudflare.com" in host or host.endswith("github.io"):
+            proto = "https"
+        else:
+            proto = "http"
+        return proto + "://" + host
 
     def current_user(self, store):
         header = self.headers.get("Authorization") or ""
@@ -929,6 +937,20 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == "/api/whatsapp/qr" and method == "GET":
             self.whatsapp_qr(query)
+            return
+
+        if path == "/api/whatsapp/session" and method == "GET":
+            ensure_wa_bridge()
+            session = bridge_status()
+            self.send_json(200, {
+                "ok": True,
+                "sessionReady": bool(session.get("connected")),
+                "sessionStatus": session.get("status") or "offline",
+                "hasQr": bool(session.get("hasQr")),
+                "qrAt": session.get("qrAt") or 0,
+                "qrUrl": self.base_url() + "/api/whatsapp/qr?mode=session&t=" + str(int(time.time() * 1000)),
+                "bridgeError": session.get("lastError") or "",
+            })
             return
 
         if path == "/api/whatsapp/bridge/inbound" and method == "POST":

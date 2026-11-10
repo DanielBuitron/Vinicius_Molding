@@ -121,16 +121,32 @@ function stopWhatsappPoll() {
   }
 }
 
+function whatsappRoute() {
+  const page = (VM.parts && VM.parts[0]) || "";
+  if (page === "vincular") return "public";
+  if (page === "panel" && (VM.parts[1] || "") === "whatsapp") return "admin";
+  return "";
+}
+
 function startWhatsappPoll() {
   stopWhatsappPoll();
-  const onWhatsapp = ((VM.parts && VM.parts[0]) === "admin") && ((VM.parts[1] || "") === "whatsapp");
-  if (!onWhatsapp) return;
+  const mode = whatsappRoute();
+  if (!mode) return;
   VM.waPollTimer = setInterval(async () => {
-    if (((VM.parts && VM.parts[0]) !== "admin") || ((VM.parts[1] || "") !== "whatsapp")) {
+    if (!whatsappRoute()) {
       stopWhatsappPoll();
       return;
     }
     try {
+      if (mode === "public") {
+        const data = await api("/api/whatsapp/session");
+        const prev = VM.waPublic || {};
+        VM.waPublic = data;
+        if (data.sessionReady || (data.qrAt && data.qrAt !== prev.qrAt) || data.sessionStatus !== prev.sessionStatus) {
+          render();
+        }
+        return;
+      }
       const data = await api("/api/admin/whatsapp");
       const prev = VM.waData || {};
       VM.waData = data;
@@ -152,7 +168,7 @@ function startWhatsappPoll() {
 function mountWhatsappQr() {
   const box = document.getElementById("wa-qr");
   if (!box) {
-    if (!(((VM.parts && VM.parts[0]) === "admin") && ((VM.parts[1] || "") === "whatsapp"))) stopWhatsappPoll();
+    if (!whatsappRoute()) stopWhatsappPoll();
     return;
   }
   const link = box.dataset.waQr || "";
@@ -161,7 +177,8 @@ function mountWhatsappQr() {
   box.innerHTML = "";
   if (imgUrl) {
     const img = document.createElement("img");
-    img.src = imgUrl + (imgUrl.includes("?") ? "&" : "?") + "r=" + Date.now();
+    const resolved = typeof apiUrl === "function" ? apiUrl(imgUrl) : imgUrl;
+    img.src = resolved + (resolved.includes("?") ? "&" : "?") + "r=" + Date.now();
     img.alt = "QR de WhatsApp";
     img.width = 264;
     img.height = 264;
@@ -324,6 +341,22 @@ async function render() {
       return;
     }
     paint(viewLogin(), "site");
+    return;
+  }
+
+  if (page === "vincular") {
+    try {
+      VM.waPublic = await api("/api/whatsapp/session");
+    } catch (err) {
+      VM.waPublic = {
+        sessionReady: false,
+        sessionStatus: "offline",
+        hasQr: false,
+        qrUrl: "/api/whatsapp/qr?mode=session&t=" + Date.now(),
+        bridgeError: err.message || "Sin conexión al bridge",
+      };
+    }
+    paint(viewVincularWhatsapp(VM.waPublic), "admin-body");
     return;
   }
 

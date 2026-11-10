@@ -69,10 +69,19 @@ function productById(id) {
   return VM.products.find((item) => item.id === id);
 }
 
+function apiUrl(path) {
+  const raw = String(path || "");
+  if (!raw.startsWith("/")) return raw;
+  const base = String((typeof SITE !== "undefined" && SITE.apiBase) || "").replace(/\/$/, "");
+  const onPages = /\.github\.io$/i.test(location.hostname);
+  if (onPages && base) return base + raw;
+  return raw;
+}
+
 async function api(path, options = {}) {
   const headers = Object.assign({ "Content-Type": "application/json" }, options.headers || {});
   if (VM.token) headers.Authorization = "Bearer " + VM.token;
-  const response = await fetch(path, {
+  const response = await fetch(apiUrl(path), {
     method: options.method || "GET",
     headers,
     body: options.body ? JSON.stringify(options.body) : undefined,
