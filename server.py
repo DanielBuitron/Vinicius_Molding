@@ -724,31 +724,315 @@ def wa_catalog_pdf(products):
     return out
 
 
-def wa_bot_answer(text, products, phone, last_product_id=None):
+def wa_cart_clone(cart):
+    clean = []
+    for row in cart or []:
+        qty = int(row.get("qty") or 0)
+        if qty < 1:
+            continue
+        clean.append({
+            "id": row.get("id"),
+            "name": row.get("name") or "",
+            "sku": row.get("sku") or "",
+            "size": row.get("size") or "",
+            "price": int(row.get("price") or 0),
+            "qty": qty,
+        })
+    return clean
+
+
+def wa_cart_total(cart):
+    return sum(int(row.get("price") or 0) * int(row.get("qty") or 0) for row in (cart or []))
+
+
+def wa_cart_text(cart):
+    rows = wa_cart_clone(cart)
+    if not rows:
+        return "Tu cotización está vacía. Ejemplo: “quiero 2 cera fibra y 1 shampoo”."
+    lines = ["Tu cotización Vinicius:"]
+    for row in rows:
+        sub = int(row["price"]) * int(row["qty"])
+        lines.append("• %s x %s · %s = %s" % (
+            row["qty"],
+            row["name"],
+            wa_money(row["price"]),
+            wa_money(sub),
+        ))
+    lines.append("Total: " + wa_money(wa_cart_total(rows)))
+    lines.append("Di “cotización” para el PDF, o sigue agregando productos.")
+    return "\n".join(lines)
+
+
+def wa_cart_add(cart, product, qty):
+    rows = wa_cart_clone(cart)
+    qty = max(1, min(99, int(qty or 1)))
+    found = next((row for row in rows if row.get("id") == product.get("id")), None)
+    if found:
+        found["qty"] = min(99, int(found["qty"]) + qty)
+    else:
+        rows.append({
+            "id": product.get("id"),
+            "name": product.get("name") or "",
+            "sku": product.get("sku") or "",
+            "size": product.get("size") or "",
+            "price": int(product.get("price") or 0),
+            "qty": qty,
+        })
+    return rows
+
+
+def wa_cart_remove(cart, product):
+    pid = product.get("id")
+    return [row for row in wa_cart_clone(cart) if row.get("id") != pid]
+
+
+def wa_parse_qty_segment(segment):
+    raw = wa_norm(segment)
+    if not raw:
+        return 1, ""
+    match = re.match(r"^(\d+)\s*(?:x|de|unidades?|und|uds)?\s*(.+)$", raw)
+    if match:
+        return max(1, min(99, int(match.group(1)))), match.group(2).strip()
+    match = re.match(r"^(?:un|una|uno)\s+(.+)$", raw)
+    if match:
+        return 1, match.group(1).strip()
+    return 1, raw
+
+
+def wa_extract_cart_items(q, products, last_product_id=None):
+    cleaned = re.sub(
+        r"\b(quiero|queremos|necesito|pedido|pedirme|agrega|agregar|añade|anade|añadir|anadir|suma|sumar|mete|meter|pon|ponme|dame|regalame|me regalas|al carrito|en el carrito|carrito|cotiza|cotizar|por favor|please)\b",
+        " ",
+        q,
+    )
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    if not cleaned:
+        return []
+    parts = re.split(r"\s+(?:y|e|,|/)\s+", cleaned)
+    found = []
+    for part in parts:
+        qty, name_q = wa_parse_qty_segment(part)
+        if not name_q:
+            continue
+        product, score = wa_find_product(name_q, products, last_product_id)
+        if product and score >= 3:
+            found.append((product, qty))
+        elif product and score >= 2 and len(parts) == 1:
+            found.append((product, qty))
+    return found
+
+
+def wa_quote_pdf(cart, customer_name="", customer_phone="", ref=""):
+    from reportlab.lib.colors import HexColor
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.units import mm
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.utils import ImageReader
+
+    rows = wa_cart_clone(cart)
+    ref = ref or ("VM-COT-" + secrets.token_hex(3).upper())
+    out = ROOT / "data" / ("cotizacion-%s.pdf" % ref.lower())
+    out.parent.mkdir(parents=True, exist_ok=True)
+    width, height = A4
+    black = HexColor("#000000")
+    red = HexColor("#E52C3B")
+    cyan = HexColor("#00C8C2")
+    yellow = HexColor("#FFD300")
+    gray = HexColor("#585E65")
+    lime = HexColor("#A4D800")
+    white = HexColor("#FFFFFF")
+    soft = HexColor("#141414")
+
+    c = canvas.Canvas(str(out), pagesize=A4)
+    c.setFillColor(black)
+    c.rect(0, 0, width, height, fill=1, stroke=0)
+    c.setFillColor(red)
+    c.rect(0, height - 8, width, 8, fill=1, stroke=0)
+    c.setFillColor(cyan)
+    c.rect(0, height - 11, width * 0.34, 3, fill=1, stroke=0)
+    c.setFillColor(yellow)
+    c.rect(width * 0.34, height - 11, width * 0.22, 3, fill=1, stroke=0)
+    c.setFillColor(lime)
+    c.rect(width * 0.56, height - 11, width * 0.44, 3, fill=1, stroke=0)
+
+    logo = WEB / "assets" / "logo-white.png"
+    if not logo.exists():
+        logo = WEB / "assets" / "logo.png"
+    if logo.exists():
+        try:
+            c.drawImage(ImageReader(str(logo)), 22 * mm, height - 52, width=42 * mm, height=14 * mm, mask="auto", preserveAspectRatio=True, anchor="sw")
+        except Exception:
+            pass
+
+    c.setFillColor(white)
+    c.setFont("Helvetica-Bold", 18)
+    c.drawRightString(width - 18 * mm, height - 28, "COTIZACIÓN")
+    c.setFillColor(gray)
+    c.setFont("Helvetica", 9)
+    c.drawRightString(width - 18 * mm, height - 40, "Vinicius Molding · Somos la solución, no el problema.")
+    c.setFillColor(cyan)
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(18 * mm, height - 66, ref)
+    c.setFillColor(gray)
+    c.setFont("Helvetica", 9)
+    c.drawString(18 * mm, height - 78, now_iso().replace("T", " ")[:16])
+    if customer_name:
+        c.setFillColor(white)
+        c.setFont("Helvetica", 10)
+        c.drawString(18 * mm, height - 92, "Cliente: " + str(customer_name)[:48])
+    if customer_phone:
+        c.setFillColor(gray)
+        c.setFont("Helvetica", 9)
+        c.drawString(18 * mm, height - 104, "WhatsApp: +" + str(customer_phone))
+
+    y = height - 122
+    c.setFillColor(soft)
+    c.roundRect(18 * mm, y - 8, width - 36 * mm, 12 * mm, 4, fill=1, stroke=0)
+    c.setFillColor(gray)
+    c.setFont("Helvetica-Bold", 8)
+    c.drawString(22 * mm, y - 2, "PRODUCTO")
+    c.drawString(110 * mm, y - 2, "CANT.")
+    c.drawString(130 * mm, y - 2, "VR. UNIT.")
+    c.drawRightString(width - 22 * mm, y - 2, "SUBTOTAL")
+    y -= 18
+
+    for row in rows:
+        c.setFillColor(white)
+        c.setFont("Helvetica-Bold", 10)
+        c.drawString(22 * mm, y, str(row.get("name") or "")[:42])
+        c.setFillColor(gray)
+        c.setFont("Helvetica", 8)
+        meta = " · ".join([part for part in [row.get("size") or "", row.get("sku") or ""] if part])
+        if meta:
+            c.drawString(22 * mm, y - 10, meta)
+        c.setFillColor(white)
+        c.setFont("Helvetica", 10)
+        c.drawString(110 * mm, y, str(row.get("qty") or 0))
+        c.drawString(130 * mm, y, wa_money(row.get("price")))
+        c.setFillColor(yellow)
+        c.setFont("Helvetica-Bold", 10)
+        c.drawRightString(width - 22 * mm, y, wa_money(int(row.get("price") or 0) * int(row.get("qty") or 0)))
+        y -= 24
+        if y < 50 * mm:
+            c.showPage()
+            c.setFillColor(black)
+            c.rect(0, 0, width, height, fill=1, stroke=0)
+            y = height - 30 * mm
+
+    c.setStrokeColor(HexColor("#2A2A2A"))
+    c.setLineWidth(0.8)
+    c.line(18 * mm, y + 8, width - 18 * mm, y + 8)
+    c.setFillColor(white)
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(22 * mm, y - 8, "TOTAL")
+    c.setFillColor(yellow)
+    c.setFont("Helvetica-Bold", 14)
+    c.drawRightString(width - 22 * mm, y - 8, wa_money(wa_cart_total(rows)))
+    c.setFillColor(gray)
+    c.setFont("Helvetica", 8)
+    c.drawString(18 * mm, 22 * mm, "Cotización válida según disponibilidad. Confirmamos entrega por WhatsApp.")
+    c.drawRightString(width - 18 * mm, 22 * mm, "viniciusmolding")
+    c.save()
+    return out, ref
+
+
+def wa_bot_answer(text, products, phone, last_product_id=None, cart=None, customer_name=""):
     q = wa_norm(text)
     phone = phone or "573235835137"
-    result = {"reply": "", "media": [], "productId": last_product_id}
+    cart = wa_cart_clone(cart)
+    result = {"reply": "", "media": [], "productId": last_product_id, "cart": cart}
     wants_image = any(k in q for k in ("foto", "fotos", "imagen", "image", "picture", "muestra", "muestrame", "enseñame", "ensename", "verla", "verlo"))
-    wants_catalog = any(k in q for k in ("catalogo", "pdf", "lista", "que tienen", "productos")) and not wants_image
+    wants_catalog = (
+        "catalogo" in q
+        or (("lista" in q or "que tienen" in q) and "cotiz" not in q)
+        or ("productos" in q and "precio" not in q and "cotiz" not in q and "carrito" not in q and "quiero" not in q)
+    ) and not wants_image and "cotiz" not in q
+    wants_quote = any(k in q for k in (
+        "cotizacion", "cotizar", "cotiza", "presupuesto", "confirmar pedido",
+        "confirma pedido", "cerrar pedido", "enviar cotizacion", "pdf cotizacion",
+        "genera cotizacion", "arma cotizacion",
+    ))
+    wants_cart_view = any(k in q for k in ("carrito", "que llevo", "mi pedido", "resumen", "ver cotizacion", "ver pedido"))
+    wants_clear = any(k in q for k in ("vaciar", "limpiar carrito", "borra todo", "borrar todo", "cancelar pedido"))
+    wants_remove = any(k in q for k in ("quita", "quitar", "elimina", "eliminar", "sacar", "borra", "borrar"))
+    wants_add = any(k in q for k in (
+        "quiero", "queremos", "necesito", "agrega", "agregar", "añade", "anade", "añadir", "anadir",
+        "suma", "sumar", "mete", "meter", "pon", "ponme", "dame", "regalame", "al carrito", "en el carrito",
+        "pedido de", "pideme", "pedirme",
+    )) or bool(re.search(r"\b\d+\s*(x|de)?\s*\w+", q))
 
     if not q or re.match(r"^(hola|buenas|buen dia|buenos dias|buenas tardes|buenas noches|hey|hi)\b", q):
-        result["reply"] = "Hola, bienvenido a Vinicius Molding. Somos cuidado capilar masculino. ¿Qué producto te interesa?"
+        result["reply"] = (
+            "Hola, bienvenido a Vinicius Molding. Somos cuidado capilar masculino.\n"
+            "Puedo enviarte el catálogo, fotos y armar tu cotización.\n"
+            "Ejemplo: “quiero 2 cera fibra y 1 shampoo”. Luego di “cotización”."
+        )
         return result
-    if re.match(r"^(gracias|perfecto|listo|ok|dale)\b", q) and len(q) < 40:
-        result["reply"] = "Con gusto. Si quieres pedir, dime el producto y la cantidad, o escribe al +" + phone + "."
+    if re.match(r"^(gracias|perfecto|listo|ok|dale)\b", q) and len(q) < 40 and not wants_quote and not cart:
+        result["reply"] = "Con gusto. Si quieres cotizar, dime producto y cantidad, o escribe “catálogo”."
+        return result
+
+    if wants_clear:
+        result["cart"] = []
+        result["reply"] = "Listo, vacié tu cotización. ¿Qué productos agregamos?"
+        return result
+
+    if wants_remove:
+        best, score = wa_find_product(q, products, last_product_id)
+        if best and score >= 2:
+            result["cart"] = wa_cart_remove(cart, best)
+            result["productId"] = best.get("id")
+            result["reply"] = "Quité %s.\n%s" % (best.get("name") or "el producto", wa_cart_text(result["cart"]))
+            return result
+        result["reply"] = "Dime qué producto quito, por ejemplo “quita cera fibra”."
+        return result
+
+    if wants_quote:
+        if not cart:
+            result["reply"] = "Aún no hay productos. Ejemplo: “quiero 2 cera fibra y 1 pasta”."
+            return result
+        pdf, ref = wa_quote_pdf(cart, customer_name=customer_name, customer_phone=phone)
+        result["reply"] = "Aquí tienes tu cotización %s.\n%s" % (ref, wa_cart_text(cart))
+        result["media"].append({
+            "type": "document",
+            "path": str(pdf),
+            "filename": "Cotizacion-%s.pdf" % ref,
+            "caption": "Cotización Vinicius Molding · %s" % ref,
+            "mimetype": "application/pdf",
+        })
+        result["quoteRef"] = ref
+        return result
+
+    if wants_cart_view and not wants_add:
+        result["reply"] = wa_cart_text(cart)
         return result
 
     if wants_catalog:
         pdf = wa_catalog_pdf(products)
-        result["reply"] = "Te comparto el catálogo oficial de Vinicius Molding en PDF."
+        result["reply"] = (
+            "Te comparto el catálogo oficial de Vinicius Molding en PDF.\n"
+            "Para cotizar desde aquí escribe, por ejemplo: “quiero 2 cera fibra y 1 shampoo”.\n"
+            "Cuando termines, di “cotización” y te envío el PDF al chat."
+        )
         result["media"].append({
             "type": "document",
             "path": str(pdf),
             "filename": "Catalogo-Vinicius-Molding.pdf",
-            "caption": "Catálogo Vinicius Molding · Somos la solución, no el problema.",
+            "caption": "Catálogo Vinicius Molding · Agrega con “quiero 2 cera fibra” y pide “cotización”.",
             "mimetype": "application/pdf",
         })
         return result
+
+    if wants_add:
+        items = wa_extract_cart_items(q, products, last_product_id)
+        if items:
+            for product, qty in items:
+                cart = wa_cart_add(cart, product, qty)
+                result["productId"] = product.get("id")
+            result["cart"] = cart
+            added = ", ".join(["%sx %s" % (qty, product.get("name")) for product, qty in items])
+            result["reply"] = "Agregué %s.\n%s" % (added, wa_cart_text(cart))
+            return result
 
     best, score = wa_find_product(q, products, last_product_id)
     if wants_image:
@@ -764,7 +1048,10 @@ def wa_bot_answer(text, products, phone, last_product_id=None):
         if image is None:
             result["reply"] = caption + "\n(Aún no tengo la imagen de ese producto.)"
             return result
-        result["reply"] = "Aquí tienes la foto de %s." % (target.get("name") or "producto")
+        result["reply"] = "Aquí tienes la foto de %s.\nSi la quieres en cotización: “quiero 1 %s”." % (
+            target.get("name") or "producto",
+            target.get("name") or "producto",
+        )
         result["media"].append({
             "type": "image",
             "path": str(image),
@@ -775,17 +1062,7 @@ def wa_bot_answer(text, products, phone, last_product_id=None):
 
     if best and score >= 3:
         result["productId"] = best.get("id")
-        result["reply"] = wa_product_caption(best)
-        if any(k in q for k in ("foto", "imagen", "ver", "muestra")):
-            image = wa_product_file(best)
-            if image is not None:
-                result["media"].append({
-                    "type": "image",
-                    "path": str(image),
-                    "caption": result["reply"],
-                    "mimetype": "image/jpeg" if image.suffix.lower() in (".jpg", ".jpeg") else "image/png",
-                })
-                result["reply"] = "Te mando la foto de %s." % (best.get("name") or "producto")
+        result["reply"] = wa_product_caption(best) + "\n¿La agrego? Escribe “quiero 1 %s” o “cotización”." % (best.get("name") or "producto")
         return result
 
     if any(k in q for k in ("precio", "cuesta", "cuanto")):
@@ -799,12 +1076,15 @@ def wa_bot_answer(text, products, phone, last_product_id=None):
     if any(k in q for k in ("envio", "entrega", "domicilio", "cali")):
         result["reply"] = "Coordinamos la entrega desde Cali, Valle del Cauca. Dime tu ciudad y te orientamos."
         return result
-    result["reply"] = "Puedo ayudarte con productos, precios, fotos, el catálogo en PDF o pedidos. Di “catálogo” o el nombre de un producto."
+    result["reply"] = (
+        "Puedo ayudarte con catálogo PDF, fotos, precios y cotizaciones.\n"
+        "Ejemplo: “quiero 2 cera fibra y 1 shampoo” → luego “cotización”."
+    )
     return result
 
 
-def wa_bot_reply(text, products, phone, last_product_id=None):
-    return wa_bot_answer(text, products, phone, last_product_id).get("reply") or ""
+def wa_bot_reply(text, products, phone, last_product_id=None, cart=None, customer_name=""):
+    return wa_bot_answer(text, products, phone, last_product_id, cart, customer_name).get("reply") or ""
 
 
 def wa_graph_send(phone_number_id, token, to_phone, body):
@@ -1478,16 +1758,33 @@ class Handler(BaseHTTPRequestHandler):
                     store.get("products") or [],
                     api["phone"],
                     chat.get("lastProductId"),
+                    chat.get("cart") or [],
+                    chat.get("name") or name,
                 )
                 reply = answer.get("reply") or ""
                 media = answer.get("media") or []
                 if answer.get("productId"):
                     chat["lastProductId"] = answer.get("productId")
+                if "cart" in answer:
+                    chat["cart"] = answer.get("cart") or []
+                if answer.get("quoteRef"):
+                    chat["lastQuoteRef"] = answer.get("quoteRef")
+                    quotes = store.setdefault("whatsappQuotes", [])
+                    quotes.insert(0, {
+                        "id": answer.get("quoteRef"),
+                        "phone": phone,
+                        "name": chat.get("name") or name,
+                        "cart": chat.get("cart") or [],
+                        "total": wa_cart_total(chat.get("cart") or []),
+                        "at": now_iso(),
+                    })
+                    store["whatsappQuotes"] = quotes[:80]
                 note = reply
                 if any(item.get("type") == "image" for item in media):
                     note = (reply + "\n[foto]").strip()
                 if any(item.get("type") == "document" for item in media):
-                    note = (reply + "\n[PDF catálogo]").strip()
+                    label = "PDF cotización" if answer.get("quoteRef") else "PDF catálogo"
+                    note = (reply + "\n[" + label + "]").strip()
                 chat["messages"].append({
                     "id": "b_" + secrets.token_hex(6),
                     "from": "out",
@@ -1558,15 +1855,22 @@ class Handler(BaseHTTPRequestHandler):
                                 store.get("products") or [],
                                 api["phone"],
                                 chat.get("lastProductId"),
+                                chat.get("cart") or [],
+                                chat.get("name") or "",
                             )
                             if answer.get("productId"):
                                 chat["lastProductId"] = answer.get("productId")
+                            if "cart" in answer:
+                                chat["cart"] = answer.get("cart") or []
+                            if answer.get("quoteRef"):
+                                chat["lastQuoteRef"] = answer.get("quoteRef")
                             note = answer.get("reply") or ""
                             media = answer.get("media") or []
                             if any(item.get("type") == "image" for item in media):
                                 note = (note + "\n[foto]").strip()
                             if any(item.get("type") == "document" for item in media):
-                                note = (note + "\n[PDF catálogo]").strip()
+                                label = "PDF cotización" if answer.get("quoteRef") else "PDF catálogo"
+                                note = (note + "\n[" + label + "]").strip()
                             chat["messages"].append({
                                 "id": "b_" + secrets.token_hex(6),
                                 "from": "out",
