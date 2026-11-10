@@ -936,11 +936,50 @@ def wa_quote_pdf(cart, customer_name="", customer_phone="", ref=""):
     return out, ref
 
 
+def wa_site_url():
+    cfg = read_config()
+    return (cfg.get("publicSiteUrl") or "https://danielbuitron.github.io/Vinicius_Molding").rstrip("/")
+
+
+def wa_shop_url(token):
+    return "%s/#/tienda/%s" % (wa_site_url(), token)
+
+
+def wa_open_shop(store, phone, jid="", name=""):
+    shops = store.setdefault("whatsappShops", {})
+    token = secrets.token_urlsafe(9)
+    shops[token] = {
+        "token": token,
+        "phone": phone,
+        "jid": jid or "",
+        "name": name or phone,
+        "cart": [],
+        "status": "open",
+        "createdAt": now_iso(),
+        "updatedAt": now_iso(),
+    }
+    # Mantener solo las 120 más recientes.
+    ordered = sorted(shops.values(), key=lambda item: item.get("updatedAt") or "", reverse=True)
+    store["whatsappShops"] = {item["token"]: item for item in ordered[:120]}
+    return token, wa_shop_url(token)
+
+
+def wa_bridge_deliver(phone, jid, text="", media=None):
+    ensure_wa_bridge()
+    payload = {
+        "to": phone,
+        "jid": jid or "",
+        "text": text or "",
+        "media": media or [],
+    }
+    return bridge_request("/send", method="POST", body=payload, timeout=30)
+
+
 def wa_bot_answer(text, products, phone, last_product_id=None, cart=None, customer_name=""):
     q = wa_norm(text)
     phone = phone or "573235835137"
     cart = wa_cart_clone(cart)
-    result = {"reply": "", "media": [], "productId": last_product_id, "cart": cart}
+    result = {"reply": "", "media": [], "productId": last_product_id, "cart": cart, "openShop": False}
     wants_image = any(k in q for k in ("foto", "fotos", "imagen", "image", "picture", "muestra", "muestrame", "enseñame", "ensename", "verla", "verlo"))
     wants_catalog = (
         "catalogo" in q
@@ -1009,16 +1048,18 @@ def wa_bot_answer(text, products, phone, last_product_id=None, cart=None, custom
 
     if wants_catalog:
         pdf = wa_catalog_pdf(products)
+        result["openShop"] = True
         result["reply"] = (
-            "Te comparto el catálogo oficial de Vinicius Molding en PDF.\n"
-            "Para cotizar desde aquí escribe, por ejemplo: “quiero 2 cera fibra y 1 shampoo”.\n"
-            "Cuando termines, di “cotización” y te envío el PDF al chat."
+            "Te comparto el catálogo Vinicius.\n"
+            "1) Ábrelo en el enlace interactivo, agrega al carrito mientras miras.\n"
+            "2) Al final toca “Enviar cotización al WhatsApp” y te llega aquí el PDF.\n"
+            "También puedes pedir por chat: “quiero 2 cera fibra y 1 shampoo”."
         )
         result["media"].append({
             "type": "document",
             "path": str(pdf),
             "filename": "Catalogo-Vinicius-Molding.pdf",
-            "caption": "Catálogo Vinicius Molding · Agrega con “quiero 2 cera fibra” y pide “cotización”.",
+            "caption": "Catálogo Vinicius Molding · Usa el enlace del chat para armar el carrito.",
             "mimetype": "application/pdf",
         })
         return result
@@ -1482,6 +1523,18 @@ class Handler(BaseHTTPRequestHandler):
             self.whatsapp_bridge_inbound()
             return
 
+        if path.startswith("/api/whatsapp/shop/") and path.endswith("/cart") and method == "POST":
+            self.whatsapp_shop_cart(path.split("/")[4])
+            return
+
+        if path.startswith("/api/whatsapp/shop/") and path.endswith("/confirm") and method == "POST":
+            self.whatsapp_shop_confirm(path.split("/")[4])
+            return
+
+        if path.startswith("/api/whatsapp/shop/") and method == "GET" and path.count("/") == 4:
+            self.whatsapp_shop_get(path.rsplit("/", 1)[-1])
+            return
+
         if path == "/api/whatsapp/webhook" and method == "GET":
             self.whatsapp_webhook_verify(query)
             return
@@ -1713,6 +1766,191 @@ class Handler(BaseHTTPRequestHandler):
             return
         self.send_bytes(200, png, "image/png", {"Cache-Control": "no-store"})
 
+    def whatsapp_shop_get(self, token):
+        token = str(token or "").strip()
+        with LOCK:
+            store = load_store()
+            shop = (store.get("whatsappShops") or {}).get(token)
+            if not shop:
+                self.send_json(404, {"error": "Este catálogo ya no está disponible. Pide “catálogo” otra vez por WhatsApp."})
+                return
+            products = [
+                {
+                    "id": item.get("id"),
+                    "name": item.get("name"),
+                    "sku": item.get("sku"),
+                    "size": item.get("size"),
+                    "price": item.get("price"),
+                    "image": item.get("image"),
+                    "summary": item.get("summary"),
+                    "accent": item.get("accent"),
+                    "category": item.get("category"),
+                    "line": item.get("line"),
+                    "stock": item.get("stock"),
+                }
+                for item in (store.get("products") or [])
+                if item.get("active", True)
+            ]
+        self.send_json(200, {
+            "ok": True,
+            "token": token,
+            "status": shop.get("status") or "open",
+            "name": shop.get("name") or "",
+            "cart": shop.get("cart") or [],
+            "products": products,
+            "city": "Cali, Valle del Cauca",
+        })
+
+    def whatsapp_shop_cart(self, token):
+        token = str(token or "").strip()
+        body = self.read_json()
+        cart = wa_cart_clone(body.get("cart") or [])
+        with LOCK:
+            store = load_store()
+            shops = store.setdefault("whatsappShops", {})
+            shop = shops.get(token)
+            if not shop:
+                self.send_json(404, {"error": "Catálogo no encontrado."})
+                return
+            if shop.get("status") == "confirmed":
+                self.send_json(409, {"error": "Esta cotización ya fue enviada al WhatsApp."})
+                return
+            catalog = {item.get("id"): item for item in (store.get("products") or [])}
+            rebuilt = []
+            for row in cart:
+                product = catalog.get(row.get("id"))
+                if not product:
+                    continue
+                qty = max(1, min(99, int(row.get("qty") or 1)))
+                rebuilt.append({
+                    "id": product.get("id"),
+                    "name": product.get("name") or "",
+                    "sku": product.get("sku") or "",
+                    "size": product.get("size") or "",
+                    "price": int(product.get("price") or 0),
+                    "qty": qty,
+                })
+            shop["cart"] = rebuilt
+            shop["updatedAt"] = now_iso()
+            phone = shop.get("phone") or ""
+            chats = store.setdefault("whatsappChats", {})
+            if phone and phone in chats:
+                chats[phone]["cart"] = rebuilt
+                chats[phone]["updatedAt"] = now_iso()
+            save_store(store)
+        self.send_json(200, {"ok": True, "cart": rebuilt, "total": wa_cart_total(rebuilt)})
+
+    def whatsapp_shop_confirm(self, token):
+        token = str(token or "").strip()
+        body = self.read_json()
+        cart_in = body.get("cart")
+        deliver = None
+        with LOCK:
+            store = load_store()
+            shops = store.setdefault("whatsappShops", {})
+            shop = shops.get(token)
+            if not shop:
+                self.send_json(404, {"error": "Catálogo no encontrado."})
+                return
+            if shop.get("status") == "confirmed" and shop.get("quoteRef"):
+                self.send_json(200, {
+                    "ok": True,
+                    "already": True,
+                    "quoteRef": shop.get("quoteRef"),
+                    "message": "La cotización ya fue enviada a tu WhatsApp.",
+                })
+                return
+            catalog = {item.get("id"): item for item in (store.get("products") or [])}
+            source = cart_in if cart_in is not None else shop.get("cart") or []
+            cart = []
+            for row in source:
+                product = catalog.get((row or {}).get("id"))
+                if not product:
+                    continue
+                qty = max(1, min(99, int((row or {}).get("qty") or 1)))
+                cart.append({
+                    "id": product.get("id"),
+                    "name": product.get("name") or "",
+                    "sku": product.get("sku") or "",
+                    "size": product.get("size") or "",
+                    "price": int(product.get("price") or 0),
+                    "qty": qty,
+                })
+            if not cart:
+                self.send_json(400, {"error": "Agrega al menos un producto al carrito."})
+                return
+            pdf, ref = wa_quote_pdf(cart, customer_name=shop.get("name") or "", customer_phone=shop.get("phone") or "")
+            shop["cart"] = cart
+            shop["status"] = "confirmed"
+            shop["quoteRef"] = ref
+            shop["updatedAt"] = now_iso()
+            phone = shop.get("phone") or ""
+            jid = shop.get("jid") or ""
+            chats = store.setdefault("whatsappChats", {})
+            chat = chats.setdefault(phone, {
+                "id": phone,
+                "name": shop.get("name") or phone,
+                "phone": phone,
+                "jid": jid,
+                "messages": [],
+                "updatedAt": now_iso(),
+            })
+            chat["cart"] = cart
+            chat["lastQuoteRef"] = ref
+            if jid:
+                chat["jid"] = jid
+            text = "Cotización desde el catálogo interactivo %s.\n%s" % (ref, wa_cart_text(cart))
+            chat["messages"].append({
+                "id": "b_" + secrets.token_hex(6),
+                "from": "out",
+                "text": text + "\n[PDF cotización]",
+                "at": now_iso(),
+                "bot": True,
+            })
+            chat["updatedAt"] = now_iso()
+            chat["messages"] = chat["messages"][-80:]
+            quotes = store.setdefault("whatsappQuotes", [])
+            quotes.insert(0, {
+                "id": ref,
+                "phone": phone,
+                "name": chat.get("name") or "",
+                "cart": cart,
+                "total": wa_cart_total(cart),
+                "source": "shop",
+                "at": now_iso(),
+            })
+            store["whatsappQuotes"] = quotes[:80]
+            save_store(store)
+            deliver = {
+                "phone": phone,
+                "jid": jid,
+                "text": text,
+                "media": [{
+                    "type": "document",
+                    "path": str(pdf),
+                    "filename": "Cotizacion-%s.pdf" % ref,
+                    "caption": "Cotización Vinicius Molding · %s" % ref,
+                    "mimetype": "application/pdf",
+                }],
+                "quoteRef": ref,
+                "total": wa_cart_total(cart),
+            }
+        try:
+            wa_bridge_deliver(deliver["phone"], deliver["jid"], deliver["text"], deliver["media"])
+        except Exception as exc:
+            self.send_json(502, {
+                "error": "Se guardó la cotización, pero no se pudo empujar al WhatsApp.",
+                "detail": str(exc),
+                "quoteRef": deliver["quoteRef"],
+            })
+            return
+        self.send_json(200, {
+            "ok": True,
+            "quoteRef": deliver["quoteRef"],
+            "total": deliver["total"],
+            "message": "Listo. Revisá tu WhatsApp: ya te llegó la cotización.",
+        })
+
     def whatsapp_bridge_inbound(self):
         if self.client_address and self.client_address[0] not in ("127.0.0.1", "::1"):
             self.send_json(403, {"error": "Solo local."})
@@ -1767,6 +2005,10 @@ class Handler(BaseHTTPRequestHandler):
                     chat["lastProductId"] = answer.get("productId")
                 if "cart" in answer:
                     chat["cart"] = answer.get("cart") or []
+                if answer.get("openShop"):
+                    token, shop_url = wa_open_shop(store, phone, jid, chat.get("name") or name)
+                    chat["shopToken"] = token
+                    reply = (reply + "\n\nCatálogo con carrito:\n" + shop_url).strip()
                 if answer.get("quoteRef"):
                     chat["lastQuoteRef"] = answer.get("quoteRef")
                     quotes = store.setdefault("whatsappQuotes", [])

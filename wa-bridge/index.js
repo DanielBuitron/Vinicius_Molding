@@ -243,18 +243,47 @@ async function startSock() {
   });
 }
 
+function resolveDest(to, jid) {
+  const target = String(jid || to || "").trim();
+  if (!target) throw new Error("Falta destino.");
+  if (target.includes("@")) return target;
+  const digits = target.replace(/\D/g, "");
+  return digits + (digits.length > 15 ? "@lid" : "@s.whatsapp.net");
+}
+
 async function sendText(to, text, jid) {
   if (!sock || session.status !== "connected") {
     throw new Error("WhatsApp no está vinculado.");
   }
-  const target = String(jid || to || "").trim();
-  if (!target || !text) throw new Error("Falta destino o texto.");
-  let dest = target;
-  if (!dest.includes("@")) {
-    const digits = dest.replace(/\D/g, "");
-    dest = digits + (digits.length > 15 ? "@lid" : "@s.whatsapp.net");
-  }
+  if (!text) throw new Error("Falta texto.");
+  const dest = resolveDest(to, jid);
   await sock.sendMessage(dest, { text: String(text) });
+  return { ok: true };
+}
+
+async function deliverOutbound(body) {
+  if (!sock || session.status !== "connected") {
+    throw new Error("WhatsApp no está vinculado.");
+  }
+  const dest = resolveDest(body.to, body.jid);
+  if (body.text) {
+    await sock.sendMessage(dest, { text: String(body.text) });
+  }
+  for (const item of body.media || []) {
+    const filePath = item && item.path;
+    if (!filePath || !fs.existsSync(filePath)) continue;
+    const payload = fs.readFileSync(filePath);
+    if (item.type === "image") {
+      await sock.sendMessage(dest, { image: payload, caption: item.caption || "" });
+    } else if (item.type === "document") {
+      await sock.sendMessage(dest, {
+        document: payload,
+        mimetype: item.mimetype || "application/pdf",
+        fileName: item.filename || "Vinicius-Molding.pdf",
+        caption: item.caption || "",
+      });
+    }
+  }
   return { ok: true };
 }
 
@@ -335,7 +364,11 @@ const server = http.createServer(async (req, res) => {
     }
     if (req.method === "POST" && u.pathname === "/send") {
       const body = await readBody(req);
-      await sendText(body.to, body.text, body.jid);
+      if (body.media && body.media.length) {
+        await deliverOutbound(body);
+      } else {
+        await sendText(body.to, body.text, body.jid);
+      }
       return sendJson(res, 200, { ok: true });
     }
     if (req.method === "POST" && u.pathname === "/logout") {

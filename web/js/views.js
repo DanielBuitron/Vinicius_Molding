@@ -429,6 +429,87 @@ function viewAsesor(done) {
   return phoneBlock(done);
 }
 
+function shopQty(id) {
+  const row = (VM.shopCart || []).find((item) => item.id === id);
+  return row ? Number(row.qty || 0) : 0;
+}
+
+function shopTotal() {
+  return (VM.shopCart || []).reduce((sum, item) => sum + Number(item.price || 0) * Number(item.qty || 0), 0);
+}
+
+function viewShop() {
+  const data = VM.shopData || {};
+  const products = data.products || VM.products || [];
+  const confirmed = data.status === "confirmed" || VM.shopDone;
+  const cart = VM.shopCart || [];
+  if (confirmed) {
+    return `
+      <section class="shop-app">
+        <header class="shop-top">
+          <img src="assets/logo-white.png" alt="Vinicius Molding">
+          <p>Somos la solución, no el problema.</p>
+        </header>
+        <div class="shop-done">
+          <h1>Cotización enviada</h1>
+          <p>Revisa tu WhatsApp: ya te llegó el PDF con tu pedido${data.quoteRef ? " · " + esc(data.quoteRef) : ""}.</p>
+        </div>
+      </section>`;
+  }
+  const groups = {};
+  products.forEach((item) => {
+    const key = item.category || "otros";
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(item);
+  });
+  const labels = { molding: "Molding", kids: "Kids", limpieza: "Limpieza", tratamiento: "Tratamiento", cuerpo: "Cuerpo" };
+  return `
+    <section class="shop-app">
+      <header class="shop-top">
+        <img src="assets/logo-white.png" alt="Vinicius Molding">
+        <div>
+          <strong>Catálogo para cotizar</strong>
+          <p>Agrega mientras miras. Al final envías la cotización a tu WhatsApp.</p>
+        </div>
+      </header>
+      <div class="shop-list">
+        ${Object.keys(groups).map((key) => `
+          <div class="shop-group">
+            <h2>${esc(labels[key] || key)}</h2>
+            ${groups[key].map((item) => {
+              const qty = shopQty(item.id);
+              return `
+                <article class="shop-card" style="--accent:${esc(item.accent || "#E52C3B")}">
+                  <img src="${esc(cutoutSrc(item.image))}" alt="${esc(item.name)}" loading="lazy">
+                  <div class="shop-card-body">
+                    <strong>${esc(item.name)}</strong>
+                    <em>${esc(item.size || "")} · ${esc(item.sku || "")}</em>
+                    <p>${esc(item.summary || "")}</p>
+                    <div class="shop-card-row">
+                      <span>${money(item.price)}</span>
+                      ${qty ? `
+                        <div class="shop-qty">
+                          <button type="button" data-act="shop-qty" data-id="${esc(item.id)}" data-dir="-1">−</button>
+                          <b>${qty}</b>
+                          <button type="button" data-act="shop-qty" data-id="${esc(item.id)}" data-dir="1">+</button>
+                        </div>` : `
+                        <button type="button" class="shop-add" data-act="shop-add" data-id="${esc(item.id)}">Añadir</button>`}
+                    </div>
+                  </div>
+                </article>`;
+            }).join("")}
+          </div>`).join("")}
+      </div>
+      <footer class="shop-bar">
+        <div>
+          <strong>${money(shopTotal())}</strong>
+          <span>${cart.reduce((n, item) => n + Number(item.qty || 0), 0)} en carrito</span>
+        </div>
+        <button type="button" class="shop-send" data-act="shop-confirm" ${cart.length ? "" : "disabled"}>Enviar cotización al WhatsApp</button>
+      </footer>
+    </section>`;
+}
+
 function viewCart() {
   const items = cartDetailed();
   if (!items.length) return `<section class="page"><h2 class="block-title">El carrito está vacío.</h2><a class="btn" href="#/inicio">Volver a la revista</a></section>`;

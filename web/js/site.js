@@ -23,6 +23,7 @@ const SITE = {
   whatsapp: "573235835137",
   city: "Cali, Valle del Cauca",
   apiBase: "https://sampling-peterson-latinas-corners.trycloudflare.com",
+  siteBase: "https://danielbuitron.github.io/Vinicius_Molding",
   products: [
     { id: "cera-brillo", sku: "VM-CB-150", name: "Cera brillo medio", line: "Línea Molding", finish: "Brillo medio", category: "molding", size: "150 g", price: 24000, stock: 56, accent: "#E52C3B", image: "assets/products/cera-brillo.jpg", summary: "Fijación que resiste el día y un brillo que se ve natural.", description: "Cera moldeadora de brillo medio. Keratina, romero, aloe vera y cera de abeja para un peinado que se mantiene.", ingredients: ["Keratina", "Romero", "Aloe vera", "Cera de abeja"], hold: 4, featured: true },
     { id: "cera-fibra", sku: "VM-CF-150", name: "Cera de fibra", line: "Línea Molding", finish: "Acabado húmedo", category: "molding", size: "150 g", price: 24000, stock: 48, accent: "#6D4AFF", image: "assets/products/cera-fibra.jpg", summary: "Acabado húmedo, como salido de la barbería.", description: "Cera de fibra con acabado húmedo. Se adapta al movimiento y se peina fácil. Keratina, romero, aloe vera y cera de abeja.", ingredients: ["Keratina", "Romero", "Aloe vera", "Cera de abeja"], hold: 4, featured: true },
