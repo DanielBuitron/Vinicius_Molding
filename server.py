@@ -958,7 +958,25 @@ def wa_norm(text):
     raw = unicodedata.normalize("NFD", str(text or "").lower())
     raw = "".join(ch for ch in raw if unicodedata.category(ch) != "Mn")
     raw = re.sub(r"[^a-z0-9\s]", " ", raw)
-    return re.sub(r"\s+", " ", raw).strip()
+    raw = re.sub(r"\s+", " ", raw).strip()
+    # Tipazos frecuentes al escribir rápido en el celular
+    fixes = {
+        "doro": "foto",
+        "fotto": "foto",
+        "fotito": "foto",
+        "fotitos": "fotos",
+        "img": "imagen",
+        "manejas": "manejan",
+        "maneja": "manejan",
+        "tienes": "tienen",
+        "tine": "tienen",
+        "catalog": "catalogo",
+        "katalogo": "catalogo",
+    }
+    words = []
+    for word in raw.split():
+        words.append(fixes.get(word, word))
+    return " ".join(words)
 
 
 def wa_money(value):
@@ -971,17 +989,58 @@ def wa_money(value):
 
 def wa_product_file(product):
     raw = str((product or {}).get("image") or "").replace("\\", "/").lstrip("/")
-    if not raw:
-        return None
-    path = WEB / raw
-    if path.exists():
-        return path
-    stem = path.with_suffix("")
-    for ext in (".jpg", ".jpeg", ".png", ".webp"):
-        alt = Path(str(stem) + ext)
-        if alt.exists():
-            return alt
+    candidates = []
+    if raw:
+        candidates.append(WEB / raw)
+        stem = (WEB / raw).with_suffix("")
+        for ext in (".jpg", ".jpeg", ".png", ".webp"):
+            candidates.append(Path(str(stem) + ext))
+    pid = str((product or {}).get("id") or "").strip()
+    if pid:
+        for ext in (".jpg", ".jpeg", ".png", ".webp"):
+            candidates.append(WEB / "assets" / "products" / (pid + ext))
+    seen = set()
+    for path in candidates:
+        key = str(path).lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        if path.exists() and path.is_file() and path.stat().st_size > 0:
+            return path.resolve()
     return None
+
+
+WA_CATEGORY_HINTS = {
+    "molding": ("cera", "ceras", "pomada", "pasta", "moldear", "fijacion", "molding", "cubre canas", "minoxidil pasta"),
+    "kits": ("kit", "kits", "combo", "combos", "paquete", "paquetes"),
+    "limpieza": ("shampoo", "shampoos", "champu", "champus", "limpieza", "caspa", "carbon"),
+    "tratamiento": ("tonico", "tonicos", "serum", "tratamiento", "crecimiento", "barba"),
+    "kids": ("kids", "ninos", "nino", "infantil"),
+    "cuerpo": ("splash", "afeitar", "shaving", "cuerpo", "ducha"),
+}
+
+
+def wa_match_category(q):
+    for cat, hints in WA_CATEGORY_HINTS.items():
+        if any(h in q for h in hints):
+            return cat
+    return ""
+
+
+def wa_products_in_category(products, category):
+    return [item for item in (products or []) if item.get("category") == category and item.get("active", True)]
+
+
+def wa_list_products(products, title="Estos son"):
+    lines = [title + ":"]
+    for item in products:
+        lines.append("• %s · %s · %s" % (
+            item.get("name") or "",
+            item.get("size") or "",
+            wa_money(item.get("price")),
+        ))
+    lines.append("¿De cuál te mando foto o te agrego una?")
+    return "\n".join(lines)
 
 
 def wa_image_reader(path, max_side=220, quality=62):
@@ -1002,23 +1061,44 @@ def wa_image_reader(path, max_side=220, quality=62):
 
 def wa_find_product(q, products, last_id=None):
     best, score = None, 0
+    aliases = {
+        "cera-fibra": ("cera fibra", "cera de fibra", "fibra"),
+        "cera-brillo": ("cera brillo", "cera moldeadora", "brillo medio"),
+        "pasta": ("pasta moldeadora", "pasta fijadora"),
+        "pomada": ("pomada mate", "pomada"),
+        "gel-cubre-canas": ("cubre canas", "cubrecanas"),
+        "pasta-minoxidil": ("pasta minoxidil",),
+        "cera-kids": ("cera ninos", "cera kids", "kids"),
+        "shampoo-proteccion": ("shampoo proteccion", "anticaida"),
+        "shampoo-carbon": ("shampoo carbon", "anticaspa", "carbon activo"),
+        "tonico": ("tonico organico",),
+        "tonico-minoxidil": ("tonico minoxidil", "minoxidil 12"),
+        "serum-barba": ("serum barba", "serum"),
+    }
     for item in products or []:
+        name = wa_norm(item.get("name") or "")
         bag = wa_norm(" ".join([
-            str(item.get("name") or ""),
+            name,
             str(item.get("sku") or ""),
             str(item.get("summary") or ""),
             str(item.get("description") or ""),
             " ".join(item.get("ingredients") or []),
             str(item.get("line") or ""),
             str(item.get("category") or ""),
+            str(item.get("id") or ""),
         ]))
         s = 0
+        if name and name in q:
+            s += 12
         for word in q.split():
             if len(word) > 2 and word in bag:
                 s += 3 if len(word) > 4 else 1
-        for key in ("cera", "fibra", "brillo", "pasta", "pomada", "shampoo", "tonico", "serum", "splash", "shaving", "ducha", "kids", "minoxidil", "canas", "carbon", "barba"):
+        for key in ("cera", "fibra", "brillo", "pasta", "pomada", "shampoo", "tonico", "serum", "splash", "shaving", "ducha", "kids", "minoxidil", "canas", "carbon", "barba", "kit", "organico"):
             if key in q and key in bag:
                 s += 4
+        for alias in aliases.get(item.get("id") or "", ()):
+            if alias in q:
+                s += 10
         if last_id and item.get("id") == last_id:
             s += 1
         if s > score:
@@ -1474,6 +1554,26 @@ def wa_bridge_deliver(phone, jid, text="", media=None):
     return bridge_request("/send", method="POST", body=payload, timeout=90)
 
 
+def wa_attach_product_image(result, product, reply=None):
+    image = wa_product_file(product)
+    result["productId"] = product.get("id")
+    if image is None:
+        result["reply"] = reply or ("Ese producto no tiene foto ahora. ¿Te lo cotizo igual?")
+        return False
+    result["reply"] = reply or ("Aquí tienes %s ✨ Si te late, dime “quiero 1”." % (product.get("name") or "el producto"))
+    result["media"].append({
+        "type": "image",
+        "path": str(image),
+        "caption": "%s · %s · %s" % (
+            product.get("name") or "",
+            product.get("size") or "",
+            wa_money(product.get("price")),
+        ),
+        "mimetype": "image/jpeg" if image.suffix.lower() in (".jpg", ".jpeg") else "image/png",
+    })
+    return True
+
+
 def wa_bot_answer(text, products, phone, last_product_id=None, cart=None, customer_name=""):
     q = wa_norm(text)
     phone = phone or "573235835137"
@@ -1482,16 +1582,20 @@ def wa_bot_answer(text, products, phone, last_product_id=None, cart=None, custom
     wants_catalog = (
         "catalogo" in q
         or "todo el catalogo" in q
-        or (("lista" in q or "que tienen" in q) and "cotiz" not in q)
+        or (("ver todo" in q or "muestra todo" in q) and "cotiz" not in q)
     ) and "cotiz" not in q
-    wants_image = (
-        any(k in q for k in ("foto", "fotos", "imagen", "image", "picture"))
-        or (
-            any(k in q for k in ("muestra", "muestrame", "enseñame", "ensename", "ver", "enseñame"))
-            and not wants_catalog
-            and "todo" not in q
-        )
-    )
+    wants_image = any(k in q for k in (
+        "foto", "fotos", "imagen", "image", "picture", "muestrame", "muestra",
+        "ensename", "enseñame", "mandame", "enviame", "pasa foto", "pasa la foto",
+    ))
+    retry_image = any(k in q for k in (
+        "no veo", "no me llega", "no llego", "no llegó", "no llega", "sin foto",
+        "no aparece", "no salio", "no salió", "otra vez la foto", "reenvia", "reenviar",
+    ))
+    wants_list = any(k in q for k in (
+        "tipos", "tipo", "cuales", "cuáles", "que tienen", "qué tienen", "que manejan",
+        "qué manejan", "manejan", "ofrecen", "hay", "opciones", "variedades", "lineas", "líneas",
+    ))
     wants_quote = any(k in q for k in (
         "cotizacion", "cotizar", "cotiza", "presupuesto", "confirmar pedido",
         "confirma pedido", "cerrar pedido", "enviar cotizacion", "pdf cotizacion",
@@ -1551,7 +1655,23 @@ def wa_bot_answer(text, products, phone, last_product_id=None, cart=None, custom
         result["reply"] = "Claro 😊 Aquí tienes el catálogo:"
         return result
 
-    if wants_add:
+    # Preguntas de categoría: “qué tipos de ceras manejan”
+    category = wa_match_category(q)
+    if wants_list and category:
+        group = wa_products_in_category(products, category)
+        if group:
+            titles = {
+                "molding": "Estas son las ceras y fijadores",
+                "kits": "Estos son los kits y combos",
+                "limpieza": "Estos son los de limpieza",
+                "tratamiento": "Estos son los tratamientos",
+                "kids": "Esta es la línea kids",
+                "cuerpo": "Estos son los de cuerpo",
+            }
+            result["reply"] = wa_list_products(group, titles.get(category, "Estos son"))
+            return result
+
+    if wants_add and not wants_image:
         items = wa_extract_cart_items(q, products, last_product_id)
         if items:
             for product, qty in items:
@@ -1563,49 +1683,74 @@ def wa_bot_answer(text, products, phone, last_product_id=None, cart=None, custom
             return result
 
     best, score = wa_find_product(q, products, last_product_id)
-    if wants_image:
+    if wants_image or retry_image:
         target = best if score >= 2 else None
         if target is None and last_product_id:
             target = next((item for item in (products or []) if item.get("id") == last_product_id), None)
+        if target is None and category:
+            group = wa_products_in_category(products, category)
+            if len(group) == 1:
+                target = group[0]
+            elif group:
+                result["reply"] = wa_list_products(group, "Claro, ¿de cuál te mando la foto?")
+                return result
         if target is None:
             result["reply"] = "Claro, ¿de cuál producto te mando la foto?"
             return result
-        image = wa_product_file(target)
-        result["productId"] = target.get("id")
-        if image is None:
-            result["reply"] = "Ese producto no tiene foto ahora. ¿Te lo cotizo igual?"
-            return result
-        result["reply"] = "Aquí tienes %s ✨ Si te late, dime “quiero 1”." % (target.get("name") or "el producto")
-        result["media"].append({
-            "type": "image",
-            "path": str(image),
-            "caption": "%s · %s · %s" % (
-                target.get("name") or "",
-                target.get("size") or "",
-                wa_money(target.get("price")),
-            ),
-            "mimetype": "image/jpeg" if image.suffix.lower() in (".jpg", ".jpeg") else "image/png",
-        })
+        reply = "Aquí tienes %s ✨ Si te late, dime “quiero 1”." % (target.get("name") or "el producto")
+        if retry_image:
+            reply = "Te la reenvío ✨ Aquí tienes %s. Si te late, dime “quiero 1”." % (target.get("name") or "el producto")
+        wa_attach_product_image(result, target, reply=reply)
         return result
 
-    if best and score >= 3:
+    # Producto concreto (no pregunta abierta de categoría)
+    if best and score >= 4 and not wants_list:
         result["productId"] = best.get("id")
-        result["reply"] = "%s · %s · %s\n¿Te agrego una?" % (
+        result["reply"] = "%s · %s · %s\n¿Te mando la foto o te agrego una?" % (
             best.get("name") or "",
             best.get("size") or "",
             wa_money(best.get("price")),
         )
         return result
 
-    if any(k in q for k in ("precio", "cuesta", "cuanto")):
-        result["reply"] = "Precios:\n" + "\n".join(
-            ["• %s %s" % (item.get("name"), wa_money(item.get("price"))) for item in (products or [])[:14]]
+    if category and not wants_add:
+        group = wa_products_in_category(products, category)
+        if group:
+            titles = {
+                "molding": "Estas son las ceras y fijadores",
+                "kits": "Estos son los kits y combos",
+                "limpieza": "Estos son los de limpieza",
+                "tratamiento": "Estos son los tratamientos",
+                "kids": "Esta es la línea kids",
+                "cuerpo": "Estos son los de cuerpo",
+            }
+            result["reply"] = wa_list_products(group, titles.get(category, "Estos son"))
+            return result
+
+    if best and score >= 3:
+        result["productId"] = best.get("id")
+        result["reply"] = "%s · %s · %s\n¿Te mando la foto o te agrego una?" % (
+            best.get("name") or "",
+            best.get("size") or "",
+            wa_money(best.get("price")),
         )
         return result
-    if any(k in q for k in ("envio", "entrega", "domicilio", "cali")):
+
+    if any(k in q for k in ("precio", "cuesta", "cuanto", "valores")):
+        result["reply"] = "Precios:\n" + "\n".join(
+            ["• %s %s" % (item.get("name"), wa_money(item.get("price"))) for item in (products or [])[:18]]
+        )
+        return result
+    if any(k in q for k in ("envio", "entrega", "domicilio", "cali", "enviar")):
         result["reply"] = "Coordinamos entrega desde Cali. ¿Para qué ciudad sería?"
         return result
-    result["reply"] = "¿Quieres ver el catálogo o te interesa un producto en especial?"
+    if any(k in q for k in ("horario", "abren", "atienden", "whatsapp")):
+        result["reply"] = "Te atendemos por este WhatsApp. ¿Buscas un producto o el catálogo completo?"
+        return result
+    if any(k in q for k in ("donde quedan", "ubicacion", "dirección", "direccion", "tienda fisica")):
+        result["reply"] = "Somos Vinicius Molding en Cali. ¿Te armo pedido a domicilio o te paso el catálogo?"
+        return result
+    result["reply"] = "Puedo ayudarte con catálogo, fotos, precios, kits o armar tu pedido. ¿Qué necesitas?"
     return result
 
 

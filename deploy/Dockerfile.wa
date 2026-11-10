@@ -1,0 +1,12 @@
+FROM node:20-bookworm-slim
+
+WORKDIR /app/wa-bridge
+COPY wa-bridge/package.json wa-bridge/package-lock.json ./
+RUN npm ci --omit=dev
+COPY wa-bridge/ ./
+
+ENV WA_BRIDGE_PORT=3100 \
+    VM_API=http://web:8000
+
+EXPOSE 3100
+CMD ["node", "index.js"]

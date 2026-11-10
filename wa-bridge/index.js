@@ -59,7 +59,11 @@ function msgText(msg) {
   ).trim();
 }
 
-function postJson(url, body) {
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function postJson(url, body, timeoutMs) {
   return new Promise((resolve, reject) => {
     const raw = JSON.stringify(body || {});
     const u = new URL(url);
@@ -74,7 +78,7 @@ function postJson(url, body) {
           "Content-Length": Buffer.byteLength(raw),
           "X-VM-Bridge": "1",
         },
-        timeout: 15000,
+        timeout: timeoutMs || 60000,
       },
       (res) => {
         let data = "";
@@ -96,6 +100,35 @@ function postJson(url, body) {
     req.write(raw);
     req.end();
   });
+}
+
+async function sendMediaItem(dest, item) {
+  const filePath = item && item.path;
+  if (!filePath || !fs.existsSync(filePath)) {
+    throw new Error("Archivo no encontrado: " + filePath);
+  }
+  const stat = fs.statSync(filePath);
+  if (!stat.size) throw new Error("Archivo vacío: " + filePath);
+  // Buffer local: en Windows las rutas con espacios fallan con { url: path }.
+  const buffer = fs.readFileSync(filePath);
+  await sleep(350);
+  if (item.type === "image") {
+    await sock.sendMessage(dest, {
+      image: buffer,
+      caption: String(item.caption || "").slice(0, 900),
+      mimetype: item.mimetype || "image/jpeg",
+    });
+    return;
+  }
+  if (item.type === "document") {
+    await sock.sendMessage(dest, {
+      document: buffer,
+      mimetype: item.mimetype || "application/pdf",
+      fileName: item.filename || "Vinicius-Molding.pdf",
+    });
+    return;
+  }
+  throw new Error("Tipo de media no soportado");
 }
 
 async function setQr(text) {
@@ -211,30 +244,27 @@ async function startSock() {
           answer = (res && res.reply) || "";
           media = (res && res.media) || [];
         } catch (_) {}
-        if (answer) {
-          await sock.sendMessage(jid, { text: answer });
-        }
-        for (const item of media) {
+        // Primero archivos (foto/PDF), luego texto: si falla la foto el usuario no cree que ya llegó.
+        const mediaItems = Array.isArray(media) ? media : [];
+        let mediaOk = 0;
+        for (const item of mediaItems) {
           try {
-            const filePath = item && item.path;
-            if (!filePath || !fs.existsSync(filePath)) continue;
-            const payload = fs.readFileSync(filePath);
-            if (item.type === "image") {
-              await sock.sendMessage(jid, {
-                image: payload,
-                caption: item.caption || "",
-              });
-            } else if (item.type === "document") {
-              await sock.sendMessage(jid, {
-                document: payload,
-                mimetype: item.mimetype || "application/pdf",
-                fileName: item.filename || "Vinicius-Molding.pdf",
-                caption: item.caption || "",
-              });
-            }
+            await sendMediaItem(jid, item);
+            mediaOk += 1;
+            await sleep(400);
           } catch (mediaErr) {
             session.lastError = String(mediaErr && mediaErr.message ? mediaErr.message : mediaErr);
           }
+        }
+        if (mediaItems.length && !mediaOk) {
+          try {
+            await sock.sendMessage(jid, {
+              text: "No pude adjuntar la foto ahora. ¿Me la pides otra vez en un momento?",
+            });
+          } catch (_) {}
+        }
+        if (answer) {
+          await sock.sendMessage(jid, { text: String(answer).slice(0, 3500) });
         }
       } catch (err) {
         session.lastError = String(err && err.message ? err.message : err);
@@ -248,7 +278,10 @@ function resolveDest(to, jid) {
   if (!target) throw new Error("Falta destino.");
   if (target.includes("@")) return target;
   const digits = target.replace(/\D/g, "");
-  return digits + (digits.length > 15 ? "@lid" : "@s.whatsapp.net");
+  if (!digits) throw new Error("Falta destino.");
+  // LIDs de WhatsApp suelen ser largos; celulares reales <= 13 dígitos (con país).
+  if (digits.length >= 14) return digits + "@lid";
+  return digits + "@s.whatsapp.net";
 }
 
 async function sendText(to, text, jid) {
@@ -267,22 +300,10 @@ async function deliverOutbound(body) {
   }
   const dest = resolveDest(body.to, body.jid);
   if (body.text) {
-    await sock.sendMessage(dest, { text: String(body.text) });
+    await sock.sendMessage(dest, { text: String(body.text).slice(0, 3500) });
   }
   for (const item of body.media || []) {
-    const filePath = item && item.path;
-    if (!filePath || !fs.existsSync(filePath)) continue;
-    const payload = fs.readFileSync(filePath);
-    if (item.type === "image") {
-      await sock.sendMessage(dest, { image: payload, caption: item.caption || "" });
-    } else if (item.type === "document") {
-      await sock.sendMessage(dest, {
-        document: payload,
-        mimetype: item.mimetype || "application/pdf",
-        fileName: item.filename || "Vinicius-Molding.pdf",
-        caption: item.caption || "",
-      });
-    }
+    await sendMediaItem(dest, item);
   }
   return { ok: true };
 }

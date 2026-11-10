@@ -8,3 +8,8 @@ wa-bridge/node_modules/
 wa-bridge/auth/
 data/catalogo-vinicius.pdf
 data/cotizacion-*.pdf
+.env
+backend/db.sqlite3
+backend/staticfiles/
+.idea/
+*.log
