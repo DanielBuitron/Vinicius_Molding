@@ -74,14 +74,18 @@ function cutoutSrc(src) {
   return String(src || "").replace(/\.jpe?g(\?.*)?$/i, ".png$1");
 }
 
+function productShot(src, alt, id) {
+  const href = id ? `#/producto/${esc(id)}` : "";
+  const tag = href ? "a" : "div";
+  const link = href ? ` href="${href}"` : "";
+  return `<${tag} class="product-shot"${link} aria-label="${esc(alt)}">
+    <img src="${esc(cutoutSrc(src))}" alt="${esc(alt)}" decoding="async" draggable="false">
+  </${tag}>`;
+}
+
+/** Compat: deja de usar el viewer 3D; muestra solo la foto. */
 function orbit(src, alt, id) {
-  const open = id ? ` data-open="${esc(id)}"` : "";
-  return `<div class="orbit" data-orbit${open} tabindex="0" aria-label="${esc(alt)}">
-    <div class="orbit-scene">
-      <span class="orbit-shadow"></span>
-      <div class="orbit-card"><img src="${esc(cutoutSrc(src))}" alt="${esc(alt)}" draggable="false"></div>
-    </div>
-  </div>`;
+  return productShot(src, alt, id);
 }
 
 function recommendedFor(product) {
