@@ -451,8 +451,8 @@ function viewShop() {
           <p>Somos la solución, no el problema.</p>
         </header>
         <div class="shop-done">
-          <h1>Cotización enviada</h1>
-          <p>Revisa tu WhatsApp: ya te llegó el PDF con tu pedido${data.quoteRef ? " · " + esc(data.quoteRef) : ""}.</p>
+          <h1>¡Listo!</h1>
+          <p>Ya te enviamos a WhatsApp el PDF elegante de tu cotización${data.quoteRef ? " · " + esc(data.quoteRef) : ""}. Gracias por elegirnos.</p>
         </div>
       </section>`;
   }
@@ -468,8 +468,8 @@ function viewShop() {
       <header class="shop-top">
         <img src="assets/logo-white.png" alt="Vinicius Molding">
         <div>
-          <strong>Catálogo para cotizar</strong>
-          <p>Agrega mientras miras. Al final envías la cotización a tu WhatsApp.</p>
+          <strong>Catálogo Vinicius</strong>
+          <p>Mira con calma, añade lo que quieras y al final te enviamos la cotización a tu WhatsApp.</p>
         </div>
       </header>
       <div class="shop-list">

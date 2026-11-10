@@ -223,6 +223,7 @@ function paint(html, bodyClass) {
   const keepGl = document.body.classList.contains("gl");
   if (bodyClass === "site" && (page === "inicio" || !page)) extras.push("home");
   if (bodyClass === "site" && page === "producto") extras.push("product-page");
+  if (bodyClass === "site" && page === "tienda") extras.push("shop-page");
   document.body.className = [bodyClass, ...extras].join(" ");
   if (keepGl) document.body.classList.add("gl");
   document.getElementById("app").innerHTML = html;
@@ -233,15 +234,31 @@ function paint(html, bodyClass) {
   }
   const header = document.querySelector(".site-header");
   if (header) header.classList.toggle("scrolled", window.scrollY > 8);
-  bindOrbits();
-  if (typeof mountVolumes === "function") mountVolumes();
-  bindShowcases();
-  bindReel();
+  if (page !== "tienda") {
+    bindOrbits();
+    if (typeof mountVolumes === "function") mountVolumes();
+    bindShowcases();
+    bindReel();
+  }
   mountWhatsappQr();
   const thread = document.getElementById("wa-thread");
   if (thread) thread.scrollTop = thread.scrollHeight;
-  if (typeof destroyDesk === "function") destroyDesk();
-  if (typeof mountDesk === "function") mountDesk();
+  if (page !== "tienda") {
+    if (typeof destroyDesk === "function") destroyDesk();
+    if (typeof mountDesk === "function") mountDesk();
+  }
+}
+
+function refreshShop() {
+  const app = document.getElementById("app");
+  if (!app || ((VM.parts && VM.parts[0]) !== "tienda")) {
+    render();
+    return;
+  }
+  const y = window.scrollY;
+  document.body.classList.add("shop-page");
+  app.innerHTML = viewShop();
+  window.scrollTo(0, y);
 }
 
 function bindReel() {
@@ -915,7 +932,7 @@ function bind() {
         else row.qty = Math.min(99, row.qty);
       }
       VM.shopCart = cart;
-      render();
+      refreshShop();
       try {
         await api("/api/whatsapp/shop/" + encodeURIComponent(VM.shopToken) + "/cart", {
           method: "POST",
@@ -926,9 +943,12 @@ function bind() {
     }
     if (act === "shop-confirm") {
       if (!VM.shopToken || !(VM.shopCart || []).length) {
-        toast("Agrega productos al carrito");
+        toast("Agrega un producto y con gusto armamos tu cotización");
         return;
       }
+      const btn = node;
+      btn.disabled = true;
+      btn.textContent = "Enviando…";
       try {
         const result = await api("/api/whatsapp/shop/" + encodeURIComponent(VM.shopToken) + "/confirm", {
           method: "POST",
@@ -939,9 +959,11 @@ function bind() {
           status: "confirmed",
           quoteRef: result.quoteRef || "",
         });
-        toast(result.message || "Cotización enviada a WhatsApp");
-        render();
+        toast(result.message || "Listo, revisa tu WhatsApp");
+        refreshShop();
       } catch (err) {
+        btn.disabled = false;
+        btn.textContent = "Enviar cotización al WhatsApp";
         toast(err.message || "No se pudo enviar la cotización");
       }
       return;
