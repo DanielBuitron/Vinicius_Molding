@@ -563,6 +563,7 @@ function viewCart() {
         <h3>${t("cart.total")}</h3>
         <div class="sum-row"><strong>${money(cartTotal())}</strong></div>
         <p class="fine">${getCurrency() === "USD" ? t("cur.noteUsd") : t("cur.noteCop")}</p>
+        <p class="fine">${t("cur.trm", { rate: new Intl.NumberFormat("es-CO", { maximumFractionDigits: 2 }).format(usdRate()) + " COP" })}</p>
         <a class="btn full" href="#/pago">${t("cart.send")}</a>
       </aside>
     </section>`;

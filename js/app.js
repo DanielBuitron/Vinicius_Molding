@@ -1289,9 +1289,17 @@ async function boot() {
     VM.products = mergeCatalog(catalog.products);
     VM.config = Object.assign({ whatsapp: SITE.whatsapp, city: SITE.city }, config);
     if (!VM.config.whatsapp) VM.config.whatsapp = SITE.whatsapp;
+    if (config.usdRate) {
+      VM.trm = saveCachedTrm({
+        usdRate: config.usdRate,
+        date: config.trmDate || "",
+        source: config.trmSource || "TRM",
+      }) || { usdRate: config.usdRate, date: config.trmDate || "", source: config.trmSource || "TRM" };
+    }
     VM.user = me.user;
     applyLocalSettings();
     if (config.whatsapp) VM.config.whatsapp = config.whatsapp;
+    await loadTrm();
     try {
       const notes = await api("/api/comments");
       VM.comments = notes.comments || [];
@@ -1302,6 +1310,7 @@ async function boot() {
     VM.products = mergeCatalog(SITE.products);
     VM.config = { wompiReady: false, city: SITE.city, whatsapp: SITE.whatsapp, email: "" };
     applyLocalSettings();
+    try { await loadTrm(); } catch (trmErr) { /* usa tasa local */ }
     try { VM.comments = JSON.parse(localStorage.getItem("vm_comments") || "[]"); } catch (error) { VM.comments = []; }
     if (VM.token === "local-admin") {
       try { VM.user = JSON.parse(localStorage.getItem("vm_user") || "null"); } catch (error) { VM.user = null; }
