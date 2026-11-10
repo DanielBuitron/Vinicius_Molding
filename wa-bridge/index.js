@@ -199,6 +199,7 @@ async function startSock() {
         if (!text) continue;
         const contact = contactFromMessage(msg);
         let answer = "";
+        let media = [];
         try {
           const res = await postJson(API + "/api/whatsapp/bridge/inbound", {
             phone: contact.phone,
@@ -208,9 +209,32 @@ async function startSock() {
             messageId: msg.key.id || "",
           });
           answer = (res && res.reply) || "";
+          media = (res && res.media) || [];
         } catch (_) {}
         if (answer) {
           await sock.sendMessage(jid, { text: answer });
+        }
+        for (const item of media) {
+          try {
+            const filePath = item && item.path;
+            if (!filePath || !fs.existsSync(filePath)) continue;
+            const payload = fs.readFileSync(filePath);
+            if (item.type === "image") {
+              await sock.sendMessage(jid, {
+                image: payload,
+                caption: item.caption || "",
+              });
+            } else if (item.type === "document") {
+              await sock.sendMessage(jid, {
+                document: payload,
+                mimetype: item.mimetype || "application/pdf",
+                fileName: item.filename || "Vinicius-Molding.pdf",
+                caption: item.caption || "",
+              });
+            }
+          } catch (mediaErr) {
+            session.lastError = String(mediaErr && mediaErr.message ? mediaErr.message : mediaErr);
+          }
         }
       } catch (err) {
         session.lastError = String(err && err.message ? err.message : err);

@@ -512,54 +512,299 @@ def wa_money(value):
     return "$" + f"{n:,}".replace(",", ".")
 
 
-def wa_bot_reply(text, products, phone):
-    q = wa_norm(text)
-    phone = phone or "573235835137"
-    if not q or re.match(r"^(hola|buenas|buen dia|buenos dias|buenas tardes|buenas noches|hey|hi)\b", q):
-        return "Hola, bienvenido a Vinicius Molding. Somos cuidado capilar masculino. ¿Qué producto te interesa?"
-    if re.match(r"^(gracias|perfecto|listo|ok|dale)\b", q) and len(q) < 40:
-        return "Con gusto. Si quieres pedir, dime el producto y la cantidad, o escribe al +" + phone + "."
-    if any(k in q for k in ("catalogo", "productos", "lista", "que tienen")):
-        lines = ["Catálogo Vinicius Molding:"]
-        for item in products[:14]:
-            lines.append("• %s · %s · %s" % (item.get("name"), item.get("size") or "", wa_money(item.get("price"))))
-        return "\n".join(lines)
+def wa_product_file(product):
+    raw = str((product or {}).get("image") or "").replace("\\", "/").lstrip("/")
+    if not raw:
+        return None
+    path = WEB / raw
+    if path.exists():
+        return path
+    stem = path.with_suffix("")
+    for ext in (".jpg", ".jpeg", ".png", ".webp"):
+        alt = Path(str(stem) + ext)
+        if alt.exists():
+            return alt
+    return None
+
+
+def wa_find_product(q, products, last_id=None):
     best, score = None, 0
-    for item in products:
+    for item in products or []:
         bag = wa_norm(" ".join([
             str(item.get("name") or ""),
             str(item.get("sku") or ""),
             str(item.get("summary") or ""),
             str(item.get("description") or ""),
             " ".join(item.get("ingredients") or []),
+            str(item.get("line") or ""),
+            str(item.get("category") or ""),
         ]))
         s = 0
         for word in q.split():
             if len(word) > 2 and word in bag:
                 s += 3 if len(word) > 4 else 1
-        for key in ("cera", "pasta", "pomada", "shampoo", "tonico", "serum", "splash", "shaving", "ducha", "kids", "minoxidil", "canas", "carbon"):
+        for key in ("cera", "fibra", "brillo", "pasta", "pomada", "shampoo", "tonico", "serum", "splash", "shaving", "ducha", "kids", "minoxidil", "canas", "carbon", "barba"):
             if key in q and key in bag:
                 s += 4
+        if last_id and item.get("id") == last_id:
+            s += 1
         if s > score:
             best, score = item, s
     if best and score >= 3:
-        bits = [
-            best.get("name") or "",
-            best.get("summary") or best.get("description") or "",
-            "Presentación: " + str(best.get("size") or "—"),
-            "Precio: " + wa_money(best.get("price")),
-        ]
-        if best.get("sku"):
-            bits.append("Referencia: " + str(best["sku"]))
-        return "\n".join(bits)
+        return best, score
+    if last_id:
+        hit = next((item for item in (products or []) if item.get("id") == last_id), None)
+        if hit:
+            return hit, 2
+    return None, 0
+
+
+def wa_product_caption(product):
+    bits = [
+        product.get("name") or "",
+        product.get("summary") or product.get("description") or "",
+        "Presentación: " + str(product.get("size") or "—"),
+        "Precio: " + wa_money(product.get("price")),
+    ]
+    if product.get("sku"):
+        bits.append("Referencia: " + str(product["sku"]))
+    return "\n".join(bits)
+
+
+def wa_catalog_pdf(products):
+    from reportlab.lib.colors import HexColor, Color
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.units import mm
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.utils import ImageReader
+
+    out = ROOT / "data" / "catalogo-vinicius.pdf"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    width, height = A4
+    black = HexColor("#000000")
+    red = HexColor("#E52C3B")
+    cyan = HexColor("#00C8C2")
+    yellow = HexColor("#FFD300")
+    gray = HexColor("#585E65")
+    lime = HexColor("#A4D800")
+    white = HexColor("#FFFFFF")
+    soft = HexColor("#141414")
+
+    c = canvas.Canvas(str(out), pagesize=A4)
+    items = list(products or [])[:14]
+
+    def paint_header(page_title="Catálogo"):
+        c.setFillColor(black)
+        c.rect(0, 0, width, height, fill=1, stroke=0)
+        c.setFillColor(red)
+        c.rect(0, height - 8, width, 8, fill=1, stroke=0)
+        c.setFillColor(cyan)
+        c.rect(0, height - 11, width * 0.34, 3, fill=1, stroke=0)
+        c.setFillColor(yellow)
+        c.rect(width * 0.34, height - 11, width * 0.22, 3, fill=1, stroke=0)
+        c.setFillColor(lime)
+        c.rect(width * 0.56, height - 11, width * 0.44, 3, fill=1, stroke=0)
+        logo = WEB / "assets" / "logo-white.png"
+        if not logo.exists():
+            logo = WEB / "assets" / "logo.png"
+        y_logo = height - 48
+        if logo.exists():
+            try:
+                c.drawImage(ImageReader(str(logo)), 22 * mm, y_logo - 4, width=42 * mm, height=14 * mm, mask="auto", preserveAspectRatio=True, anchor="sw")
+            except Exception:
+                pass
+        c.setFillColor(white)
+        c.setFont("Helvetica-Bold", 16)
+        c.drawRightString(width - 18 * mm, height - 28, "VINICIUS MOLDING")
+        c.setFillColor(gray)
+        c.setFont("Helvetica", 9)
+        c.drawRightString(width - 18 * mm, height - 40, "Somos la solución, no el problema.")
+        c.setFillColor(red)
+        c.setFont("Helvetica-Bold", 11)
+        c.drawString(18 * mm, height - 58, page_title.upper())
+        c.setStrokeColor(HexColor("#222222"))
+        c.setLineWidth(0.6)
+        c.line(18 * mm, height - 64, width - 18 * mm, height - 64)
+
+    def product_card(item, x, y, card_w, card_h):
+        c.setFillColor(soft)
+        c.roundRect(x, y, card_w, card_h, 8, fill=1, stroke=0)
+        c.setStrokeColor(HexColor("#2A2A2A"))
+        c.setLineWidth(0.8)
+        c.roundRect(x, y, card_w, card_h, 8, fill=0, stroke=1)
+        accent = HexColor(str(item.get("accent") or "#E52C3B"))
+        c.setFillColor(accent)
+        c.rect(x, y + card_h - 4, card_w, 4, fill=1, stroke=0)
+        img_path = wa_product_file(item)
+        img_box = 28 * mm
+        img_x = x + 6 * mm
+        img_y = y + card_h - img_box - 10 * mm
+        c.setFillColor(black)
+        c.roundRect(img_x, img_y, img_box, img_box, 6, fill=1, stroke=0)
+        if img_path is not None:
+            try:
+                c.drawImage(
+                    ImageReader(str(img_path)),
+                    img_x + 1.5 * mm,
+                    img_y + 1.5 * mm,
+                    width=img_box - 3 * mm,
+                    height=img_box - 3 * mm,
+                    preserveAspectRatio=True,
+                    mask="auto",
+                    anchor="c",
+                )
+            except Exception:
+                pass
+        text_x = img_x + img_box + 5 * mm
+        c.setFillColor(white)
+        c.setFont("Helvetica-Bold", 11)
+        name = str(item.get("name") or "")[:34]
+        c.drawString(text_x, y + card_h - 14 * mm, name)
+        c.setFillColor(gray)
+        c.setFont("Helvetica", 8)
+        c.drawString(text_x, y + card_h - 19 * mm, str(item.get("line") or item.get("category") or "Vinicius"))
+        c.setFillColor(cyan)
+        c.setFont("Helvetica", 8)
+        c.drawString(text_x, y + card_h - 24 * mm, str(item.get("size") or "—"))
+        summary = str(item.get("summary") or item.get("description") or "")
+        c.setFillColor(HexColor("#C9CDD1"))
+        c.setFont("Helvetica", 8)
+        words = summary.split()
+        line = ""
+        lines = []
+        for word in words:
+            trial = (line + " " + word).strip()
+            if c.stringWidth(trial, "Helvetica", 8) > card_w - img_box - 14 * mm:
+                lines.append(line)
+                line = word
+            else:
+                line = trial
+        if line:
+            lines.append(line)
+        ty = y + card_h - 30 * mm
+        for row in lines[:3]:
+            c.drawString(text_x, ty, row)
+            ty -= 10
+        c.setFillColor(yellow)
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(text_x, y + 8 * mm, wa_money(item.get("price")))
+        if item.get("sku"):
+            c.setFillColor(gray)
+            c.setFont("Helvetica", 7)
+            c.drawRightString(x + card_w - 6 * mm, y + 8 * mm, str(item.get("sku")))
+
+    paint_header("Catálogo oficial")
+    c.setFillColor(white)
+    c.setFont("Helvetica", 10)
+    c.drawString(18 * mm, height - 78, "Cuidado capilar masculino · Cali, Valle del Cauca")
+    c.setFillColor(gray)
+    c.setFont("Helvetica", 8)
+    c.drawString(18 * mm, height - 90, "Molding · Kids · Limpieza · Tratamiento · Cuerpo")
+
+    card_w = width - 36 * mm
+    card_h = 42 * mm
+    y = height - 108 * mm
+    page = 1
+    for index, item in enumerate(items):
+        if y < 30 * mm:
+            c.setFillColor(gray)
+            c.setFont("Helvetica", 8)
+            c.drawCentredString(width / 2, 14 * mm, "Vinicius Molding · Página %s" % page)
+            c.showPage()
+            page += 1
+            paint_header("Catálogo oficial")
+            y = height - 78 * mm
+        product_card(item, 18 * mm, y - card_h, card_w, card_h)
+        y -= card_h + 6 * mm
+
+    c.setFillColor(gray)
+    c.setFont("Helvetica", 8)
+    c.drawCentredString(width / 2, 14 * mm, "Vinicius Molding · Página %s · Pedidos por WhatsApp" % page)
+    c.save()
+    return out
+
+
+def wa_bot_answer(text, products, phone, last_product_id=None):
+    q = wa_norm(text)
+    phone = phone or "573235835137"
+    result = {"reply": "", "media": [], "productId": last_product_id}
+    wants_image = any(k in q for k in ("foto", "fotos", "imagen", "image", "picture", "muestra", "muestrame", "enseñame", "ensename", "verla", "verlo"))
+    wants_catalog = any(k in q for k in ("catalogo", "pdf", "lista", "que tienen", "productos")) and not wants_image
+
+    if not q or re.match(r"^(hola|buenas|buen dia|buenos dias|buenas tardes|buenas noches|hey|hi)\b", q):
+        result["reply"] = "Hola, bienvenido a Vinicius Molding. Somos cuidado capilar masculino. ¿Qué producto te interesa?"
+        return result
+    if re.match(r"^(gracias|perfecto|listo|ok|dale)\b", q) and len(q) < 40:
+        result["reply"] = "Con gusto. Si quieres pedir, dime el producto y la cantidad, o escribe al +" + phone + "."
+        return result
+
+    if wants_catalog:
+        pdf = wa_catalog_pdf(products)
+        result["reply"] = "Te comparto el catálogo oficial de Vinicius Molding en PDF."
+        result["media"].append({
+            "type": "document",
+            "path": str(pdf),
+            "filename": "Catalogo-Vinicius-Molding.pdf",
+            "caption": "Catálogo Vinicius Molding · Somos la solución, no el problema.",
+            "mimetype": "application/pdf",
+        })
+        return result
+
+    best, score = wa_find_product(q, products, last_product_id)
+    if wants_image:
+        target = best if score >= 2 else None
+        if target is None and last_product_id:
+            target = next((item for item in (products or []) if item.get("id") == last_product_id), None)
+        if target is None:
+            result["reply"] = "Claro. Dime el producto y te mando la foto, por ejemplo “foto cera de fibra”."
+            return result
+        image = wa_product_file(target)
+        result["productId"] = target.get("id")
+        caption = wa_product_caption(target)
+        if image is None:
+            result["reply"] = caption + "\n(Aún no tengo la imagen de ese producto.)"
+            return result
+        result["reply"] = "Aquí tienes la foto de %s." % (target.get("name") or "producto")
+        result["media"].append({
+            "type": "image",
+            "path": str(image),
+            "caption": caption,
+            "mimetype": "image/jpeg" if image.suffix.lower() in (".jpg", ".jpeg") else "image/png",
+        })
+        return result
+
+    if best and score >= 3:
+        result["productId"] = best.get("id")
+        result["reply"] = wa_product_caption(best)
+        if any(k in q for k in ("foto", "imagen", "ver", "muestra")):
+            image = wa_product_file(best)
+            if image is not None:
+                result["media"].append({
+                    "type": "image",
+                    "path": str(image),
+                    "caption": result["reply"],
+                    "mimetype": "image/jpeg" if image.suffix.lower() in (".jpg", ".jpeg") else "image/png",
+                })
+                result["reply"] = "Te mando la foto de %s." % (best.get("name") or "producto")
+        return result
+
     if any(k in q for k in ("precio", "cuesta", "cuanto")):
-        lines = ["Precios Vinicius:"] + ["• %s %s" % (item.get("name"), wa_money(item.get("price"))) for item in products[:14]]
-        return "\n".join(lines)
+        result["reply"] = "Precios Vinicius:\n" + "\n".join(
+            ["• %s %s" % (item.get("name"), wa_money(item.get("price"))) for item in (products or [])[:14]]
+        )
+        return result
     if any(k in q for k in ("whatsapp", "asesor", "contacto", "telefono", "celular")):
-        return "Puedes escribirnos por WhatsApp al +" + phone + "."
+        result["reply"] = "Puedes escribirnos por WhatsApp al +" + phone + "."
+        return result
     if any(k in q for k in ("envio", "entrega", "domicilio", "cali")):
-        return "Coordinamos la entrega desde Cali, Valle del Cauca. Dime tu ciudad y te orientamos."
-    return "Puedo ayudarte con productos, precios, pedidos o la marca Vinicius Molding. Di “catálogo” o el nombre de un producto."
+        result["reply"] = "Coordinamos la entrega desde Cali, Valle del Cauca. Dime tu ciudad y te orientamos."
+        return result
+    result["reply"] = "Puedo ayudarte con productos, precios, fotos, el catálogo en PDF o pedidos. Di “catálogo” o el nombre de un producto."
+    return result
+
+
+def wa_bot_reply(text, products, phone, last_product_id=None):
+    return wa_bot_answer(text, products, phone, last_product_id).get("reply") or ""
 
 
 def wa_graph_send(phone_number_id, token, to_phone, body):
@@ -1201,6 +1446,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(400, {"error": "Falta teléfono o texto."})
             return
         reply = ""
+        media = []
         with LOCK:
             store = load_store()
             cfg = read_config()
@@ -1227,18 +1473,32 @@ class Handler(BaseHTTPRequestHandler):
                 "at": now_iso(),
             })
             if api["autoReply"]:
-                reply = wa_bot_reply(text, store.get("products") or [], api["phone"])
+                answer = wa_bot_answer(
+                    text,
+                    store.get("products") or [],
+                    api["phone"],
+                    chat.get("lastProductId"),
+                )
+                reply = answer.get("reply") or ""
+                media = answer.get("media") or []
+                if answer.get("productId"):
+                    chat["lastProductId"] = answer.get("productId")
+                note = reply
+                if any(item.get("type") == "image" for item in media):
+                    note = (reply + "\n[foto]").strip()
+                if any(item.get("type") == "document" for item in media):
+                    note = (reply + "\n[PDF catálogo]").strip()
                 chat["messages"].append({
                     "id": "b_" + secrets.token_hex(6),
                     "from": "out",
-                    "text": reply,
+                    "text": note,
                     "at": now_iso(),
                     "bot": True,
                 })
             chat["updatedAt"] = now_iso()
             chat["messages"] = chat["messages"][-80:]
             save_store(store)
-        self.send_json(200, {"ok": True, "reply": reply})
+        self.send_json(200, {"ok": True, "reply": reply, "media": media})
 
     def whatsapp_webhook_verify(self, query):
         mode = (query.get("hub.mode") or [""])[0]
@@ -1293,15 +1553,28 @@ class Handler(BaseHTTPRequestHandler):
                         chat["updatedAt"] = now_iso()
                         chat["messages"] = chat["messages"][-80:]
                         if api["autoReply"]:
-                            answer = wa_bot_reply(text, store.get("products") or [], api["phone"])
+                            answer = wa_bot_answer(
+                                text,
+                                store.get("products") or [],
+                                api["phone"],
+                                chat.get("lastProductId"),
+                            )
+                            if answer.get("productId"):
+                                chat["lastProductId"] = answer.get("productId")
+                            note = answer.get("reply") or ""
+                            media = answer.get("media") or []
+                            if any(item.get("type") == "image" for item in media):
+                                note = (note + "\n[foto]").strip()
+                            if any(item.get("type") == "document" for item in media):
+                                note = (note + "\n[PDF catálogo]").strip()
                             chat["messages"].append({
                                 "id": "b_" + secrets.token_hex(6),
                                 "from": "out",
-                                "text": answer,
+                                "text": note,
                                 "at": now_iso(),
                                 "bot": True,
                             })
-                            replies.append((sender, answer))
+                            replies.append((sender, answer.get("reply") or note))
             save_store(store)
         if api["autoReply"] and api["token"] and api["phoneNumberId"]:
             for to_phone, answer in replies:
