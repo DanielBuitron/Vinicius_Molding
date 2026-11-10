@@ -43,7 +43,15 @@ const S=[
 ...PR.map((p,j)=>j%2? [imgP(j),infoP(j,7+2*j)] : [infoP(j,6+2*j),imgP(j)]),
 [`<div class="pg dark">${hd(6+PR.length*2)}<h2>La línea completa</h2><p>${PR.length} piezas en la revista: molding, limpieza, tratamiento y cuerpo.</p></div>`,
  `<div class="pg dark">${hd(7+PR.length*2)}<h2>Pide el tuyo</h2><p>Fabricado por Cosmypro Lab, Cali-Valle. Comercializado por Vinicius Molding.</p><a class="cta" href="${WA}" target="_blank" rel="noopener">WhatsApp</a><a class="cta w" href="${IG}" target="_blank" rel="noopener">@viniciusmolding</a></div>`]];
-const CAP=['Cubierta','Quiénes somos','Colección · Contenido',...PR.map(p=>p.cap),'Contacto'];
+let CAP=['Cubierta','Quiénes somos','Colección · Contenido',...PR.map(p=>p.cap),'Contacto'];
+function refreshRevistaLang(){
+  if(typeof t!=='function')return;
+  CAP=[t('mag.cover'),t('mag.about'),t('mag.collection'),...PR.map(p=>p.cap),t('mag.contact')];
+  const capEl=document.getElementById('cap');
+  if(capEl)capEl.textContent=CAP[state]||CAP[0];
+  document.querySelectorAll('#book .add[data-mag="add"]').forEach(el=>{el.textContent=typeof t==='function'?t('product.add'):el.textContent});
+}
+window.refreshRevistaLang=refreshRevistaLang;
 const fr=[cover],bk=[S[0][0]];for(let i=1;i<=S.length-1;i++){fr.push(S[i-1][1]);bk.push(S[i][0])}fr.push(S[S.length-1][1]);bk.push(back);
 // ---- hojas articuladas en tramos (se doblan de verdad)
 const SG=innerWidth<700?3:6,book=document.getElementById('book');book.innerHTML='<i class="bsh"></i><i class="edge el"></i><i class="edge er"></i>';
@@ -118,4 +126,5 @@ let sx=0,sy0=0;stage.addEventListener('pointerdown',e=>{sx=e.clientX;sy0=e.clien
 stage.addEventListener('pointerup',e=>{const dx=e.clientX-sx,dy=e.clientY-sy0;if(Math.abs(dx)>60&&Math.abs(dy)<45)nav(dx<0?1:-1)});
 addEventListener('scroll',read,{passive:true});addEventListener('resize',read);
 read();draw(cur);
+try{refreshRevistaLang()}catch(e){}
 })();

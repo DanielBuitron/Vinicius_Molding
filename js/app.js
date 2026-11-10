@@ -18,22 +18,24 @@ function parseRoute() {
 function titles() {
   const page = VM.parts[0];
   if (page === "inicio") {
-    document.title = "Vinicius Molding · Cuidado capilar masculino";
+    document.title = t("title.home");
     return;
   }
   if (page === "producto") {
     const product = productById(VM.parts[1]);
-    document.title = (product ? product.name : "Producto") + " · Vinicius Molding";
+    const name = product ? (productField(product, "name") || product.name) : t("title.product");
+    document.title = name + " · Vinicius Molding";
     return;
   }
   const names = {
-    catalogo: "Catálogo",
-    linea: "Catálogo",
-    carrito: "Carrito",
-    pago: "Pago",
-    pedido: "Pedido",
-    login: "Ingresar",
-    panel: "Panel",
+    catalogo: t("title.catalog"),
+    linea: t("title.catalog"),
+    carrito: t("title.cart"),
+    pago: t("title.pay"),
+    pedido: t("title.order"),
+    login: t("title.login"),
+    panel: t("title.panel"),
+    tienda: t("title.catalog"),
   };
   document.title = (names[page] || "Vinicius") + " · Vinicius Molding";
 }
@@ -105,13 +107,12 @@ function syncMagazine(home) {
   const login = document.getElementById("login-link");
   if (login) {
     if (VM.user) {
-      login.textContent = "Panel";
       login.setAttribute("href", "#/panel/resumen");
     } else {
-      login.textContent = "Iniciar sesión";
       login.setAttribute("href", "#/login");
     }
   }
+  if (typeof applyStaticLang === "function") applyStaticLang();
 }
 
 function stopWhatsappPoll() {
@@ -395,11 +396,11 @@ async function render() {
   if (page === "tienda") {
     const token = VM.parts[1] || "";
     if (!token) {
-      paint(shellPublic(`<section class="page"><h2 class="block-title">Falta el enlace del catálogo.</h2><p>Pide “catálogo” por WhatsApp para recibir uno nuevo.</p></section>`), "site");
+      paint(shellPublic(`<section class="page"><h2 class="block-title">${t("shop.missing")}</h2><p>${t("shop.missingHint")}</p></section>`), "site");
       return;
     }
     VM.shopToken = token;
-    paint(`<div class="boot"><img src="assets/isotipo-red.png" alt=""><p>Cargando catálogo</p></div>`, "site");
+    paint(`<div class="boot"><img src="assets/isotipo-red.png" alt=""><p>${t("shop.loading")}</p></div>`, "site");
     try {
       const data = await api("/api/whatsapp/shop/" + encodeURIComponent(token));
       if (seq !== renderSeq) return;
@@ -410,7 +411,7 @@ async function render() {
       paint(viewShop(), "site");
     } catch (err) {
       if (seq !== renderSeq) return;
-      paint(shellPublic(`<section class="page"><h2 class="block-title">No pudimos abrir el catálogo.</h2><p>${esc(err.message || "Pide “catálogo” otra vez por WhatsApp.")}</p></section>`), "site");
+      paint(shellPublic(`<section class="page"><h2 class="block-title">${t("shop.error")}</h2><p>${esc(err.message || t("shop.errorHint"))}</p></section>`), "site");
     }
     return;
   }
@@ -948,7 +949,7 @@ function bind() {
       }
       const btn = node;
       btn.disabled = true;
-      btn.textContent = "Enviando…";
+      btn.textContent = t("shop.sending");
       try {
         const result = await api("/api/whatsapp/shop/" + encodeURIComponent(VM.shopToken) + "/confirm", {
           method: "POST",
@@ -963,7 +964,7 @@ function bind() {
         refreshShop();
       } catch (err) {
         btn.disabled = false;
-        btn.textContent = "Enviar cotización al WhatsApp";
+        btn.textContent = t("shop.send");
         toast(err.message || "No se pudo enviar la cotización");
       }
       return;
@@ -1268,8 +1269,16 @@ window.addEventListener("hashchange", () => {
   render();
 });
 
+window.onSiteLangChange = function () {
+  if (typeof ensureLangDock === "function") ensureLangDock();
+  if (typeof applyStaticLang === "function") applyStaticLang();
+  render();
+};
+
 async function boot() {
   if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+  if (typeof ensureLangDock === "function") ensureLangDock();
+  if (typeof applyStaticLang === "function") applyStaticLang();
   bind();
   try {
     const [catalog, config, me] = await Promise.all([
