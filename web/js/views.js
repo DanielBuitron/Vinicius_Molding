@@ -1,22 +1,23 @@
 function shellPublic(content) {
   const count = cartCount();
   const page = VM.parts[0] || "inicio";
-  const links = [["inicio", "Inicio"], ["catalogo", "Catálogo"]];
+  const links = [["inicio", t("nav.home")], ["catalogo", t("nav.catalog")]];
   const home = page === "inicio";
   return `
-    ${home ? "" : `<a class="wa-side" href="${waHref()}" target="_blank" rel="noopener" aria-label="WhatsApp del asesor">${iconWhatsapp()}<span>Hablar con el asesor</span></a>`}
+    ${home ? "" : `<a class="wa-side" href="${waHref()}" target="_blank" rel="noopener" aria-label="${t("nav.advisor")}">${iconWhatsapp()}<span>${t("nav.advisor")}</span></a>`}
     <header class="site-header ${home ? "desk-header" : ""}">
       <a class="brand" href="#/inicio"><img src="assets/logo-white.png" alt="Vinicius Molding"></a>
       ${home ? "" : `
       <nav class="nav ${VM.menu ? "open" : ""}">
         ${links.map(([id, label]) => `<a href="#/${id}" class="${page === id || (id === "catalogo" && page === "linea") ? "active" : ""}">${label}</a>`).join("")}
-        <a href="#/login">Panel</a>
+        <a href="#/login">${t("nav.panel")}</a>
       </nav>`}
       <div class="header-actions">
-        <a class="btn touch" href="${waHref()}" target="_blank" rel="noopener">Hablar</a>
+        ${langSwitcherHtml("lang-inline")}
+        <a class="btn touch" href="${waHref()}" target="_blank" rel="noopener">${t("nav.talk")}</a>
         ${home ? "" : `
-        <a class="icon-btn" href="#/carrito" aria-label="Carrito">${iconBag()}<span class="cart-count ${count ? "show" : ""}" data-cart-count>${count}</span></a>
-        <button class="menu-toggle" data-act="menu" aria-label="Menú">${VM.menu ? iconClose() : iconMenu()}</button>`}
+        <a class="icon-btn" href="#/carrito" aria-label="${t("nav.cart")}">${iconBag()}<span class="cart-count ${count ? "show" : ""}" data-cart-count>${count}</span></a>
+        <button class="menu-toggle" data-act="menu" aria-label="${t("nav.menu")}">${VM.menu ? iconClose() : iconMenu()}</button>`}
       </div>
     </header>
     <main>${content}</main>
@@ -24,29 +25,30 @@ function shellPublic(content) {
     <footer class="site-footer">
       <div>
         <img src="assets/logo-white.png" alt="">
-        <p>Cuidado capilar masculino. ${esc(VM.config.city || SITE.city)}.</p>
+        <p>${t("footer.blurb", { city: esc(VM.config.city || SITE.city) })}</p>
       </div>
       <div>
-        <strong>Casa</strong>
-        <a href="#/catalogo">Catálogo</a>
-        <a href="#/inicio">Inicio</a>
-        <a href="#/catalogo/molding">Línea Molding</a>
-        <a href="#/catalogo/limpieza">Limpieza</a>
-        <a href="#/catalogo/tratamiento">Tratamiento</a>
-        <a href="#/catalogo/kids">Kids</a>
-        <a href="#/catalogo/cuerpo">Cuerpo</a>
+        <strong>${t("footer.house")}</strong>
+        <a href="#/catalogo">${t("nav.catalog")}</a>
+        <a href="#/inicio">${t("nav.home")}</a>
+        <a href="#/catalogo/molding">${t("footer.lineMolding")}</a>
+        <a href="#/catalogo/limpieza">${t("footer.cleaning")}</a>
+        <a href="#/catalogo/tratamiento">${t("footer.treatment")}</a>
+        <a href="#/catalogo/kids">${t("footer.kids")}</a>
+        <a href="#/catalogo/cuerpo">${t("footer.body")}</a>
       </div>
       <div>
-        <strong>Asesor</strong>
+        <strong>${t("footer.advisor")}</strong>
         <a href="${waHref()}" target="_blank" rel="noopener">WhatsApp</a>
       </div>
     </footer>`}`;
 }
 
 function packShot(item) {
+  const name = productField(item, "name") || item.name;
   return `<a class="pack" href="#/producto/${esc(item.id)}" style="--accent:${esc(item.accent || "#E52C3B")}">
-    <img src="${esc(cutoutSrc(item.image))}" alt="${esc(item.name)}" decoding="async" draggable="false">
-    <em>${esc(item.name)}</em>
+    <img src="${esc(cutoutSrc(item.image))}" alt="${esc(name)}" decoding="async" draggable="false">
+    <em>${esc(name)}</em>
   </a>`;
 }
 
@@ -139,12 +141,12 @@ function viewDesk() {
         <div class="desk3d-vignette" aria-hidden="true"></div>
         <div class="desk3d-grain" aria-hidden="true"></div>
         <div class="desk3d-intro" data-desk-intro>
-          <p class="desk3d-tag">Nueva escena 3D · v200</p>
-          <h1>Lookbook interactivo<br>que puedes explorar</h1>
-          <p>Desliza la rueda. La tapa se abre y las páginas giran sobre la mesa.</p>
+          <p class="desk3d-tag">${t("home.tag")}</p>
+          <h1>${t("home.title")}</h1>
+          <p>${t("home.text")}</p>
         </div>
-        <p class="desk3d-hint" data-desk-hint>Desliza para abrir</p>
-        <a class="desk3d-cta" href="#/catalogo">Ver catálogo</a>
+        <p class="desk3d-hint" data-desk-hint>${t("home.hint")}</p>
+        <a class="desk3d-cta" href="#/catalogo">${t("home.cta")}</a>
       </div>
       <div class="desk3d-space" style="height:1400vh" aria-hidden="true"></div>
     </section>`;
@@ -227,17 +229,20 @@ function phoneBlock(done) {
 }
 
 function homeSlide(item, active) {
+  const name = productField(item, "name") || item.name;
+  const finish = productField(item, "finish") || item.finish;
+  const summary = productField(item, "summary") || item.summary;
   return `
     <article class="showcase-slide ${active ? "on" : ""}">
-      <div>${orbit(item.image, item.name, item.id)}</div>
+      <div>${orbit(item.image, name, item.id)}</div>
       <div class="showcase-copy">
-        <p class="kicker">${esc(item.finish)} · ${esc(item.size)}</p>
-        <h3><a href="#/producto/${esc(item.id)}">${esc(item.name)}</a></h3>
-        <p>${esc(item.summary)}</p>
+        <p class="kicker">${esc(finish)} · ${esc(item.size)}</p>
+        <h3><a href="#/producto/${esc(item.id)}">${esc(name)}</a></h3>
+        <p>${esc(summary)}</p>
         <strong class="price">${money(item.price)}</strong>
         <div class="hero-actions">
-          <a class="btn" href="#/producto/${esc(item.id)}">Ver producto</a>
-          <button class="btn ghost" type="button" data-act="add" data-id="${esc(item.id)}" ${item.stock ? "" : "disabled"}>Agregar</button>
+          <a class="btn" href="#/producto/${esc(item.id)}">${t("product.view")}</a>
+          <button class="btn ghost" type="button" data-act="add" data-id="${esc(item.id)}" ${item.stock ? "" : "disabled"}>${t("catalog.add")}</button>
         </div>
       </div>
     </article>`;
@@ -250,36 +255,37 @@ function homeGroup(group) {
       <div class="runway-head">
         <h2>${esc(group.name)}</h2>
         <div class="carousel-nav">
-          ${many ? `<button type="button" class="icon-btn" data-act="show" data-dir="-1" aria-label="Anterior">‹</button><button type="button" class="icon-btn" data-act="show" data-dir="1" aria-label="Siguiente">›</button>` : ""}
-          <a href="#/catalogo/${esc(group.id)}">Ver</a>
+          ${many ? `<button type="button" class="icon-btn" data-act="show" data-dir="-1" aria-label="${t("catalog.prev")}">‹</button><button type="button" class="icon-btn" data-act="show" data-dir="1" aria-label="${t("catalog.next")}">›</button>` : ""}
+          <a href="#/catalogo/${esc(group.id)}">${t("catalog.view")}</a>
         </div>
       </div>
       <div class="showcase-stage">
         ${group.items.map((item, index) => homeSlide(item, index === 0)).join("")}
       </div>
-      ${many ? `<div class="showcase-dots">${group.items.map((item, index) => `<button type="button" class="${index === 0 ? "on" : ""}" data-act="show-dot" data-index="${index}" aria-label="${esc(item.name)}"></button>`).join("")}</div>` : ""}
+      ${many ? `<div class="showcase-dots">${group.items.map((item, index) => `<button type="button" class="${index === 0 ? "on" : ""}" data-act="show-dot" data-index="${index}" aria-label="${esc(productField(item, "name") || item.name)}"></button>`).join("")}</div>` : ""}
     </section>`;
 }
 
 function catalogGroups() {
-  return CATALOG.map((group) => ({
+  return localizedCatalog().map((group) => ({
     ...group,
     items: VM.products.filter((item) => item.category === group.id),
   })).filter((group) => group.items.length);
 }
 
 function catalogCard(item) {
+  const name = productField(item, "name") || item.name;
   return `
     <article class="sku folio-sku" style="--accent:${esc(item.accent)}">
       <a class="sku-shot" href="#/producto/${esc(item.id)}">
-        <img src="${esc(cutoutSrc(item.image))}" alt="${esc(item.name)}" decoding="async" draggable="false">
+        <img src="${esc(cutoutSrc(item.image))}" alt="${esc(name)}" decoding="async" draggable="false">
       </a>
       <div class="sku-body">
         <p class="kicker">${esc(item.catName || item.size)}</p>
-        <h3><a href="#/producto/${esc(item.id)}">${esc(item.name)}</a></h3>
+        <h3><a href="#/producto/${esc(item.id)}">${esc(name)}</a></h3>
         <div class="sku-row">
           <span class="price">${money(item.price)}</span>
-          <button class="btn small" data-act="add" data-id="${esc(item.id)}" ${item.stock ? "" : "disabled"}>Agregar</button>
+          <button class="btn small" data-act="add" data-id="${esc(item.id)}" ${item.stock ? "" : "disabled"}>${t("catalog.add")}</button>
         </div>
       </div>
     </article>`;
@@ -294,12 +300,12 @@ function viewCatalog() {
     <section class="section catalog desk-page">
       <div class="catalog-intro">
         <div>
-          <div class="kicker">Lookbook · Vinicius</div>
-          <h2>Catálogo</h2>
-          <p class="catalog-lede">La misma línea del escritorio, pieza por pieza.</p>
+          <div class="kicker">${t("catalog.kicker")}</div>
+          <h2>${t("catalog.title")}</h2>
+          <p class="catalog-lede">${t("catalog.lede")}</p>
         </div>
         <div class="filters">
-          <a class="chip ${focus ? "" : "on"}" href="#/catalogo">Todos <span>${total}</span></a>
+          <a class="chip ${focus ? "" : "on"}" href="#/catalogo">${t("catalog.all")} <span>${total}</span></a>
           ${all.map((group) => `<a class="chip ${focus === group.id ? "on" : ""}" href="#/catalogo/${esc(group.id)}">${esc(group.name)} <span>${group.items.length}</span></a>`).join("")}
         </div>
       </div>
@@ -314,13 +320,15 @@ function viewLinea() {
 }
 
 function productCard(item) {
+  const name = productField(item, "name") || item.name;
+  const summary = productField(item, "summary") || item.summary;
   return `<article class="pick">
-    ${orbit(item.image, item.name, item.id)}
-    <h3><a href="#/producto/${esc(item.id)}">${esc(item.name)}</a></h3>
-    <p>${esc(item.summary)}</p>
+    ${orbit(item.image, name, item.id)}
+    <h3><a href="#/producto/${esc(item.id)}">${esc(name)}</a></h3>
+    <p>${esc(summary)}</p>
     <div class="pick-row">
       <span class="price">${money(item.price)}</span>
-      <button class="btn small" data-act="add" data-id="${esc(item.id)}" ${item.stock ? "" : "disabled"}>Agregar</button>
+      <button class="btn small" data-act="add" data-id="${esc(item.id)}" ${item.stock ? "" : "disabled"}>${t("catalog.add")}</button>
     </div>
   </article>`;
 }
@@ -332,8 +340,8 @@ function carousel(title, items) {
       <div class="carousel-head">
         <h2>${title}</h2>
         <div class="carousel-nav">
-          <button type="button" class="icon-btn" data-act="slide" data-dir="-1" aria-label="Anterior">‹</button>
-          <button type="button" class="icon-btn" data-act="slide" data-dir="1" aria-label="Siguiente">›</button>
+          <button type="button" class="icon-btn" data-act="slide" data-dir="-1" aria-label="${t("catalog.prev")}">‹</button>
+          <button type="button" class="icon-btn" data-act="slide" data-dir="1" aria-label="${t("catalog.next")}">›</button>
         </div>
       </div>
       <div class="rail" data-rail>${items.map(productCard).join("")}</div>
@@ -342,22 +350,25 @@ function carousel(title, items) {
 
 function viewProduct() {
   const product = productById(VM.parts[1]);
-  if (!product) return `<section class="page"><h2 class="block-title">Esa pieza no está.</h2><a class="btn" href="#/catalogo">Volver al catálogo</a></section>`;
+  if (!product) return `<section class="page"><h2 class="block-title">${t("product.missing")}</h2><a class="btn" href="#/catalogo">${t("product.back")}</a></section>`;
   const qty = VM.qty[product.id] || 1;
-  const hold = product.hold ? `<div class="hold" aria-label="Fijación ${product.hold} de 5">${[1, 2, 3, 4, 5].map((n) => `<i class="${n <= product.hold ? "on" : ""}"></i>`).join("")}</div>` : "";
+  const name = productField(product, "name") || product.name;
+  const finish = productField(product, "finish") || product.finish;
+  const description = productField(product, "description") || product.description;
+  const hold = product.hold ? `<div class="hold" aria-label="${t("product.hold", { n: product.hold })}">${[1, 2, 3, 4, 5].map((n) => `<i class="${n <= product.hold ? "on" : ""}"></i>`).join("")}</div>` : "";
   const facts = [
-    ["Línea", product.line],
-    ["Presentación", product.size],
-    ["Acabado", product.finish],
-    ["Referencia", product.sku],
+    [t("product.line"), product.line],
+    [t("product.size"), product.size],
+    [t("product.finish"), finish],
+    [t("product.sku"), product.sku],
   ];
   const family = VM.products.filter((item) => item.category === product.category);
   return `
     <article class="product-stage" style="--accent:${esc(product.accent)}">
       <div class="product-copy">
         <a class="kicker" href="#/catalogo/${esc(product.category)}">${esc(categoryName(product.category))}</a>
-        <h1>${esc(product.name)}</h1>
-        <p class="lede">${esc(product.description)}</p>
+        <h1>${esc(name)}</h1>
+        <p class="lede">${esc(description)}</p>
         <div class="price" style="font-size:34px">${money(product.price)}</div>
         ${stockLabel(product)}
         ${hold}
@@ -369,16 +380,16 @@ function viewProduct() {
             <span>${qty}</span>
             <button type="button" data-act="qty" data-id="${esc(product.id)}" data-dir="1">+</button>
           </div>
-          <button class="btn" data-act="add" data-id="${esc(product.id)}" data-qty="${qty}" ${product.stock ? "" : "disabled"}>Agregar al carrito</button>
-          <a class="btn ghost" href="${waHref("Hola, quiero información de " + product.name + ".")}" target="_blank" rel="noopener">Consultar</a>
+          <button class="btn" data-act="add" data-id="${esc(product.id)}" data-qty="${qty}" ${product.stock ? "" : "disabled"}>${t("product.add")}</button>
+          <a class="btn ghost" href="${waHref(t("wa.product", { name }))}" target="_blank" rel="noopener">${t("product.ask")}</a>
         </div>
       </div>
-      <div class="orbit-lg">${orbit(product.image, product.name)}</div>
-      <nav class="product-dots" aria-label="Otras de la línea">
-        ${family.map((item) => `<a href="#/producto/${esc(item.id)}" class="${item.id === product.id ? "on" : ""}" aria-label="${esc(item.name)}" style="--accent:${esc(item.accent)}"></a>`).join("")}
+      <div class="orbit-lg">${orbit(product.image, name)}</div>
+      <nav class="product-dots" aria-label="${t("product.more")}">
+        ${family.map((item) => `<a href="#/producto/${esc(item.id)}" class="${item.id === product.id ? "on" : ""}" aria-label="${esc(productField(item, "name") || item.name)}" style="--accent:${esc(item.accent)}"></a>`).join("")}
       </nav>
     </article>
-    ${carousel("Te recomendamos", recommendedFor(product))}`;
+    ${carousel(t("product.recommend"), recommendedFor(product))}`;
 }
 
 function viewMarca() {
@@ -448,11 +459,12 @@ function viewShop() {
       <section class="shop-app">
         <header class="shop-top">
           <img src="assets/logo-white.png" alt="Vinicius Molding">
-          <p>Somos la solución, no el problema.</p>
+          <p>${t("shop.tagline")}</p>
+          ${langSwitcherHtml("lang-inline")}
         </header>
         <div class="shop-done">
-          <h1>¡Listo!</h1>
-          <p>Ya te enviamos a WhatsApp el PDF elegante de tu cotización${data.quoteRef ? " · " + esc(data.quoteRef) : ""}. Gracias por elegirnos.</p>
+          <h1>${t("shop.doneTitle")}</h1>
+          <p>${t("shop.doneText", { ref: data.quoteRef ? " · " + esc(data.quoteRef) : "" })}</p>
         </div>
       </section>`;
   }
@@ -462,15 +474,22 @@ function viewShop() {
     if (!groups[key]) groups[key] = [];
     groups[key].push(item);
   });
-  const labels = { molding: "Molding", kids: "Kids", limpieza: "Limpieza", tratamiento: "Tratamiento", cuerpo: "Cuerpo" };
+  const labels = {
+    molding: t("cat.molding"),
+    kids: t("cat.kids"),
+    limpieza: t("cat.limpieza"),
+    tratamiento: t("cat.tratamiento"),
+    cuerpo: t("cat.cuerpo"),
+  };
   return `
     <section class="shop-app">
       <header class="shop-top">
         <img src="assets/logo-white.png" alt="Vinicius Molding">
         <div>
-          <strong>Catálogo Vinicius</strong>
-          <p>Mira con calma, añade lo que quieras y al final te enviamos la cotización a tu WhatsApp.</p>
+          <strong>${t("shop.title")}</strong>
+          <p>${t("shop.lede")}</p>
         </div>
+        ${langSwitcherHtml("lang-inline")}
       </header>
       <div class="shop-list">
         ${Object.keys(groups).map((key) => `
@@ -478,13 +497,15 @@ function viewShop() {
             <h2>${esc(labels[key] || key)}</h2>
             ${groups[key].map((item) => {
               const qty = shopQty(item.id);
+              const name = productField(item, "name") || item.name;
+              const summary = productField(item, "summary") || item.summary || "";
               return `
                 <article class="shop-card" style="--accent:${esc(item.accent || "#E52C3B")}">
-                  <img src="${esc(cutoutSrc(item.image))}" alt="${esc(item.name)}" loading="lazy">
+                  <img src="${esc(cutoutSrc(item.image))}" alt="${esc(name)}" loading="lazy">
                   <div class="shop-card-body">
-                    <strong>${esc(item.name)}</strong>
+                    <strong>${esc(name)}</strong>
                     <em>${esc(item.size || "")} · ${esc(item.sku || "")}</em>
-                    <p>${esc(item.summary || "")}</p>
+                    <p>${esc(summary)}</p>
                     <div class="shop-card-row">
                       <span>${money(item.price)}</span>
                       ${qty ? `
@@ -493,7 +514,7 @@ function viewShop() {
                           <b>${qty}</b>
                           <button type="button" data-act="shop-qty" data-id="${esc(item.id)}" data-dir="1">+</button>
                         </div>` : `
-                        <button type="button" class="shop-add" data-act="shop-add" data-id="${esc(item.id)}">Añadir</button>`}
+                        <button type="button" class="shop-add" data-act="shop-add" data-id="${esc(item.id)}">${t("shop.add")}</button>`}
                     </div>
                   </div>
                 </article>`;
@@ -503,25 +524,25 @@ function viewShop() {
       <footer class="shop-bar">
         <div>
           <strong>${money(shopTotal())}</strong>
-          <span>${cart.reduce((n, item) => n + Number(item.qty || 0), 0)} en carrito</span>
+          <span>${t("shop.inCart", { n: cart.reduce((n, item) => n + Number(item.qty || 0), 0) })}</span>
         </div>
-        <button type="button" class="shop-send" data-act="shop-confirm" ${cart.length ? "" : "disabled"}>Enviar cotización al WhatsApp</button>
+        <button type="button" class="shop-send" data-act="shop-confirm" ${cart.length ? "" : "disabled"}>${t("shop.send")}</button>
       </footer>
     </section>`;
 }
 
 function viewCart() {
   const items = cartDetailed();
-  if (!items.length) return `<section class="page"><h2 class="block-title">El carrito está vacío.</h2><a class="btn" href="#/inicio">Volver a la revista</a></section>`;
+  if (!items.length) return `<section class="page"><h2 class="block-title">${t("cart.empty")}</h2><a class="btn" href="#/inicio">${t("cart.back")}</a></section>`;
   return `
     <section class="cart-layout">
       <div>
-        <h2 class="block-title" style="margin-bottom:16px">Tu selección</h2>
+        <h2 class="block-title" style="margin-bottom:16px">${t("cart.title")}</h2>
         ${items.map((item) => `
           <article class="line-item">
             <img src="${esc(cutoutSrc(item.image))}" alt="">
             <div>
-              <strong>${esc(item.name)}</strong>
+              <strong>${esc(productField(item, "name") || item.name)}</strong>
               <div class="fine">${money(item.price)}</div>
               <div class="qty" style="margin-top:8px">
                 <button data-act="cart-qty" data-id="${esc(item.id)}" data-dir="-1">−</button>
@@ -531,15 +552,15 @@ function viewCart() {
             </div>
             <div>
               <div class="price">${money(item.price * item.qty)}</div>
-              <button class="linkish" data-act="remove" data-id="${esc(item.id)}">Quitar</button>
+              <button class="linkish" data-act="remove" data-id="${esc(item.id)}">${t("cart.remove")}</button>
             </div>
           </article>`).join("")}
       </div>
       <aside class="summary">
-        <h3>Total</h3>
+        <h3>${t("cart.total")}</h3>
         <div class="sum-row"><strong>${money(cartTotal())}</strong></div>
-        <p class="fine">Pesos colombianos. El envío se coordina desde Cali.</p>
-        <a class="btn full" href="#/pago">Enviar pedido</a>
+        <p class="fine">${t("cart.note")}</p>
+        <a class="btn full" href="#/pago">${t("cart.send")}</a>
       </aside>
     </section>`;
 }
@@ -550,26 +571,26 @@ function viewCheckout() {
   return `
     <section class="checkout-layout">
       <form class="form panel-card" data-form="checkout">
-        <h3>Datos de contacto</h3>
-        <p class="fine">Al enviar, el PDF del pedido sale al WhatsApp del asesor.</p>
-        <label>Nombre<input name="name" required></label>
-        <label>Celular<input name="phone" required inputmode="tel"></label>
-        <label>Ciudad<input name="city" value="Cali"></label>
-        <label>Dirección<input name="address"></label>
-        <label>Nota<textarea name="note" rows="3" placeholder="Horario, barrio o indicación"></textarea></label>
-        <button class="btn" type="submit">Enviar PDF al asesor</button>
+        <h3>${t("checkout.title")}</h3>
+        <p class="fine">${t("checkout.fine")}</p>
+        <label>${t("checkout.name")}<input name="name" required></label>
+        <label>${t("checkout.phone")}<input name="phone" required inputmode="tel"></label>
+        <label>${t("checkout.city")}<input name="city" value="Cali"></label>
+        <label>${t("checkout.address")}<input name="address"></label>
+        <label>${t("checkout.note")}<textarea name="note" rows="3" placeholder="${t("checkout.notePh")}"></textarea></label>
+        <button class="btn" type="submit">${t("checkout.submit")}</button>
       </form>
       <aside class="summary">
         <h3>${money(cartTotal())}</h3>
-        ${items.map((item) => `<div class="sum-row"><span>${item.qty} × ${esc(item.name)}</span><span>${money(item.price * item.qty)}</span></div>`).join("")}
-        <p class="fine">El asesor lo recibe en su WhatsApp para confirmar productos, valor y entrega.</p>
+        ${items.map((item) => `<div class="sum-row"><span>${item.qty} × ${esc(productField(item, "name") || item.name)}</span><span>${money(item.price * item.qty)}</span></div>`).join("")}
+        <p class="fine">${t("checkout.aside")}</p>
       </aside>
     </section>`;
 }
 
 function viewOrder(order, pending) {
-  if (pending) return `<section class="page"><p>Confirmando el pago…</p></section>`;
-  if (!order) return `<section class="page"><h2 class="block-title">No encontramos el pedido.</h2></section>`;
+  if (pending) return `<section class="page"><p>${t("order.confirming")}</p></section>`;
+  if (!order) return `<section class="page"><h2 class="block-title">${t("order.missing")}</h2></section>`;
   const simulate = !VM.config.wompiReady && order.status === "pendiente_pago";
   return `
     <section class="page" style="max-width:760px">
@@ -589,12 +610,13 @@ function viewLogin() {
       </div>
       <div class="login-side">
         <form class="login-card form" data-form="login">
-          <div class="kicker">Panel</div>
-          <h1>Ingresar</h1>
-          <label>Usuario<input name="username" autocomplete="username" required value="admin"></label>
-          <label>Clave<input name="password" type="password" autocomplete="current-password" required></label>
-          <button class="btn" type="submit">Entrar</button>
-          <p class="hint">Acceso interno del equipo comercial.</p>
+          <div class="kicker">${t("nav.panel")}</div>
+          <h1>${t("login.title")}</h1>
+          ${langSwitcherHtml("lang-inline")}
+          <label>${t("login.user")}<input name="username" autocomplete="username" required value="admin"></label>
+          <label>${t("login.pass")}<input name="password" type="password" autocomplete="current-password" required></label>
+          <button class="btn" type="submit">${t("login.submit")}</button>
+          <p class="hint">${t("login.hint")}</p>
         </form>
       </div>
     </div>`;

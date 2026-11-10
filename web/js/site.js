@@ -8,6 +8,11 @@ const TESTIMONIOS = [
 const PIECE_WORDS = ["Cero", "Una pieza", "Dos piezas", "Tres piezas", "Cuatro piezas", "Cinco piezas", "Seis piezas", "Siete piezas", "Ocho piezas", "Nueve piezas", "Diez piezas", "Once piezas", "Doce piezas", "Trece piezas", "Catorce piezas"];
 
 function pieceLabel(n) {
+  if (typeof t === "function") {
+    if (n === 0) return t("piece.0");
+    if (n === 1) return t("piece.1");
+    return t("piece.n", { n });
+  }
   return PIECE_WORDS[n] || `${n} piezas`;
 }
 
@@ -44,7 +49,8 @@ const SITE = {
 
 function waHref(text) {
   const number = (VM.config && VM.config.whatsapp) || SITE.whatsapp;
-  const msg = encodeURIComponent(text || "Hola, quiero hablar con un asesor de Vinicius Molding.");
+  const fallback = typeof t === "function" ? t("wa.default") : "Hola, quiero hablar con un asesor de Vinicius Molding.";
+  const msg = encodeURIComponent(text || fallback);
   return "https://wa.me/" + number + "?text=" + msg;
 }
 

@@ -143,13 +143,14 @@ function chevronField() {
 }
 
 function stockLabel(product) {
-  if (!product.stock) return '<span class="stock-note out">Agotado</span>';
-  if (product.stock <= 8) return `<span class="stock-note">Quedan ${product.stock}</span>`;
-  return '<span class="stock-note ok">Disponible</span>';
+  if (!product.stock) return `<span class="stock-note out">${t("stock.out")}</span>`;
+  if (product.stock <= 8) return `<span class="stock-note">${t("stock.low", { n: product.stock })}</span>`;
+  return `<span class="stock-note ok">${t("stock.ok")}</span>`;
 }
 
 function categoryName(id) {
-  const group = (typeof CATALOG !== "undefined" ? CATALOG : []).find((item) => item.id === id);
+  const groups = typeof localizedCatalog === "function" ? localizedCatalog() : (typeof CATALOG !== "undefined" ? CATALOG : []);
+  const group = groups.find((item) => item.id === id);
   return group ? group.name : id;
 }
 
@@ -160,14 +161,7 @@ function waLink(phone) {
 }
 
 function statusLabel(status) {
-  return ({
-    nuevo: "Nuevo",
-    contactado: "Contactado",
-    cerrado: "Cerrado",
-    pendiente_pago: "Pendiente de pago",
-    aprobado: "Aprobado",
-    rechazado: "Rechazado",
-    anulado: "Anulado",
-    error: "Error",
-  })[status] || status;
+  const key = "status." + status;
+  const label = typeof t === "function" ? t(key) : "";
+  return label && label !== key ? label : status;
 }
