@@ -69,10 +69,22 @@ function productById(id) {
   return VM.products.find((item) => item.id === id);
 }
 
+function apiBaseUrl() {
+  if (typeof SITE !== "undefined" && !SITE.apiBase) {
+    const meta = document.querySelector('meta[name="vm-api-base"]');
+    const fromMeta = meta ? String(meta.getAttribute("content") || "").trim() : "";
+    if (fromMeta) SITE.apiBase = fromMeta;
+  }
+  const fromSite = typeof SITE !== "undefined" ? String(SITE.apiBase || "") : "";
+  const meta = document.querySelector('meta[name="vm-api-base"]');
+  const fromMeta = meta ? String(meta.getAttribute("content") || "") : "";
+  return (fromSite || fromMeta || "").replace(/\/$/, "");
+}
+
 function apiUrl(path) {
   const raw = String(path || "");
   if (!raw.startsWith("/")) return raw;
-  const base = String((typeof SITE !== "undefined" && SITE.apiBase) || "").replace(/\/$/, "");
+  const base = apiBaseUrl();
   const onPages = /\.github\.io$/i.test(location.hostname);
   if (onPages && base) return base + raw;
   return raw;
