@@ -128,12 +128,21 @@ function whatsappRoute() {
   return "";
 }
 
+function waChatsFingerprint(data) {
+  const chats = (data && data.chats) || [];
+  return chats.map((chat) => {
+    const msgs = chat.messages || [];
+    const last = msgs[msgs.length - 1] || {};
+    return [chat.id, chat.updatedAt || "", msgs.length, last.id || "", last.text || ""].join(":");
+  }).join("|");
+}
+
 function startWhatsappPoll() {
   stopWhatsappPoll();
-  const mode = whatsappRoute();
-  if (!mode) return;
+  if (!whatsappRoute()) return;
   VM.waPollTimer = setInterval(async () => {
-    if (!whatsappRoute()) {
+    const mode = whatsappRoute();
+    if (!mode) {
       stopWhatsappPoll();
       return;
     }
@@ -149,26 +158,32 @@ function startWhatsappPoll() {
       }
       const data = await api("/api/admin/whatsapp");
       const prev = VM.waData || {};
+      const wasLinked = Boolean(prev.sessionReady || VM.waLinked);
       VM.waData = data;
       if (data.sessionReady) {
         VM.waLinked = true;
         VM.waShowQr = false;
         localStorage.setItem("vm_wa_linked", "1");
-        stopWhatsappPoll();
+      }
+      const qrChanged = data.qrAt && data.qrAt !== prev.qrAt;
+      const statusChanged = data.sessionStatus !== prev.sessionStatus
+        || Boolean(data.hasQr) !== Boolean(prev.hasQr)
+        || Boolean(data.sessionReady) !== Boolean(prev.sessionReady);
+      const chatsChanged = waChatsFingerprint(data) !== waChatsFingerprint(prev);
+      if (!wasLinked && data.sessionReady) {
         render();
         return;
       }
-      const qrChanged = data.qrAt && data.qrAt !== prev.qrAt;
-      const statusChanged = data.sessionStatus !== prev.sessionStatus || Boolean(data.hasQr) !== Boolean(prev.hasQr);
-      if ((VM.waShowQr || !VM.waLinked) && (qrChanged || statusChanged)) render();
+      if (qrChanged || statusChanged || chatsChanged) render();
     } catch (err) { /* el bridge aún arranca */ }
-  }, 2200);
+  }, 2000);
 }
 
 function mountWhatsappQr() {
   const box = document.getElementById("wa-qr");
   if (!box) {
-    if (!whatsappRoute()) stopWhatsappPoll();
+    if (whatsappRoute()) startWhatsappPoll();
+    else stopWhatsappPoll();
     return;
   }
   const link = box.dataset.waQr || "";
