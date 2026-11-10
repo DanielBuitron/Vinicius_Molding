@@ -39,7 +39,7 @@ splash:{n:'Body Splash',sub:'For men',cap:'Body Splash For Men',d:'Body splash. 
 ducha:{n:'Intimate wash',sub:'For men',cap:'Intimate Wash For Men',d:'Men’s hygiene. No fragrance, dyes or parabens.',r:[['Size','180 g'],['Formula','Fragrance-free, paraben-free'],['Use','External']]}
 };
 const PES={cera:24000,pasta:24000,pomada:24000,'cera-fibra':24000,kids:24000,anticaida:34000,carbon:32000,serum:20000,tonico:52000,'pasta-minoxidil':24000,'cubre-canas':24000,shaving:29000,splash:29000,ducha:29000};
-const cop=n=>'$'+Number(n).toLocaleString('es-CO');
+const cop=n=>typeof money==='function'?money(n):('$'+Number(n).toLocaleString('es-CO'));
 const LINK={cera:'cera-brillo',pasta:'pasta',pomada:'pomada','cera-fibra':'cera-fibra',kids:'cera-kids',anticaida:'shampoo-proteccion',carbon:'shampoo-carbon',serum:'serum-barba',tonico:'tonico','pasta-minoxidil':'pasta-minoxidil','cubre-canas':'gel-cubre-canas',shaving:'shaving-gel',splash:'splash',ducha:'ducha-intima'};
 PR.forEach((p,j)=>{p.ref=String(j+1).padStart(2,'0');p.price=PES[p.id]||0;p._es={n:p.n,sub:p.sub,cap:p.cap,d:p.d,r:p.r.map(row=>row.slice())};p.r=[['Precio',cop(p.price)],...p.r]});
 try{const saved=JSON.parse(localStorage.getItem('vm_catalog')||'{}');PR.forEach(p=>{const s=saved[LINK[p.id]||p.id];if(!s)return;if(s.name){p.n=s.name;p._es.n=s.name}if(s.finish){p.sub=s.finish;p._es.sub=s.finish}if(s.description){p.d=s.description;p._es.d=s.description}if(s.image){p.img=s.image;p.bleed=1}if(s.price!=null){p.price=Number(s.price)}if(s.size){const row=p._es.r.find(x=>x[0]==='Contenido');if(row)row[1]=s.size}if(s.ingredients){const txt=Array.isArray(s.ingredients)?s.ingredients.join(' · '):s.ingredients;const row=p._es.r.find(x=>x[0]==='Contiene');if(row)row[1]=txt}})}catch(e){}

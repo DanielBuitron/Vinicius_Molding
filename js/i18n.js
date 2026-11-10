@@ -1,10 +1,16 @@
 (() => {
   const KEY = "vm_lang";
+  const CUR_KEY = "vm_currency";
   const dict = {
     es: {
       "lang.es": "ES",
       "lang.en": "EN",
       "lang.switch": "Idioma",
+      "cur.switch": "Moneda",
+      "cur.cop": "COP",
+      "cur.usd": "USD",
+      "cur.noteCop": "Precios en pesos colombianos. El envío se coordina desde Cali.",
+      "cur.noteUsd": "Precios en dólares (aprox.). El pago se confirma en COP desde Cali.",
       "nav.home": "Inicio",
       "nav.catalog": "Catálogo",
       "nav.panel": "Panel",
@@ -57,7 +63,7 @@
       "cart.title": "Tu selección",
       "cart.remove": "Quitar",
       "cart.total": "Total",
-      "cart.note": "Pesos colombianos. El envío se coordina desde Cali.",
+      "cart.note": "Precios en la moneda elegida. El pago se confirma en COP desde Cali.",
       "cart.send": "Enviar pedido",
       "checkout.title": "Datos de contacto",
       "checkout.fine": "Al enviar, el PDF del pedido sale al WhatsApp del asesor.",
@@ -163,6 +169,11 @@
       "lang.es": "ES",
       "lang.en": "EN",
       "lang.switch": "Language",
+      "cur.switch": "Currency",
+      "cur.cop": "COP",
+      "cur.usd": "USD",
+      "cur.noteCop": "Prices in Colombian pesos. Shipping is arranged from Cali.",
+      "cur.noteUsd": "Prices in USD (approx.). Payment is confirmed in COP from Cali.",
       "nav.home": "Home",
       "nav.catalog": "Catalog",
       "nav.panel": "Dashboard",
@@ -215,7 +226,7 @@
       "cart.title": "Your picks",
       "cart.remove": "Remove",
       "cart.total": "Total",
-      "cart.note": "Colombian pesos. Shipping is arranged from Cali.",
+      "cart.note": "Prices in your selected currency. Payment is confirmed in COP from Cali.",
       "cart.send": "Place order",
       "checkout.title": "Contact details",
       "checkout.fine": "When you send, the order PDF goes to the advisor’s WhatsApp.",
@@ -415,7 +426,16 @@
     return nav.startsWith("en") ? "en" : "es";
   }
 
+  function detectCurrency(currentLang) {
+    try {
+      const saved = localStorage.getItem(CUR_KEY);
+      if (saved === "USD" || saved === "COP") return saved;
+    } catch (_) {}
+    return currentLang === "en" ? "USD" : "COP";
+  }
+
   let lang = detectLang();
+  let currency = detectCurrency(lang);
 
   function t(key, vars) {
     const pack = dict[lang] || dict.es;
@@ -446,6 +466,23 @@
 
   function getLang() {
     return lang;
+  }
+
+  function getCurrency() {
+    return currency;
+  }
+
+  function setCurrency(next) {
+    currency = next === "USD" ? "USD" : "COP";
+    try { localStorage.setItem(CUR_KEY, currency); } catch (_) {}
+    document.body.dataset.currency = currency;
+    document.querySelectorAll("[data-currency-btn]").forEach((btn) => {
+      btn.classList.toggle("on", btn.getAttribute("data-currency-btn") === currency);
+      btn.setAttribute("aria-pressed", btn.getAttribute("data-currency-btn") === currency ? "true" : "false");
+    });
+    if (typeof window.refreshRevistaLang === "function") window.refreshRevistaLang();
+    if (typeof window.onSiteLangChange === "function") window.onSiteLangChange(lang);
+    return currency;
   }
 
   function localizedCatalog() {
@@ -543,6 +580,17 @@
     </div>`;
   }
 
+  function currencySwitcherHtml(extraClass) {
+    return `<div class="lang-switch currency-switch ${extraClass || ""}" role="group" aria-label="${t("cur.switch")}">
+      <button type="button" data-currency-btn="COP" aria-pressed="${currency === "COP" ? "true" : "false"}" class="${currency === "COP" ? "on" : ""}">COP</button>
+      <button type="button" data-currency-btn="USD" aria-pressed="${currency === "USD" ? "true" : "false"}" class="${currency === "USD" ? "on" : ""}">USD</button>
+    </div>`;
+  }
+
+  function localeControlsHtml(extraClass) {
+    return `<div class="locale-controls ${extraClass || ""}">${langSwitcherHtml()}${currencySwitcherHtml()}</div>`;
+  }
+
   function applyStaticLang() {
     const loginLong = document.querySelector("#login-link .long");
     const loginShort = document.querySelector("#login-link .short");
@@ -589,38 +637,57 @@
     if (title && document.body.classList.contains("mode-home")) {
       document.title = t("title.home");
     }
+    document.querySelectorAll("[data-currency-btn]").forEach((btn) => {
+      btn.classList.toggle("on", btn.getAttribute("data-currency-btn") === currency);
+      btn.setAttribute("aria-pressed", btn.getAttribute("data-currency-btn") === currency ? "true" : "false");
+    });
   }
 
   function ensureLangDock() {
-    if (document.getElementById("lang-dock")) return;
-    const dock = document.createElement("div");
-    dock.id = "lang-dock";
-    dock.innerHTML = langSwitcherHtml("lang-dock-switch");
-    document.body.appendChild(dock);
+    let dock = document.getElementById("lang-dock");
+    if (!dock) {
+      dock = document.createElement("div");
+      dock.id = "lang-dock";
+      document.body.appendChild(dock);
+    }
+    dock.innerHTML = localeControlsHtml("lang-dock-switch");
   }
 
   window.t = t;
   window.setLang = setLang;
   window.getLang = getLang;
+  window.setCurrency = setCurrency;
+  window.getCurrency = getCurrency;
   window.localizedCatalog = localizedCatalog;
   window.productField = productField;
   window.warmProductTranslations = warmProductTranslations;
   window.ensureTextEn = ensureTextEn;
   window.langSwitcherHtml = langSwitcherHtml;
+  window.currencySwitcherHtml = currencySwitcherHtml;
+  window.localeControlsHtml = localeControlsHtml;
   window.applyStaticLang = applyStaticLang;
   window.ensureLangDock = ensureLangDock;
 
   document.documentElement.lang = lang;
   document.addEventListener("DOMContentLoaded", () => {
     document.body.dataset.lang = lang;
+    document.body.dataset.currency = currency;
     ensureLangDock();
     applyStaticLang();
   });
   document.addEventListener("click", (event) => {
-    const btn = event.target.closest("[data-lang-btn]");
-    if (!btn) return;
-    event.preventDefault();
-    const next = btn.getAttribute("data-lang-btn");
-    if (next && next !== getLang()) setLang(next);
+    const langBtn = event.target.closest("[data-lang-btn]");
+    if (langBtn) {
+      event.preventDefault();
+      const next = langBtn.getAttribute("data-lang-btn");
+      if (next && next !== getLang()) setLang(next);
+      return;
+    }
+    const curBtn = event.target.closest("[data-currency-btn]");
+    if (curBtn) {
+      event.preventDefault();
+      const next = curBtn.getAttribute("data-currency-btn");
+      if (next && next !== getCurrency()) setCurrency(next);
+    }
   });
 })();

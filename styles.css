@@ -136,16 +136,18 @@ html.port #revista .ctl{bottom:2vh}
 .wa-fab{position:fixed;z-index:45;right:max(16px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;background:#25D366;color:#fff;display:grid;place-items:center;box-shadow:0 10px 28px rgba(0,0,0,.45)}
 .wa-fab svg{width:30px;height:30px}
 html.phone .wa-fab{bottom:max(76px,calc(env(safe-area-inset-bottom) + 68px))}
+.locale-controls{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
 .lang-switch{display:inline-flex;align-items:center;gap:2px;padding:3px;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.45);backdrop-filter:blur(8px)}
 .lang-switch button{appearance:none;border:0;cursor:pointer;min-width:34px;height:28px;border-radius:999px;padding:0 10px;font:700 11px/1 Poppins,sans-serif;letter-spacing:.06em;color:rgba(255,255,255,.78);background:transparent}
 .lang-switch button.on{background:#E52C3B;color:#fff}
+.currency-switch button.on{background:#00C8C2;color:#041212}
 #lang-dock{position:fixed;z-index:46;left:max(12px,env(safe-area-inset-left));bottom:max(18px,env(safe-area-inset-bottom));display:none}
 html.phone #lang-dock{bottom:max(76px,calc(env(safe-area-inset-bottom) + 68px))}
-body.mode-home .top-actions .lang-switch{display:inline-flex}
+body.mode-home .top-actions .locale-controls{display:inline-flex}
 body.mode-app #lang-dock{display:none}
 body.shop-page #lang-dock{display:none}
 @media (max-width:700px){
-  body.mode-home .top-actions .lang-switch{display:none}
+  body.mode-home .top-actions .locale-controls{display:none}
   body.mode-home #lang-dock{display:block}
 }
 html.phone #revista .book-light{opacity:calc(.82 - var(--o, 0) * .52)}

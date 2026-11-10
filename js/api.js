@@ -29,12 +29,54 @@ function esc(value) {
   }[ch]));
 }
 
+function usdRate() {
+  const fromConfig = VM && VM.config ? Number(VM.config.usdRate) : 0;
+  const fromSite = typeof SITE !== "undefined" ? Number(SITE.usdRate) : 0;
+  return fromConfig || fromSite || 4000;
+}
+
 function money(value) {
+  const amount = Number(value) || 0;
+  const currency = typeof getCurrency === "function" ? getCurrency() : "COP";
+  if (currency === "USD") {
+    const usd = amount / usdRate();
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(usd);
+  }
   return new Intl.NumberFormat("es-CO", {
     style: "currency",
     currency: "COP",
     maximumFractionDigits: 0,
-  }).format(Number(value) || 0);
+  }).format(amount);
+}
+
+function moneyAlt(value) {
+  const amount = Number(value) || 0;
+  const currency = typeof getCurrency === "function" ? getCurrency() : "COP";
+  if (currency === "USD") {
+    return new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: "COP",
+      maximumFractionDigits: 0,
+    }).format(amount);
+  }
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount / usdRate());
+}
+
+function moneyPair(value) {
+  const currency = typeof getCurrency === "function" ? getCurrency() : "COP";
+  return currency === "USD"
+    ? `${money(value)} · ${moneyAlt(value)}`
+    : `${money(value)} · ${moneyAlt(value)}`;
 }
 
 function sessionId() {
