@@ -692,6 +692,7 @@ function prepareSheetPhoto(file) {
 
 async function saveProduct(form, data) {
   const id = form.dataset.id;
+  const creating = form.dataset.form === "product-create";
   const file = form.querySelector('input[name="photo"]');
   const patch = {
     name: data.name,
@@ -700,24 +701,67 @@ async function saveProduct(form, data) {
     finish: data.finish,
     size: data.size,
     sku: data.sku,
+    category: data.category || "molding",
+    stock: Number(data.stock || 0),
+    minStock: Number(data.minStock || 6),
     summary: data.summary,
     description: data.description,
     ingredients: String(data.ingredients || "").split(/[·,]/).map((part) => part.trim()).filter(Boolean),
   };
   if (file && file.files && file.files[0]) patch.image = await prepareSheetPhoto(file.files[0]);
-  const all = catalogOverrides();
-  all[id] = Object.assign({}, all[id] || {}, patch);
   try {
-    localStorage.setItem("vm_catalog", JSON.stringify(all));
+    if (creating) {
+      const result = await api("/api/admin/products", { method: "POST", body: patch });
+      if (result.product) {
+        VM.products = mergeCatalog([...(VM.products || []).filter((item) => item.id !== result.product.id), result.product]);
+      }
+      toast("Producto creado");
+    } else {
+      const all = catalogOverrides();
+      all[id] = Object.assign({}, all[id] || {}, patch);
+      try {
+        localStorage.setItem("vm_catalog", JSON.stringify(all));
+      } catch (err) {
+        toast("La foto pesa demasiado para guardarla en este navegador.");
+        return;
+      }
+      VM.products = mergeCatalog(VM.products);
+      await api("/api/admin/products/" + id, { method: "PUT", body: patch });
+      toast("Producto guardado");
+    }
   } catch (err) {
-    toast("La foto pesa demasiado para guardarla en este navegador.");
+    toast(err.message || "No se pudo guardar el producto");
     return;
   }
-  VM.products = mergeCatalog(VM.products);
-  try { await api("/api/admin/products/" + id, { method: "PUT", body: patch }); } catch (err) { /* queda guardado en este navegador */ }
-  toast("Producto guardado. Recarga la revista para ver la foto en la hoja.");
+  try {
+    const fresh = await api("/api/products");
+    VM.products = mergeCatalog(fresh.products);
+  } catch (err) { /* usamos lo local */ }
   VM.invId = "";
+  VM.invCreating = false;
+  VM.invDraft = null;
   render();
+}
+
+async function deleteProduct(id, name) {
+  if (!id) return;
+  const ok = window.confirm(`¿Eliminar “${name || id}”? Esta acción no se puede deshacer.`);
+  if (!ok) return;
+  try {
+    await api("/api/admin/products/" + encodeURIComponent(id), { method: "DELETE" });
+    VM.products = (VM.products || []).filter((item) => item.id !== id);
+    const all = catalogOverrides();
+    if (all[id]) {
+      delete all[id];
+      localStorage.setItem("vm_catalog", JSON.stringify(all));
+    }
+    toast("Producto eliminado");
+    VM.invId = "";
+    VM.invCreating = false;
+    render();
+  } catch (err) {
+    toast(err.message || "No se pudo eliminar");
+  }
 }
 
 function formData(form) {
@@ -1033,11 +1077,47 @@ function bind() {
     }
     if (act === "inv-open") {
       VM.invId = node.dataset.id;
+      VM.invCreating = false;
+      VM.invDraft = null;
+      render();
+      return;
+    }
+    if (act === "inv-create") {
+      VM.invId = "";
+      VM.invCreating = true;
+      VM.invDraft = {
+        name: "",
+        price: 36000,
+        line: "Línea Molding",
+        finish: "",
+        size: "150 g",
+        sku: "",
+        category: "molding",
+        summary: "",
+        description: "",
+        ingredients: "",
+        stock: 12,
+        minStock: 6,
+        image: "assets/products/cera-brillo.jpg",
+      };
+      render();
+      return;
+    }
+    if (act === "inv-delete") {
+      await deleteProduct(node.dataset.id, node.dataset.name);
+      return;
+    }
+    if (act === "inv-page") {
+      const next = Number(node.dataset.page || 1);
+      if (!Number.isFinite(next) || next < 1 || node.disabled) return;
+      VM.invPage = next;
       render();
       return;
     }
     if (act === "inv-close") {
       VM.invId = "";
+      VM.invCreating = false;
+      VM.invDraft = null;
       render();
       return;
     }
@@ -1203,21 +1283,16 @@ function bind() {
     if (!field || !field.dataset || !field.dataset.invFilter) return;
     const read = (key) => {
       const node = document.querySelector(`[data-inv-filter="${key}"]`);
-      return node ? node.value.trim().toLowerCase() : "";
+      return node ? node.value.trim() : "";
     };
-    const name = read("name");
-    const line = read("line");
-    const sku = read("sku");
-    let visible = 0;
-    document.querySelectorAll(".inv-row").forEach((row) => {
-      const ok = row.dataset.name.toLowerCase().includes(name)
-        && row.dataset.line.toLowerCase().includes(line)
-        && row.dataset.sku.toLowerCase().includes(sku);
-      row.hidden = !ok;
-      if (ok) visible += 1;
-    });
-    const empty = document.getElementById("inv-empty");
-    if (empty) empty.hidden = visible > 0;
+    VM.invFilter = {
+      name: read("name"),
+      line: read("line"),
+      sku: read("sku"),
+    };
+    VM.invPage = 1;
+    clearTimeout(VM._invFilterTimer);
+    VM._invFilterTimer = setTimeout(() => render(), 160);
   });
 
   document.body.addEventListener("change", async (event) => {
@@ -1249,7 +1324,7 @@ function bind() {
     const data = formData(form);
     const kind = form.dataset.form;
     try {
-      if (kind === "product") {
+      if (kind === "product" || kind === "product-create") {
         await saveProduct(form, data);
         return;
       }
