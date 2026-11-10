@@ -234,10 +234,15 @@ function startWhatsappPoll() {
       const prev = VM.waData || {};
       const wasLinked = Boolean(prev.sessionReady || VM.waLinked);
       VM.waData = data;
+      if (data.phone) VM.config.whatsapp = data.phone;
       if (data.sessionReady) {
         VM.waLinked = true;
         VM.waShowQr = false;
         localStorage.setItem("vm_wa_linked", "1");
+      } else if (!data.sessionReady && wasLinked) {
+        VM.waLinked = false;
+        VM.waShowQr = true;
+        localStorage.removeItem("vm_wa_linked");
       }
       const qrChanged = data.qrAt && data.qrAt !== prev.qrAt;
       const statusChanged = data.sessionStatus !== prev.sessionStatus
@@ -515,7 +520,11 @@ async function adminView() {
     startNotificationsPoll();
     return viewNotifications(VM.notifData);
   }
-  if (tab === "clave" || tab === "wompi" || tab === "asesor" || tab === "contacto" || tab === "whatsapp") {
+  if (tab === "asesor" || tab === "contacto") {
+    location.hash = "#/panel/whatsapp";
+    return `<div class="boot"><img src="assets/isotipo-red.png" alt=""><p>Abriendo WhatsApp…</p></div>`;
+  }
+  if (tab === "clave" || tab === "wompi" || tab === "whatsapp") {
     try {
       const settings = await api("/api/admin/settings");
       VM.config.wompi = {
@@ -532,6 +541,7 @@ async function adminView() {
     if (tab === "whatsapp") {
       try {
         VM.waData = await api("/api/admin/whatsapp");
+        if (VM.waData.phone) VM.config.whatsapp = VM.waData.phone;
         if (VM.waData.sessionReady) {
           VM.waLinked = true;
           VM.waShowQr = false;
@@ -1144,9 +1154,17 @@ function bind() {
     if (act === "wa-logout") {
       try {
         await api("/api/admin/whatsapp/logout", { method: "POST", body: {} });
-      } catch (err) { /* se reintentará al refrescar */ }
+        toast("WhatsApp desvinculado. Escanea el QR de nuevo.");
+      } catch (err) {
+        toast(err.message || "Sesión cerrada en este panel");
+      }
       VM.waLinked = false;
       VM.waShowQr = true;
+      if (VM.waData) {
+        VM.waData.sessionReady = false;
+        VM.waData.hasQr = true;
+        VM.waData.sessionStatus = "qr";
+      }
       localStorage.removeItem("vm_wa_linked");
       render();
       return;
@@ -1375,16 +1393,8 @@ function bind() {
         return;
       }
       if (kind === "contact") {
-        const phone = String(data.phone || "").replace(/\D/g, "");
-        if (phone.length < 10) {
-          toast("Escribe el celular con indicativo");
-          return;
-        }
-        localStorage.setItem("vm_phone", phone);
-        VM.config.whatsapp = phone;
-        try { await api("/api/admin/settings", { method: "POST", body: { whatsapp: phone } }); } catch (err) { /* queda en este navegador */ }
-        toast("Número actualizado");
-        render();
+        toast("El número ahora sale del WhatsApp que escanees");
+        location.hash = "#/panel/whatsapp";
         return;
       }
       if (kind === "wompi") {

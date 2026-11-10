@@ -1,6 +1,6 @@
 function adminShell(title, body, opts) {
   const tab = VM.parts[1] || "resumen";
-  const current = tab === "asesor" ? "contacto" : tab === "clave" ? "wompi" : tab;
+  const current = tab === "asesor" || tab === "contacto" ? "whatsapp" : tab === "clave" ? "wompi" : tab;
   const item = (id, label) => `<a href="#/panel/${id}" class="${current === id || (id === "resumen" && !VM.parts[1]) ? "on" : ""}">${label}</a>`;
   const waMode = opts && opts.whatsapp;
   return `
@@ -12,7 +12,6 @@ function adminShell(title, body, opts) {
         ${item("seguimiento", "Seguimiento")}
         ${item("whatsapp", "WhatsApp")}
         ${item("notificaciones", `Notificaciones${VM.notifUnread ? `<span class="side-badge">${VM.notifUnread}</span>` : ""}`)}
-        ${item("contacto", "Contacto")}
         ${item("pedidos", "Pedidos")}
         ${item("wompi", "Wompi")}
         <div class="spacer"></div>
@@ -63,10 +62,10 @@ function viewDashboard(data) {
     </div>
     <div class="admin-grid">
       <article class="panel-card">
-        <h3>Contacto</h3>
-        <p>Los clientes escriben a este número.</p>
-        <strong style="display:block;font-family:var(--display);font-size:28px">${esc(VM.config.whatsapp || "")}</strong>
-        <p><a href="#/panel/contacto">Cambiar número</a></p>
+        <h3>WhatsApp vinculado</h3>
+        <p>El número público es el del WhatsApp que escanees en el panel.</p>
+        <strong style="display:block;font-family:var(--display);font-size:28px">${esc(VM.config.whatsapp || "Sin vincular")}</strong>
+        <p><a href="#/panel/whatsapp">Abrir WhatsApp</a></p>
       </article>
       <article class="panel-card">
         <h3>Pedidos recientes</h3>
@@ -356,17 +355,19 @@ function viewWhatsapp(payload) {
 
   const settings = `
     <form class="wa-api-form" data-form="wa-api" ${VM.waSettings ? "" : "hidden"}>
-      <h3>WhatsApp Cloud API</h3>
-      <label>Número público<input name="phone" value="${esc(phone)}" placeholder="573235835137"></label>
-      <label>Token permanente<input name="token" value="${data.hasToken ? "********" : ""}" placeholder="EAAG..." autocomplete="off"></label>
+      <h3>WhatsApp</h3>
+      <p class="fine">Número vinculado: <b>+${esc(phone || "—")}</b>. Se toma del WhatsApp que escanees; no se edita a mano.</p>
+      <input type="hidden" name="phone" value="${esc(phone)}">
+      <label>Token permanente (Cloud API opcional)<input name="token" value="${data.hasToken ? "********" : ""}" placeholder="EAAG..." autocomplete="off"></label>
       <label>Phone number ID<input name="phoneNumberId" value="${esc(data.phoneNumberId || "")}" placeholder="ID de Meta"></label>
       <label>Verify token<input name="verifyToken" value="${esc(data.verifyToken || "vinicius-wa")}"></label>
       <label class="wa-check"><input type="checkbox" name="autoReply" value="1" ${data.autoReply !== false ? "checked" : ""}> Seguir respondiendo automáticamente (bot Vinicius)</label>
       <p class="fine">Si lo apagas, el bot deja de contestar y solo respondes tú desde el panel.</p>
       <p class="fine">Webhook Meta: <code>${esc(data.webhookUrl || "")}</code></p>
       <div class="wa-api-actions">
-        <button class="btn" type="submit">Guardar API</button>
+        <button class="btn" type="submit">Guardar</button>
         <button class="btn ghost" type="button" data-act="wa-settings">Cerrar</button>
+        <button class="btn danger" type="button" data-act="wa-logout">Desvincular WhatsApp</button>
       </div>
     </form>`;
 

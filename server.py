@@ -847,6 +847,23 @@ def wa_cfg(cfg=None):
     }
 
 
+def wa_sync_linked_phone(cfg=None, session=None):
+    """El número público es el del WhatsApp escaneado en el bridge."""
+    cfg = cfg or read_config()
+    session = session if session is not None else bridge_status()
+    me = (session or {}).get("me") or {}
+    phone = "".join(ch for ch in str(me.get("phone") or "") if ch.isdigit())
+    if not phone:
+        return wa_cfg(cfg)["phone"]
+    company = cfg.setdefault("company", {})
+    if company.get("whatsapp") != phone:
+        company["whatsapp"] = phone
+        wa = cfg.setdefault("whatsappApi", {})
+        wa["displayPhone"] = phone
+        write_config(cfg)
+    return phone
+
+
 def wa_ready(cfg=None):
     data = wa_cfg(cfg)
     return bool(data["token"] and data["phoneNumberId"])
@@ -2099,6 +2116,14 @@ class Handler(BaseHTTPRequestHandler):
             cfg = read_config()
             company = cfg.get("company") or {}
             trm = trm_payload()
+            try:
+                session = bridge_status()
+                if session.get("connected"):
+                    wa_sync_linked_phone(cfg, session)
+                    cfg = read_config()
+                    company = cfg.get("company") or {}
+            except Exception:
+                pass
             self.send_json(200, {
                 "wompiReady": wompi_ready(cfg),
                 "currency": (cfg.get("wompi") or {}).get("currency") or "COP",
@@ -2964,8 +2989,8 @@ class Handler(BaseHTTPRequestHandler):
         qr_url = self.base_url() + "/api/whatsapp/qr?mode=session&t=" + str(int(time.time() * 1000))
         if not has_qr and not session_ready:
             qr_url = self.base_url() + "/api/whatsapp/qr?mode=session&wait=1&t=" + str(int(time.time() * 1000))
-        me = session.get("me") or {}
-        phone = me.get("phone") or api["phone"]
+        phone = wa_sync_linked_phone(cfg, session) if session_ready else (api["phone"] or "")
+        api = wa_cfg(cfg)
         self.send_json(200, {
             "ready": wa_ready(cfg),
             "sessionReady": session_ready,
@@ -2980,7 +3005,7 @@ class Handler(BaseHTTPRequestHandler):
             "hasToken": bool(api["token"]),
             "webhookUrl": self.base_url() + "/api/whatsapp/webhook",
             "qrUrl": qr_url,
-            "openUrl": wa_send_link(api["phone"], "Hola, quiero información de Vinicius Molding"),
+            "openUrl": wa_send_link(phone or api["phone"], "Hola, quiero información de Vinicius Molding"),
             "chats": chats,
         })
 
@@ -3126,12 +3151,24 @@ class Handler(BaseHTTPRequestHandler):
             if not self.require_user(store):
                 return
         ensure_wa_bridge()
+        detail = ""
         try:
-            bridge_request("/logout", method="POST", body={}, timeout=8)
+            bridge_request("/logout", method="POST", body={}, timeout=12)
         except Exception as exc:
-            self.send_json(502, {"error": "No se pudo cerrar la sesión.", "detail": str(exc)})
-            return
-        self.send_json(200, {"ok": True})
+            detail = str(exc)
+        # Limpieza local por si el bridge no respondió a tiempo
+        auth_dir = ROOT / "wa-bridge" / "auth"
+        try:
+            if auth_dir.exists():
+                for child in auth_dir.iterdir():
+                    if child.is_file():
+                        child.unlink(missing_ok=True)
+                    elif child.is_dir():
+                        import shutil
+                        shutil.rmtree(child, ignore_errors=True)
+        except Exception:
+            pass
+        self.send_json(200, {"ok": True, "detail": detail or "Sesión cerrada. Escanea el QR de nuevo."})
 
     def _slug_product_id(self, name, existing):
         import unicodedata
