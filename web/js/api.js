@@ -10,6 +10,8 @@ const VM = {
   parts: [],
   qs: new URLSearchParams(),
   comments: [],
+  catalogQuery: "",
+  catalogSort: "name",
 };
 
 try {

@@ -55,7 +55,7 @@ shaving:{n:'剃须啫喱',sub:'男士 · 芦荟',cap:'男士剃须啫喱',d:'男
 splash:{n:'身体喷雾',sub:'男士专用',cap:'男士身体喷雾',d:'身体喷雾。桉树与薄荷醇。按需喷涂。',r:[['规格','250 ml'],['成分','桉树 · 薄荷醇'],['用法','身体']]},
 ducha:{n:'私密洗护',sub:'男士专用',cap:'男士私密洗护',d:'男士卫生护理。无香精、无色素、无对羟基苯甲酸酯。',r:[['规格','180 g'],['配方','无香精无防腐剂'],['用法','外用']]}
 };
-const PES={cera:24000,pasta:24000,pomada:24000,'cera-fibra':24000,kids:24000,anticaida:34000,carbon:32000,serum:20000,tonico:52000,'pasta-minoxidil':24000,'cubre-canas':24000,shaving:29000,splash:29000,ducha:29000};
+const PES={cera:36000,pasta:36000,pomada:36000,'cera-fibra':36000,kids:36000,anticaida:49000,carbon:49000,serum:30000,tonico:67000,'pasta-minoxidil':36000,'cubre-canas':36000,shaving:29000,splash:29000,ducha:29000};
 const cop=n=>typeof money==='function'?money(n):('$'+Number(n).toLocaleString('es-CO'));
 const LINK={cera:'cera-brillo',pasta:'pasta',pomada:'pomada','cera-fibra':'cera-fibra',kids:'cera-kids',anticaida:'shampoo-proteccion',carbon:'shampoo-carbon',serum:'serum-barba',tonico:'tonico','pasta-minoxidil':'pasta-minoxidil','cubre-canas':'gel-cubre-canas',shaving:'shaving-gel',splash:'splash',ducha:'ducha-intima'};
 PR.forEach((p,j)=>{p.ref=String(j+1).padStart(2,'0');p.price=PES[p.id]||0;p._es={n:p.n,sub:p.sub,cap:p.cap,d:p.d,r:p.r.map(row=>row.slice())};p.r=[['Precio',cop(p.price)],...p.r]});
