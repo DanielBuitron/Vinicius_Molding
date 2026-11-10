@@ -375,6 +375,29 @@ async function render() {
     return;
   }
 
+  if (page === "tienda") {
+    const token = VM.parts[1] || "";
+    if (!token) {
+      paint(shellPublic(`<section class="page"><h2 class="block-title">Falta el enlace del catálogo.</h2><p>Pide “catálogo” por WhatsApp para recibir uno nuevo.</p></section>`), "site");
+      return;
+    }
+    VM.shopToken = token;
+    paint(`<div class="boot"><img src="assets/isotipo-red.png" alt=""><p>Cargando catálogo</p></div>`, "site");
+    try {
+      const data = await api("/api/whatsapp/shop/" + encodeURIComponent(token));
+      if (seq !== renderSeq) return;
+      VM.shopData = data;
+      VM.shopCart = Array.isArray(data.cart) ? data.cart.slice() : [];
+      VM.shopDone = data.status === "confirmed";
+      if (data.quoteRef) VM.shopData.quoteRef = data.quoteRef;
+      paint(viewShop(), "site");
+    } catch (err) {
+      if (seq !== renderSeq) return;
+      paint(shellPublic(`<section class="page"><h2 class="block-title">No pudimos abrir el catálogo.</h2><p>${esc(err.message || "Pide “catálogo” otra vez por WhatsApp.")}</p></section>`), "site");
+    }
+    return;
+  }
+
   if (page === "panel") {
     if (!VM.user) {
       location.hash = "#/login";
@@ -864,6 +887,63 @@ function bind() {
     }
     if (act === "add") {
       addToCart(node.dataset.id, node.dataset.qty);
+      return;
+    }
+    if (act === "shop-add" || act === "shop-qty") {
+      const id = node.dataset.id;
+      const product = (VM.shopData && VM.shopData.products || []).find((item) => item.id === id) || productById(id);
+      if (!product) return;
+      let cart = Array.isArray(VM.shopCart) ? VM.shopCart.slice() : [];
+      let row = cart.find((item) => item.id === id);
+      if (act === "shop-add") {
+        if (!row) {
+          cart.push({
+            id: product.id,
+            name: product.name,
+            sku: product.sku || "",
+            size: product.size || "",
+            price: Number(product.price || 0),
+            qty: 1,
+          });
+        } else {
+          row.qty = Math.min(99, Number(row.qty || 0) + 1);
+        }
+      } else {
+        if (!row) return;
+        row.qty = Number(row.qty || 0) + Number(node.dataset.dir || 0);
+        if (row.qty < 1) cart = cart.filter((item) => item.id !== id);
+        else row.qty = Math.min(99, row.qty);
+      }
+      VM.shopCart = cart;
+      render();
+      try {
+        await api("/api/whatsapp/shop/" + encodeURIComponent(VM.shopToken) + "/cart", {
+          method: "POST",
+          body: { cart: VM.shopCart },
+        });
+      } catch (err) { /* se reintenta al confirmar */ }
+      return;
+    }
+    if (act === "shop-confirm") {
+      if (!VM.shopToken || !(VM.shopCart || []).length) {
+        toast("Agrega productos al carrito");
+        return;
+      }
+      try {
+        const result = await api("/api/whatsapp/shop/" + encodeURIComponent(VM.shopToken) + "/confirm", {
+          method: "POST",
+          body: { cart: VM.shopCart },
+        });
+        VM.shopDone = true;
+        VM.shopData = Object.assign({}, VM.shopData || {}, {
+          status: "confirmed",
+          quoteRef: result.quoteRef || "",
+        });
+        toast(result.message || "Cotización enviada a WhatsApp");
+        render();
+      } catch (err) {
+        toast(err.message || "No se pudo enviar la cotización");
+      }
       return;
     }
     if (act === "inv-open") {
