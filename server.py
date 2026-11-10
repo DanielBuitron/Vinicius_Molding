@@ -33,6 +33,7 @@ BRIDGE_URL = "http://127.0.0.1:%s" % BRIDGE_PORT
 SERVER_PORT = 8080
 _bridge_proc = None
 _bridge_lock = threading.Lock()
+_trm_cache = {"value": 0.0, "date": "", "source": "", "at": 0.0}
 
 try:
     sys.stdout.reconfigure(encoding="utf-8")
@@ -266,6 +267,55 @@ MIME = {
     ".ico": "image/x-icon",
     ".woff2": "font/woff2",
 }
+
+
+def fetch_trm_banrep():
+    """TRM oficial del día (Banco de la República / Superfinanciera vía datos.gov.co)."""
+    global _trm_cache
+    now = time.time()
+    if _trm_cache.get("value") and (now - float(_trm_cache.get("at") or 0)) < 3600:
+        return dict(_trm_cache)
+    query = urllib.parse.urlencode({
+        "$order": "vigenciadesde DESC",
+        "$limit": "1",
+    })
+    url = "https://www.datos.gov.co/resource/32sa-8pi3.json?" + query
+    req = urllib.request.Request(url, headers={"Accept": "application/json", "User-Agent": "ViniciusMolding/1.0"})
+    with urllib.request.urlopen(req, timeout=12) as response:
+        rows = json.loads(response.read().decode("utf-8") or "[]")
+    row = (rows or [{}])[0]
+    value = float(str(row.get("valor") or "0").replace(",", ""))
+    if value < 1000:
+        raise ValueError("TRM inválida")
+    date = str(row.get("vigenciadesde") or "")[:10]
+    _trm_cache = {
+        "value": value,
+        "date": date,
+        "source": "Banco de la República / Superfinanciera (TRM)",
+        "at": now,
+        "ok": True,
+    }
+    return dict(_trm_cache)
+
+
+def trm_payload():
+    try:
+        data = fetch_trm_banrep()
+        return {
+            "ok": True,
+            "usdRate": round(float(data["value"]), 2),
+            "date": data.get("date") or "",
+            "source": data.get("source") or "TRM",
+        }
+    except Exception as exc:
+        fallback = float((_trm_cache or {}).get("value") or 0) or 4000.0
+        return {
+            "ok": False,
+            "usdRate": round(fallback, 2),
+            "date": (_trm_cache or {}).get("date") or "",
+            "source": "fallback",
+            "error": str(exc),
+        }
 
 
 def now_iso():
@@ -527,6 +577,22 @@ def wa_product_file(product):
     return None
 
 
+def wa_image_reader(path, max_side=220, quality=62):
+    """Miniatura liviana para PDFs (evita archivos enormes que WhatsApp no manda)."""
+    from io import BytesIO
+    from reportlab.lib.utils import ImageReader
+    try:
+        from PIL import Image
+        img = Image.open(path).convert("RGB")
+        img.thumbnail((max_side, max_side))
+        buf = BytesIO()
+        img.save(buf, format="JPEG", quality=quality, optimize=True)
+        buf.seek(0)
+        return ImageReader(buf)
+    except Exception:
+        return ImageReader(str(path))
+
+
 def wa_find_product(q, products, last_id=None):
     best, score = None, 0
     for item in products or []:
@@ -644,7 +710,7 @@ def wa_catalog_pdf(products):
         if img_path is not None:
             try:
                 c.drawImage(
-                    ImageReader(str(img_path)),
+                    wa_image_reader(img_path, max_side=240, quality=60),
                     img_x + 1.5 * mm,
                     img_y + 1.5 * mm,
                     width=img_box - 3 * mm,
@@ -748,21 +814,14 @@ def wa_cart_total(cart):
 def wa_cart_text(cart, final=False):
     rows = wa_cart_clone(cart)
     if not rows:
-        return "Todavía no hay productos en tu cotización. Si quieres, dime algo como “quiero 2 cera fibra y 1 shampoo” y con gusto te ayudo."
-    lines = ["Así va tu cotización Vinicius:"]
+        return "Aún no hay productos. ¿Qué te agrego?"
+    lines = ["Tu cotización:"]
     for row in rows:
         sub = int(row["price"]) * int(row["qty"])
-        lines.append("• %s x %s · %s = %s" % (
-            row["qty"],
-            row["name"],
-            wa_money(row["price"]),
-            wa_money(sub),
-        ))
+        lines.append("• %sx %s = %s" % (row["qty"], row["name"], wa_money(sub)))
     lines.append("Total: " + wa_money(wa_cart_total(rows)))
-    if final:
-        lines.append("Te comparto el PDF con el diseño de Vinicius Molding.")
-    else:
-        lines.append("Si quieres el PDF, escribe “cotización”. También puedes seguir agregando con calma.")
+    if not final:
+        lines.append("Cuando quieras el PDF, escribe “cotización”.")
     return "\n".join(lines)
 
 
@@ -918,7 +977,7 @@ def wa_quote_pdf(cart, customer_name="", customer_phone="", ref=""):
             img_path = None
         if img_path is not None:
             try:
-                c.drawImage(ImageReader(str(img_path)), 22 * mm, y - 12, width=14 * mm, height=14 * mm, preserveAspectRatio=True, mask="auto", anchor="c")
+                c.drawImage(wa_image_reader(img_path, max_side=140, quality=55), 22 * mm, y - 12, width=14 * mm, height=14 * mm, preserveAspectRatio=True, mask="auto", anchor="c")
             except Exception:
                 pass
         text_x = 40 * mm if img_path is not None else 22 * mm
@@ -971,11 +1030,20 @@ def wa_shop_url(token):
 
 def wa_open_shop(store, phone, jid="", name=""):
     shops = store.setdefault("whatsappShops", {})
+    chats = store.setdefault("whatsappChats", {})
+    chat = chats.get(phone) or {}
+    resolved_jid = (jid or chat.get("jid") or "").strip()
+    if not resolved_jid and phone:
+        digits = "".join(ch for ch in str(phone) if ch.isdigit())
+        if len(digits) >= 14:
+            resolved_jid = digits + "@lid"
+        elif digits:
+            resolved_jid = digits + "@s.whatsapp.net"
     token = secrets.token_urlsafe(9)
     shops[token] = {
         "token": token,
         "phone": phone,
-        "jid": jid or "",
+        "jid": resolved_jid,
         "name": name or phone,
         "cart": [],
         "status": "open",
@@ -996,7 +1064,7 @@ def wa_bridge_deliver(phone, jid, text="", media=None):
         "text": text or "",
         "media": media or [],
     }
-    return bridge_request("/send", method="POST", body=payload, timeout=30)
+    return bridge_request("/send", method="POST", body=payload, timeout=90)
 
 
 def wa_bot_answer(text, products, phone, last_product_id=None, cart=None, customer_name=""):
@@ -1004,40 +1072,41 @@ def wa_bot_answer(text, products, phone, last_product_id=None, cart=None, custom
     phone = phone or "573235835137"
     cart = wa_cart_clone(cart)
     result = {"reply": "", "media": [], "productId": last_product_id, "cart": cart, "openShop": False}
-    wants_image = any(k in q for k in ("foto", "fotos", "imagen", "image", "picture", "muestra", "muestrame", "enseñame", "ensename", "verla", "verlo"))
     wants_catalog = (
         "catalogo" in q
+        or "todo el catalogo" in q
         or (("lista" in q or "que tienen" in q) and "cotiz" not in q)
-        or ("productos" in q and "precio" not in q and "cotiz" not in q and "carrito" not in q and "quiero" not in q)
-    ) and not wants_image and "cotiz" not in q
+    ) and "cotiz" not in q
+    wants_image = (
+        any(k in q for k in ("foto", "fotos", "imagen", "image", "picture"))
+        or (
+            any(k in q for k in ("muestra", "muestrame", "enseñame", "ensename", "ver", "enseñame"))
+            and not wants_catalog
+            and "todo" not in q
+        )
+    )
     wants_quote = any(k in q for k in (
         "cotizacion", "cotizar", "cotiza", "presupuesto", "confirmar pedido",
         "confirma pedido", "cerrar pedido", "enviar cotizacion", "pdf cotizacion",
-        "genera cotizacion", "arma cotizacion",
     ))
-    wants_cart_view = any(k in q for k in ("carrito", "que llevo", "mi pedido", "resumen", "ver cotizacion", "ver pedido"))
+    wants_cart_view = any(k in q for k in ("carrito", "que llevo", "mi pedido", "resumen"))
     wants_clear = any(k in q for k in ("vaciar", "limpiar carrito", "borra todo", "borrar todo", "cancelar pedido"))
-    wants_remove = any(k in q for k in ("quita", "quitar", "elimina", "eliminar", "sacar", "borra", "borrar"))
+    wants_remove = any(k in q for k in ("quita", "quitar", "elimina", "eliminar", "sacar"))
     wants_add = any(k in q for k in (
         "quiero", "queremos", "necesito", "agrega", "agregar", "añade", "anade", "añadir", "anadir",
-        "suma", "sumar", "mete", "meter", "pon", "ponme", "dame", "regalame", "al carrito", "en el carrito",
-        "pedido de", "pideme", "pedirme",
+        "suma", "ponme", "dame", "al carrito", "en el carrito",
     )) or bool(re.search(r"\b\d+\s*(x|de)?\s*\w+", q))
 
     if not q or re.match(r"^(hola|buenas|buen dia|buenos dias|buenas tardes|buenas noches|hey|hi)\b", q):
-        result["reply"] = (
-            "¡Hola! Qué gusto saludarte. Soy el asistente de Vinicius Molding.\n"
-            "Puedo mostrarte el catálogo, enviarte fotos o armarte una cotización con calma.\n"
-            "Si quieres, escribe “catálogo” o dime qué producto te llama la atención."
-        )
+        result["reply"] = "¡Hola! 😊 ¿Quieres ver el catálogo o te interesa un producto en especial?"
         return result
     if re.match(r"^(gracias|perfecto|listo|ok|dale)\b", q) and len(q) < 40 and not wants_quote and not cart:
-        result["reply"] = "Con mucho gusto. Cuando quieras seguimos: puedo enviarte el catálogo o armar tu cotización."
+        result["reply"] = "Con gusto. Cuando quieras seguimos."
         return result
 
     if wants_clear:
         result["cart"] = []
-        result["reply"] = "Listo, dejé tu cotización en cero. ¿Qué te gustaría agregar ahora?"
+        result["reply"] = "Listo, carrito vacío. ¿Qué te agrego?"
         return result
 
     if wants_remove:
@@ -1045,22 +1114,22 @@ def wa_bot_answer(text, products, phone, last_product_id=None, cart=None, custom
         if best and score >= 2:
             result["cart"] = wa_cart_remove(cart, best)
             result["productId"] = best.get("id")
-            result["reply"] = "Perfecto, quité %s.\n%s" % (best.get("name") or "el producto", wa_cart_text(result["cart"]))
+            result["reply"] = "Listo, quité %s.\n%s" % (best.get("name") or "eso", wa_cart_text(result["cart"]))
             return result
-        result["reply"] = "Claro, ¿cuál te saco? Por ejemplo: “quita cera fibra”."
+        result["reply"] = "¿Cuál quito?"
         return result
 
     if wants_quote:
         if not cart:
-            result["reply"] = "Con gusto te armo el PDF. Primero agreguemos algo, por ejemplo: “quiero 2 cera fibra y 1 pasta”."
+            result["reply"] = "Aún no hay productos. Dime qué quieres, por ejemplo “quiero 2 cera fibra”."
             return result
         pdf, ref = wa_quote_pdf(cart, customer_name=customer_name, customer_phone=phone)
-        result["reply"] = "¡Con mucho gusto! Aquí tienes tu cotización %s.\n%s" % (ref, wa_cart_text(cart, final=True))
+        result["reply"] = "Listo ✨ Cotización %s\n%s" % (ref, wa_cart_text(cart, final=True))
         result["media"].append({
             "type": "document",
             "path": str(pdf),
             "filename": "Cotizacion-Vinicius-%s.pdf" % ref,
-            "caption": "Cotización elegante Vinicius Molding · %s" % ref,
+            "caption": "Cotización Vinicius Molding · %s" % ref,
             "mimetype": "application/pdf",
         })
         result["quoteRef"] = ref
@@ -1071,21 +1140,8 @@ def wa_bot_answer(text, products, phone, last_product_id=None, cart=None, custom
         return result
 
     if wants_catalog:
-        pdf = wa_catalog_pdf(products)
         result["openShop"] = True
-        result["reply"] = (
-            "Claro que sí, con gusto te comparto el catálogo Vinicius.\n"
-            "Abre el enlace interactivo, ve mirando con calma y ve añadiendo al carrito.\n"
-            "Cuando termines, toca “Enviar cotización al WhatsApp” y te llega aquí el PDF elegante.\n"
-            "Si prefieres por chat, también puedo ayudarte: “quiero 2 cera fibra y 1 shampoo”."
-        )
-        result["media"].append({
-            "type": "document",
-            "path": str(pdf),
-            "filename": "Catalogo-Vinicius-Molding.pdf",
-            "caption": "Catálogo Vinicius Molding · Ábrelo y arma tu carrito cuando quieras.",
-            "mimetype": "application/pdf",
-        })
+        result["reply"] = "Claro 😊 Aquí tienes el catálogo:"
         return result
 
     if wants_add:
@@ -1096,7 +1152,7 @@ def wa_bot_answer(text, products, phone, last_product_id=None, cart=None, custom
                 result["productId"] = product.get("id")
             result["cart"] = cart
             added = ", ".join(["%sx %s" % (qty, product.get("name")) for product, qty in items])
-            result["reply"] = "¡Listo! Agregué %s.\n%s" % (added, wa_cart_text(cart))
+            result["reply"] = "Listo, agregué %s.\n%s" % (added, wa_cart_text(cart))
             return result
 
     best, score = wa_find_product(q, products, last_product_id)
@@ -1105,55 +1161,44 @@ def wa_bot_answer(text, products, phone, last_product_id=None, cart=None, custom
         if target is None and last_product_id:
             target = next((item for item in (products or []) if item.get("id") == last_product_id), None)
         if target is None:
-            result["reply"] = "Claro, con gusto. Dime el producto y te mando la foto, por ejemplo “foto cera de fibra”."
+            result["reply"] = "Claro, ¿de cuál producto te mando la foto?"
             return result
         image = wa_product_file(target)
         result["productId"] = target.get("id")
-        caption = wa_product_caption(target)
         if image is None:
-            result["reply"] = caption + "\nPor ahora no tengo la imagen de ese producto, pero te puedo cotizar igual."
+            result["reply"] = "Ese producto no tiene foto ahora. ¿Te lo cotizo igual?"
             return result
-        result["reply"] = (
-            "Con gusto, aquí tienes la foto de %s.\n"
-            "Si te gusta, puedes decir “quiero 1 %s” y la dejo en tu cotización."
-        ) % (target.get("name") or "producto", target.get("name") or "producto")
+        result["reply"] = "Aquí tienes %s ✨ Si te late, dime “quiero 1”." % (target.get("name") or "el producto")
         result["media"].append({
             "type": "image",
             "path": str(image),
-            "caption": caption,
+            "caption": "%s · %s · %s" % (
+                target.get("name") or "",
+                target.get("size") or "",
+                wa_money(target.get("price")),
+            ),
             "mimetype": "image/jpeg" if image.suffix.lower() in (".jpg", ".jpeg") else "image/png",
         })
         return result
 
     if best and score >= 3:
         result["productId"] = best.get("id")
-        result["reply"] = (
-            wa_product_caption(best)
-            + "\n¿Te la agrego a la cotización? Puedes escribir “quiero 1 %s”."
-        ) % (best.get("name") or "producto")
+        result["reply"] = "%s · %s · %s\n¿Te agrego una?" % (
+            best.get("name") or "",
+            best.get("size") or "",
+            wa_money(best.get("price")),
+        )
         return result
 
     if any(k in q for k in ("precio", "cuesta", "cuanto")):
-        result["reply"] = "Con gusto, estos son los precios actuales de Vinicius:\n" + "\n".join(
+        result["reply"] = "Precios:\n" + "\n".join(
             ["• %s %s" % (item.get("name"), wa_money(item.get("price"))) for item in (products or [])[:14]]
         )
         return result
-    if any(k in q for k in ("whatsapp", "asesor", "contacto", "telefono", "celular")):
-        result["reply"] = "Claro, puedes escribirnos al +" + phone + " y con gusto te acompañamos."
-        return result
     if any(k in q for k in ("envio", "entrega", "domicilio", "cali")):
-        result["reply"] = "Perfecto: coordinamos la entrega desde Cali, Valle del Cauca. Si me dices tu ciudad, te oriento con gusto."
+        result["reply"] = "Coordinamos entrega desde Cali. ¿Para qué ciudad sería?"
         return result
-    if len(q.split()) <= 3:
-        result["reply"] = (
-            "¡Claro! Dime cómo te ayudo: puedo enviarte el catálogo, una foto o armarte una cotización.\n"
-            "Si quieres, escribe “catálogo” y empezamos."
-        )
-        return result
-    result["reply"] = (
-        "Con gusto te ayudo. Puedo enviarte el catálogo, fotos, precios o armarte una cotización.\n"
-        "Si quieres, prueba con “catálogo” o “quiero 2 cera fibra y 1 shampoo”."
-    )
+    result["reply"] = "¿Quieres ver el catálogo o te interesa un producto en especial?"
     return result
 
 
@@ -1398,6 +1443,7 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/config" and method == "GET":
             cfg = read_config()
             company = cfg.get("company") or {}
+            trm = trm_payload()
             self.send_json(200, {
                 "wompiReady": wompi_ready(cfg),
                 "currency": (cfg.get("wompi") or {}).get("currency") or "COP",
@@ -1405,7 +1451,15 @@ class Handler(BaseHTTPRequestHandler):
                 "whatsapp": company.get("whatsapp") or "",
                 "email": company.get("email") or "",
                 "webhookUrl": self.base_url() + "/api/wompi/events",
+                "usdRate": trm.get("usdRate"),
+                "trmDate": trm.get("date") or "",
+                "trmSource": trm.get("source") or "",
+                "trmOk": bool(trm.get("ok")),
             })
+            return
+
+        if path == "/api/trm" and method == "GET":
+            self.send_json(200, trm_payload())
             return
 
         if path == "/api/products" and method == "GET":
@@ -1918,30 +1972,34 @@ class Handler(BaseHTTPRequestHandler):
             shop["quoteRef"] = ref
             shop["updatedAt"] = now_iso()
             phone = shop.get("phone") or ""
-            jid = shop.get("jid") or ""
             chats = store.setdefault("whatsappChats", {})
             chat = chats.setdefault(phone, {
                 "id": phone,
                 "name": shop.get("name") or phone,
                 "phone": phone,
-                "jid": jid,
+                "jid": shop.get("jid") or "",
                 "messages": [],
                 "updatedAt": now_iso(),
             })
+            jid = (shop.get("jid") or chat.get("jid") or "").strip()
+            if not jid and phone:
+                digits = "".join(ch for ch in str(phone) if ch.isdigit())
+                if len(digits) >= 14:
+                    jid = digits + "@lid"
+                elif digits:
+                    jid = digits + "@s.whatsapp.net"
+            shop["jid"] = jid
             chat["cart"] = cart
             chat["lastQuoteRef"] = ref
-            if jid:
-                chat["jid"] = jid
-            text = (
-                "¡Qué bueno! Ya quedó tu cotización %s desde el catálogo.\n%s\n"
-                "Te envío ahora el PDF elegante con la identidad Vinicius Molding."
-            ) % (ref, wa_cart_text(cart, final=True))
+            chat["jid"] = jid
+            text = "Listo ✨ Cotización %s\n%s" % (ref, wa_cart_text(cart, final=True))
             chat["messages"].append({
                 "id": "b_" + secrets.token_hex(6),
                 "from": "out",
-                "text": text + "\n[PDF cotización]",
+                "text": text,
                 "at": now_iso(),
                 "bot": True,
+                "hasFile": True,
             })
             chat["updatedAt"] = now_iso()
             chat["messages"] = chat["messages"][-80:]
@@ -2018,6 +2076,8 @@ class Handler(BaseHTTPRequestHandler):
                 chat["name"] = name
             if jid:
                 chat["jid"] = jid
+            elif not chat.get("jid") and len(phone) >= 14:
+                chat["jid"] = phone + "@lid"
             if phone and phone != chat.get("phone"):
                 chat["phone"] = phone
             chat["messages"].append({
@@ -2042,9 +2102,9 @@ class Handler(BaseHTTPRequestHandler):
                 if "cart" in answer:
                     chat["cart"] = answer.get("cart") or []
                 if answer.get("openShop"):
-                    token, shop_url = wa_open_shop(store, phone, jid, chat.get("name") or name)
+                    token, shop_url = wa_open_shop(store, phone, chat.get("jid") or jid, chat.get("name") or name)
                     chat["shopToken"] = token
-                    reply = (reply + "\n\nCatálogo con carrito:\n" + shop_url).strip()
+                    reply = (reply + "\n" + shop_url).strip()
                 if answer.get("quoteRef"):
                     chat["lastQuoteRef"] = answer.get("quoteRef")
                     quotes = store.setdefault("whatsappQuotes", [])
@@ -2057,18 +2117,13 @@ class Handler(BaseHTTPRequestHandler):
                         "at": now_iso(),
                     })
                     store["whatsappQuotes"] = quotes[:80]
-                note = reply
-                if any(item.get("type") == "image" for item in media):
-                    note = (reply + "\n[foto]").strip()
-                if any(item.get("type") == "document" for item in media):
-                    label = "PDF cotización" if answer.get("quoteRef") else "PDF catálogo"
-                    note = (reply + "\n[" + label + "]").strip()
                 chat["messages"].append({
                     "id": "b_" + secrets.token_hex(6),
                     "from": "out",
-                    "text": note,
+                    "text": reply,
                     "at": now_iso(),
                     "bot": True,
+                    "hasFile": bool(media),
                 })
             chat["updatedAt"] = now_iso()
             chat["messages"] = chat["messages"][-80:]
@@ -2144,17 +2199,13 @@ class Handler(BaseHTTPRequestHandler):
                                 chat["lastQuoteRef"] = answer.get("quoteRef")
                             note = answer.get("reply") or ""
                             media = answer.get("media") or []
-                            if any(item.get("type") == "image" for item in media):
-                                note = (note + "\n[foto]").strip()
-                            if any(item.get("type") == "document" for item in media):
-                                label = "PDF cotización" if answer.get("quoteRef") else "PDF catálogo"
-                                note = (note + "\n[" + label + "]").strip()
                             chat["messages"].append({
                                 "id": "b_" + secrets.token_hex(6),
                                 "from": "out",
                                 "text": note,
                                 "at": now_iso(),
                                 "bot": True,
+                                "hasFile": bool(media),
                             })
                             replies.append((sender, answer.get("reply") or note))
             save_store(store)

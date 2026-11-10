@@ -30,9 +30,78 @@ function esc(value) {
 }
 
 function usdRate() {
+  const live = VM && VM.trm ? Number(VM.trm.usdRate) : 0;
   const fromConfig = VM && VM.config ? Number(VM.config.usdRate) : 0;
   const fromSite = typeof SITE !== "undefined" ? Number(SITE.usdRate) : 0;
-  return fromConfig || fromSite || 4000;
+  return live || fromConfig || fromSite || 4000;
+}
+
+function readCachedTrm() {
+  try {
+    const raw = JSON.parse(localStorage.getItem("vm_trm") || "null");
+    if (!raw || !raw.usdRate) return null;
+    const today = new Date().toISOString().slice(0, 10);
+    if (raw.date && raw.date.slice(0, 10) !== today && raw.cachedDay !== today) return null;
+    return raw;
+  } catch (err) {
+    return null;
+  }
+}
+
+function saveCachedTrm(data) {
+  const payload = {
+    usdRate: Number(data.usdRate) || 0,
+    date: data.date || "",
+    source: data.source || "TRM",
+    cachedDay: new Date().toISOString().slice(0, 10),
+  };
+  if (!payload.usdRate) return null;
+  try { localStorage.setItem("vm_trm", JSON.stringify(payload)); } catch (err) { /* ignore */ }
+  return payload;
+}
+
+async function fetchOfficialTrm() {
+  try {
+    const rows = await fetch(
+      "https://www.datos.gov.co/resource/32sa-8pi3.json?$order=vigenciadesde%20DESC&$limit=1"
+    ).then((res) => res.json());
+    const row = (rows && rows[0]) || {};
+    const value = Number(String(row.valor || "").replace(",", ""));
+    if (!(value > 1000)) throw new Error("TRM inválida");
+    return {
+      ok: true,
+      usdRate: value,
+      date: String(row.vigenciadesde || "").slice(0, 10),
+      source: "Banco de la República / Superfinanciera (TRM)",
+    };
+  } catch (err) {
+    return null;
+  }
+}
+
+async function loadTrm() {
+  const cached = readCachedTrm();
+  if (cached) {
+    VM.trm = cached;
+    if (VM.config) VM.config.usdRate = cached.usdRate;
+  }
+  let data = null;
+  try {
+    data = await api("/api/trm");
+  } catch (err) {
+    data = await fetchOfficialTrm();
+  }
+  if (!data || !Number(data.usdRate)) {
+    if (cached) return cached;
+    return null;
+  }
+  const saved = saveCachedTrm(data);
+  VM.trm = saved || data;
+  if (!VM.config) VM.config = {};
+  VM.config.usdRate = Number(data.usdRate);
+  VM.config.trmDate = data.date || "";
+  VM.config.trmSource = data.source || "";
+  return VM.trm;
 }
 
 function money(value) {
