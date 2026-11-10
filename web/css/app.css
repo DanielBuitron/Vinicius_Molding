@@ -82,6 +82,12 @@ body.product-page .site-header.scrolled {
 }
 .nav a.active, .nav a:hover { color: var(--red); }
 .header-actions { display: flex; align-items: center; gap: 8px; }
+.locale-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
 .lang-switch {
   display: inline-flex;
   align-items: center;
@@ -109,8 +115,12 @@ body.product-page .site-header.scrolled {
   background: var(--red, #E52C3B);
   color: #fff;
 }
-.shop-top .lang-switch,
-.login-card .lang-switch {
+.currency-switch button.on {
+  background: var(--teal, #00C8C2);
+  color: #041212;
+}
+.shop-top .locale-controls,
+.login-card .locale-controls {
   justify-self: start;
   margin: 4px 0 8px;
 }

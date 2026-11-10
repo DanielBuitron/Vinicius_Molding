@@ -13,7 +13,7 @@ function shellPublic(content) {
         <a href="#/login">${t("nav.panel")}</a>
       </nav>`}
       <div class="header-actions">
-        ${langSwitcherHtml("lang-inline")}
+        ${localeControlsHtml("lang-inline")}
         <a class="btn touch" href="${waHref()}" target="_blank" rel="noopener">${t("nav.talk")}</a>
         ${home ? "" : `
         <a class="icon-btn" href="#/carrito" aria-label="${t("nav.cart")}">${iconBag()}<span class="cart-count ${count ? "show" : ""}" data-cart-count>${count}</span></a>
@@ -372,6 +372,7 @@ function viewProduct() {
         <h1>${esc(name)}</h1>
         <p class="lede">${esc(description)}</p>
         <div class="price" style="font-size:34px">${money(product.price)}</div>
+        <p class="fine">${moneyAlt(product.price)}</p>
         ${stockLabel(product)}
         ${hold}
         <dl class="facts">${facts.map(([label, value]) => `<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join("")}</dl>
@@ -462,7 +463,7 @@ function viewShop() {
         <header class="shop-top">
           <img src="assets/logo-white.png" alt="Vinicius Molding">
           <p>${t("shop.tagline")}</p>
-          ${langSwitcherHtml("lang-inline")}
+          ${localeControlsHtml("lang-inline")}
         </header>
         <div class="shop-done">
           <h1>${t("shop.doneTitle")}</h1>
@@ -491,7 +492,7 @@ function viewShop() {
           <strong>${t("shop.title")}</strong>
           <p>${t("shop.lede")}</p>
         </div>
-        ${langSwitcherHtml("lang-inline")}
+        ${localeControlsHtml("lang-inline")}
       </header>
       <div class="shop-list">
         ${Object.keys(groups).map((key) => `
@@ -561,7 +562,7 @@ function viewCart() {
       <aside class="summary">
         <h3>${t("cart.total")}</h3>
         <div class="sum-row"><strong>${money(cartTotal())}</strong></div>
-        <p class="fine">${t("cart.note")}</p>
+        <p class="fine">${getCurrency() === "USD" ? t("cur.noteUsd") : t("cur.noteCop")}</p>
         <a class="btn full" href="#/pago">${t("cart.send")}</a>
       </aside>
     </section>`;
@@ -614,7 +615,7 @@ function viewLogin() {
         <form class="login-card form" data-form="login">
           <div class="kicker">${t("nav.panel")}</div>
           <h1>${t("login.title")}</h1>
-          ${langSwitcherHtml("lang-inline")}
+          ${localeControlsHtml("lang-inline")}
           <label>${t("login.user")}<input name="username" autocomplete="username" required value="admin"></label>
           <label>${t("login.pass")}<input name="password" type="password" autocomplete="current-password" required></label>
           <button class="btn" type="submit">${t("login.submit")}</button>
