@@ -1,9 +1,10 @@
-function adminShell(title, body) {
+function adminShell(title, body, opts) {
   const tab = VM.parts[1] || "resumen";
   const current = tab === "asesor" ? "contacto" : tab === "clave" ? "wompi" : tab;
   const item = (id, label) => `<a href="#/panel/${id}" class="${current === id || (id === "resumen" && !VM.parts[1]) ? "on" : ""}">${label}</a>`;
+  const waMode = opts && opts.whatsapp;
   return `
-    <div class="admin">
+    <div class="admin ${waMode ? "admin-wa" : ""}">
       <aside class="side">
         <a href="#/inicio"><img src="assets/logo-white.png" alt="Vinicius Molding"></a>
         ${item("resumen", "Resumen")}
@@ -17,7 +18,8 @@ function adminShell(title, body) {
         <a href="#/inicio">Ver la tienda</a>
         <button class="navlink side-foot" data-act="logout">Cerrar sesión</button>
       </aside>
-      <section class="admin-main">
+      <section class="admin-main ${waMode ? "admin-main-wa" : ""}">
+        ${waMode ? body : `
         <div class="admin-top">
           <div>
             <div class="kicker">Panel · ${esc(VM.user?.name || "Administración")}</div>
@@ -25,7 +27,7 @@ function adminShell(title, body) {
           </div>
           <div class="fine">${VM.config.wompiReady ? "Wompi conectado" : "Wompi pendiente de llaves"}</div>
         </div>
-        ${body}
+        ${body}`}
       </section>
     </div>`;
 }
@@ -168,35 +170,119 @@ function viewContact() {
     </form>`);
 }
 
-function viewWhatsapp() {
-  const phone = VM.config.whatsapp || SITE.whatsapp || "573235835137";
-  const link = window.ViniciusBot ? ViniciusBot.waLink("Hola, quiero información de Vinicius Molding") : ("https://wa.me/" + phone);
-  const qr = window.ViniciusBot ? ViniciusBot.qrSrc(link) : "";
-  const history = (VM.botChat || []).map((row) => `<div class="bot-msg ${row.role}"><span>${esc(row.text)}</span></div>`).join("");
+function waTime(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
+}
+
+function viewWhatsapp(payload) {
+  const data = payload || VM.waData || {};
+  const phone = data.phone || VM.config.whatsapp || SITE.whatsapp || "573235835137";
+  const chats = data.chats || [];
+  const activeId = VM.waChatId || (chats[0] && chats[0].id) || "";
+  const active = chats.find((chat) => chat.id === activeId) || null;
+  const openUrl = data.openUrl || ("https://api.whatsapp.com/send/?phone=" + phone + "&text=&type=phone_number&app_absent=0");
+  const qrUrl = data.qrUrl || ("/api/whatsapp/qr?phone=" + encodeURIComponent(phone) + "&t=" + Date.now());
+  const linked = Boolean(data.ready || VM.waLinked || chats.length);
+  const list = chats.map((chat) => {
+    const last = (chat.messages || [])[(chat.messages || []).length - 1];
+    return `
+      <button type="button" class="wa-chat-item ${chat.id === activeId ? "on" : ""}" data-act="wa-open" data-id="${esc(chat.id)}">
+        <span class="wa-avatar">${esc((chat.name || chat.phone || "?").slice(0, 1).toUpperCase())}</span>
+        <span class="wa-chat-meta">
+          <strong>${esc(chat.name || chat.phone || chat.id)}</strong>
+          <em>${esc((last && last.text) || "Sin mensajes")}</em>
+        </span>
+        <small>${esc(waTime(chat.updatedAt))}</small>
+      </button>`;
+  }).join("");
+
+  const messages = ((active && active.messages) || []).map((msg) => `
+    <div class="wa-bubble ${msg.from === "out" ? "out" : "in"}">
+      <p>${esc(msg.text)}</p>
+      <span>${esc(waTime(msg.at))}${msg.bot ? " · bot" : ""}</span>
+    </div>`).join("");
+
+  const linkScreen = `
+    <div class="wa-link">
+      <div class="wa-link-copy">
+        <h2>Usa WhatsApp en Vinicius</h2>
+        <ol>
+          <li>Escanea el QR con la cámara o con WhatsApp</li>
+          <li>Se abre el chat oficial de Vinicius Molding</li>
+          <li>El cliente escribe normal y el bot responde con tu catálogo</li>
+          <li>Conecta la <b>Cloud API</b> de Meta (engranaje) para recibir y enviar desde aquí</li>
+        </ol>
+        <p class="wa-link-note">WhatsApp Cloud API · Webhook: <code>${esc(data.webhookUrl || "/api/whatsapp/webhook")}</code></p>
+      </div>
+      <div class="wa-link-qr">
+        <div class="wa-qr-frame" id="wa-qr" data-wa-qr="${esc(openUrl)}" data-wa-qr-img="${esc(qrUrl)}"></div>
+        <p>+${esc(phone)}</p>
+        <a class="wa-open-btn" href="${esc(openUrl)}" target="_blank" rel="noopener">Abrir WhatsApp</a>
+        <button type="button" class="wa-ghost-btn" data-act="wa-linked">Ya escaneé / continuar</button>
+      </div>
+    </div>`;
+
+  const chatScreen = `
+    <div class="wa-shell">
+      <aside class="wa-sidebar">
+        <header class="wa-side-head">
+          <div>
+            <strong>WhatsApp</strong>
+            <em>${data.ready ? "API conectada" : "QR + chatbot Vinicius"}</em>
+          </div>
+          <button type="button" class="wa-icon-btn" data-act="wa-settings" title="API">⚙</button>
+        </header>
+        <div class="wa-search"><input placeholder="Buscar o empezar un chat" disabled></div>
+        <div class="wa-chat-list">${list || `<div class="wa-empty-side">Cuando un cliente escriba por la API, el chat aparece aquí.</div>`}</div>
+      </aside>
+      <section class="wa-stage">
+        ${active ? `
+          <header class="wa-conv-head">
+            <span class="wa-avatar">${esc((active.name || "?").slice(0, 1).toUpperCase())}</span>
+            <div>
+              <strong>${esc(active.name || active.phone)}</strong>
+              <em>en línea · bot Vinicius</em>
+            </div>
+          </header>
+          <div class="wa-thread" id="wa-thread">${messages}</div>
+          <form class="wa-composer" data-form="wa-send">
+            <input type="hidden" name="to" value="${esc(active.id)}">
+            <input name="text" required placeholder="Escribe un mensaje" autocomplete="off">
+            <button type="submit" aria-label="Enviar">➤</button>
+          </form>` : `
+          <div class="wa-empty-main">
+            <div class="wa-empty-card">
+              <h3>Vinicius Molding</h3>
+              <p>Escanea el QR de WhatsApp o conecta la Cloud API para hablar con los clientes.</p>
+              <button type="button" class="wa-open-btn" data-act="wa-show-qr">Ver QR de WhatsApp</button>
+            </div>
+          </div>`}
+      </section>
+    </div>`;
+
+  const settings = `
+    <form class="wa-api-form" data-form="wa-api" ${VM.waSettings ? "" : "hidden"}>
+      <h3>WhatsApp Cloud API</h3>
+      <label>Número público<input name="phone" value="${esc(phone)}" placeholder="573235835137"></label>
+      <label>Token permanente<input name="token" value="${data.hasToken ? "********" : ""}" placeholder="EAAG..." autocomplete="off"></label>
+      <label>Phone number ID<input name="phoneNumberId" value="${esc(data.phoneNumberId || "")}" placeholder="ID de Meta"></label>
+      <label>Verify token<input name="verifyToken" value="${esc(data.verifyToken || "vinicius-wa")}"></label>
+      <label class="wa-check"><input type="checkbox" name="autoReply" value="1" ${data.autoReply !== false ? "checked" : ""}> Respuesta automática del bot Vinicius</label>
+      <p class="fine">Webhook Meta: <code>${esc(data.webhookUrl || "")}</code></p>
+      <div class="wa-api-actions">
+        <button class="btn" type="submit">Guardar API</button>
+        <button class="btn ghost" type="button" data-act="wa-settings">Cerrar</button>
+      </div>
+    </form>`;
+
   return adminShell("WhatsApp", `
-    <div class="wa-panel">
-      <article class="panel-card wa-qr-card">
-        <h3>Escanear y abrir</h3>
-        <p class="fine">El cliente escanea el QR, abre WhatsApp y empieza a escribir. El bot responde con la información de Vinicius.</p>
-        <div class="wa-qr">
-          <img src="${esc(qr)}" alt="Código QR de WhatsApp" width="260" height="260">
-        </div>
-        <p class="wa-phone">+${esc(phone)}</p>
-        <div class="wa-actions">
-          <a class="btn" href="${esc(link)}" target="_blank" rel="noopener">Abrir WhatsApp</a>
-          <a class="btn ghost" href="#/panel/contacto">Cambiar número</a>
-        </div>
-      </article>
-      <article class="panel-card wa-chat-card">
-        <h3>Chatbot Vinicius</h3>
-        <p class="fine">Habla normal: precios, productos, uso, pedidos o la marca. La respuesta sale de tu catálogo.</p>
-        <div class="bot-thread" id="bot-thread">${history || `<div class="bot-msg bot"><span>Hola, soy el asistente de Vinicius Molding. Pregúntame por un producto o di “catálogo”.</span></div>`}</div>
-        <form class="bot-compose" data-form="bot-chat">
-          <input name="message" required placeholder="Escribe como el cliente…" autocomplete="off">
-          <button class="btn" type="submit">Enviar</button>
-        </form>
-      </article>
-    </div>`);
+    <div class="wa-app">
+      ${linked && !VM.waShowQr ? chatScreen : linkScreen}
+      ${settings}
+    </div>`, { whatsapp: true });
 }
 
 function viewWompi() {
@@ -231,4 +317,3 @@ function viewOrders(orders) {
       </div>
     </article>`);
 }
-

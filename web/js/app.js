@@ -114,6 +114,32 @@ function syncMagazine(home) {
   }
 }
 
+function mountWhatsappQr() {
+  const box = document.getElementById("wa-qr");
+  if (!box) return;
+  const link = box.dataset.waQr || "";
+  const imgUrl = box.dataset.waQrImg || "";
+  box.innerHTML = "";
+  if (imgUrl) {
+    const img = document.createElement("img");
+    img.src = imgUrl;
+    img.alt = "QR de WhatsApp";
+    img.width = 264;
+    img.height = 264;
+    img.onerror = () => {
+      if (window.QRCode) {
+        box.innerHTML = "";
+        new QRCode(box, { text: link, width: 264, height: 264, correctLevel: QRCode.CorrectLevel.M });
+      }
+    };
+    box.appendChild(img);
+    return;
+  }
+  if (window.QRCode && link) {
+    new QRCode(box, { text: link, width: 264, height: 264, correctLevel: QRCode.CorrectLevel.M });
+  }
+}
+
 function paint(html, bodyClass) {
   const page = (VM.parts && VM.parts[0]) || "inicio";
   const extras = [];
@@ -134,6 +160,9 @@ function paint(html, bodyClass) {
   if (typeof mountVolumes === "function") mountVolumes();
   bindShowcases();
   bindReel();
+  mountWhatsappQr();
+  const thread = document.getElementById("wa-thread");
+  if (thread) thread.scrollTop = thread.scrollHeight;
   if (typeof destroyDesk === "function") destroyDesk();
   if (typeof mountDesk === "function") mountDesk();
 }
@@ -336,7 +365,26 @@ async function adminView() {
       if (settings.webhookUrl) VM.config.webhookUrl = settings.webhookUrl;
     } catch (err) { /* en el sitio publicado quedan las llaves de este navegador */ }
     if (tab === "clave" || tab === "wompi") return viewWompi();
-    if (tab === "whatsapp") return viewWhatsapp();
+    if (tab === "whatsapp") {
+      try {
+        VM.waData = await api("/api/admin/whatsapp");
+      } catch (err) {
+        const phone = VM.config.whatsapp || SITE.whatsapp || "573235835137";
+        VM.waData = {
+          ready: false,
+          phone,
+          phoneNumberId: "",
+          verifyToken: "vinicius-wa",
+          autoReply: true,
+          hasToken: false,
+          webhookUrl: "",
+          qrUrl: "",
+          openUrl: "https://api.whatsapp.com/send/?phone=" + phone + "&text=&type=phone_number&app_absent=0",
+          chats: VM.waData && VM.waData.chats ? VM.waData.chats : [],
+        };
+      }
+      return viewWhatsapp(VM.waData);
+    }
     return viewContact();
   }
   const localMetrics = () => {
@@ -400,6 +448,7 @@ function applyLocalSettings() {
   try { wompi = JSON.parse(localStorage.getItem("vm_wompi") || "null") || {}; } catch (err) { wompi = {}; }
   if (wompi.publicKey || wompi.integritySecret || wompi.eventsSecret) VM.config.wompi = wompi;
   if (wompi.publicKey && wompi.integritySecret) VM.config.wompiReady = true;
+  VM.waLinked = localStorage.getItem("vm_wa_linked") === "1";
 }
 
 async function payWithWompi(customer) {
@@ -722,6 +771,30 @@ function bind() {
       render();
       return;
     }
+    if (act === "wa-open") {
+      VM.waChatId = node.dataset.id;
+      VM.waShowQr = false;
+      VM.waLinked = true;
+      render();
+      return;
+    }
+    if (act === "wa-linked") {
+      VM.waLinked = true;
+      VM.waShowQr = false;
+      localStorage.setItem("vm_wa_linked", "1");
+      render();
+      return;
+    }
+    if (act === "wa-show-qr") {
+      VM.waShowQr = true;
+      render();
+      return;
+    }
+    if (act === "wa-settings") {
+      VM.waSettings = !VM.waSettings;
+      render();
+      return;
+    }
     if (act === "qty") {
       const product = productById(node.dataset.id);
       setQty(node.dataset.id, Number(node.dataset.dir), product ? product.stock : 20);
@@ -912,17 +985,49 @@ function bind() {
         await sendOrderWhatsapp(data);
         return;
       }
-      if (kind === "bot-chat") {
-        const text = String(data.message || "").trim();
-        if (!text) return;
-        if (!VM.botChat) VM.botChat = [];
-        VM.botChat.push({ role: "user", text });
-        const answer = window.ViniciusBot ? ViniciusBot.reply(text) : "El asistente no está cargado.";
-        VM.botChat.push({ role: "bot", text: answer });
-        if (VM.botChat.length > 40) VM.botChat = VM.botChat.slice(-40);
+      if (kind === "wa-api") {
+        const body = {
+          phone: String(data.phone || "").replace(/\D/g, ""),
+          token: data.token || "",
+          phoneNumberId: data.phoneNumberId || "",
+          verifyToken: data.verifyToken || "vinicius-wa",
+          autoReply: Boolean(data.autoReply),
+        };
+        localStorage.setItem("vm_wa_api", JSON.stringify(body));
+        try {
+          await api("/api/admin/whatsapp", { method: "POST", body });
+          toast("WhatsApp API guardada");
+        } catch (err) {
+          toast(err.message || "API guardada en este navegador");
+        }
+        VM.waSettings = false;
+        VM.waLinked = true;
+        render();
+        return;
+      }
+      if (kind === "wa-send") {
+        const to = String(data.to || "").replace(/\D/g, "");
+        const text = String(data.text || "").trim();
+        if (!to || !text) return;
+        try {
+          await api("/api/admin/whatsapp/send", { method: "POST", body: { to, text } });
+        } catch (err) {
+          if (!VM.waData) VM.waData = { chats: [] };
+          const chats = VM.waData.chats || [];
+          let chat = chats.find((row) => row.id === to);
+          if (!chat) {
+            chat = { id: to, name: to, phone: to, messages: [], updatedAt: new Date().toISOString() };
+            chats.unshift(chat);
+          }
+          chat.messages.push({ id: "local_" + Date.now(), from: "out", text, at: new Date().toISOString() });
+          chat.updatedAt = new Date().toISOString();
+          VM.waData.chats = chats;
+          toast(err.message || "Mensaje local");
+        }
+        VM.waChatId = to;
         render();
         requestAnimationFrame(() => {
-          const thread = document.getElementById("bot-thread");
+          const thread = document.getElementById("wa-thread");
           if (thread) thread.scrollTop = thread.scrollHeight;
         });
         return;

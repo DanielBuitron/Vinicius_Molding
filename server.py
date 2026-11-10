@@ -3,15 +3,23 @@
 
 import base64
 import hashlib
+import io
 import json
+import re
 import secrets
 import sys
 import threading
+import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+
+try:
+    import qrcode
+except Exception:
+    qrcode = None
 
 ROOT = Path(__file__).resolve().parent
 WEB = ROOT / "web"
@@ -303,6 +311,7 @@ def fresh_store():
         "orders": [],
         "movements": [],
         "analytics": {"days": {}, "events": []},
+        "whatsappChats": {},
     }
 
 
@@ -321,6 +330,7 @@ def load_store():
     store.setdefault("orders", [])
     store.setdefault("movements", [])
     store.setdefault("analytics", {"days": {}, "events": []})
+    store.setdefault("whatsappChats", {})
     by_id = {item["id"]: item for item in store["products"]}
     for seed in SEED_PRODUCTS:
         current = by_id.get(seed["id"])
@@ -356,6 +366,126 @@ def public_product(product):
 def wompi_ready(cfg):
     wompi = cfg.get("wompi") or {}
     return bool(wompi.get("publicKey") and wompi.get("integritySecret"))
+
+
+def wa_cfg(cfg=None):
+    cfg = cfg or read_config()
+    company = cfg.get("company") or {}
+    wa = cfg.get("whatsappApi") or {}
+    phone = "".join(ch for ch in str(company.get("whatsapp") or wa.get("displayPhone") or "573235835137") if ch.isdigit())
+    return {
+        "phone": phone,
+        "token": str(wa.get("token") or "").strip(),
+        "phoneNumberId": str(wa.get("phoneNumberId") or "").strip(),
+        "verifyToken": str(wa.get("verifyToken") or "vinicius-wa").strip() or "vinicius-wa",
+        "autoReply": bool(wa.get("autoReply", True)),
+    }
+
+
+def wa_ready(cfg=None):
+    data = wa_cfg(cfg)
+    return bool(data["token"] and data["phoneNumberId"])
+
+
+def wa_send_link(phone, text=""):
+    digits = "".join(ch for ch in str(phone or "") if ch.isdigit())
+    q = urllib.parse.urlencode({"phone": digits, "text": text or "", "type": "phone_number", "app_absent": "0"})
+    return "https://api.whatsapp.com/send/?" + q
+
+
+def wa_qr_png(phone):
+    if qrcode is None:
+        return None
+    link = wa_send_link(phone)
+    img = qrcode.QRCode(version=None, error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=8, border=2)
+    img.add_data(link)
+    img.make(fit=True)
+    picture = img.make_image(fill_color="#111b21", back_color="white")
+    buf = io.BytesIO()
+    picture.save(buf, format="PNG")
+    return buf.getvalue()
+
+
+def wa_norm(text):
+    import unicodedata
+    raw = unicodedata.normalize("NFD", str(text or "").lower())
+    raw = "".join(ch for ch in raw if unicodedata.category(ch) != "Mn")
+    raw = re.sub(r"[^a-z0-9\s]", " ", raw)
+    return re.sub(r"\s+", " ", raw).strip()
+
+
+def wa_money(value):
+    try:
+        n = int(value or 0)
+    except Exception:
+        n = 0
+    return "$" + f"{n:,}".replace(",", ".")
+
+
+def wa_bot_reply(text, products, phone):
+    q = wa_norm(text)
+    phone = phone or "573235835137"
+    if not q or re.match(r"^(hola|buenas|buen dia|buenos dias|buenas tardes|buenas noches|hey|hi)\b", q):
+        return "Hola, bienvenido a Vinicius Molding. Somos cuidado capilar masculino. ¿Qué producto te interesa?"
+    if re.match(r"^(gracias|perfecto|listo|ok|dale)\b", q) and len(q) < 40:
+        return "Con gusto. Si quieres pedir, dime el producto y la cantidad, o escribe al +" + phone + "."
+    if any(k in q for k in ("catalogo", "productos", "lista", "que tienen")):
+        lines = ["Catálogo Vinicius Molding:"]
+        for item in products[:14]:
+            lines.append("• %s · %s · %s" % (item.get("name"), item.get("size") or "", wa_money(item.get("price"))))
+        return "\n".join(lines)
+    best, score = None, 0
+    for item in products:
+        bag = wa_norm(" ".join([
+            str(item.get("name") or ""),
+            str(item.get("sku") or ""),
+            str(item.get("summary") or ""),
+            str(item.get("description") or ""),
+            " ".join(item.get("ingredients") or []),
+        ]))
+        s = 0
+        for word in q.split():
+            if len(word) > 2 and word in bag:
+                s += 3 if len(word) > 4 else 1
+        for key in ("cera", "pasta", "pomada", "shampoo", "tonico", "serum", "splash", "shaving", "ducha", "kids", "minoxidil", "canas", "carbon"):
+            if key in q and key in bag:
+                s += 4
+        if s > score:
+            best, score = item, s
+    if best and score >= 3:
+        bits = [
+            best.get("name") or "",
+            best.get("summary") or best.get("description") or "",
+            "Presentación: " + str(best.get("size") or "—"),
+            "Precio: " + wa_money(best.get("price")),
+        ]
+        if best.get("sku"):
+            bits.append("Referencia: " + str(best["sku"]))
+        return "\n".join(bits)
+    if any(k in q for k in ("precio", "cuesta", "cuanto")):
+        lines = ["Precios Vinicius:"] + ["• %s %s" % (item.get("name"), wa_money(item.get("price"))) for item in products[:14]]
+        return "\n".join(lines)
+    if any(k in q for k in ("whatsapp", "asesor", "contacto", "telefono", "celular")):
+        return "Puedes escribirnos por WhatsApp al +" + phone + "."
+    if any(k in q for k in ("envio", "entrega", "domicilio", "cali")):
+        return "Coordinamos la entrega desde Cali, Valle del Cauca. Dime tu ciudad y te orientamos."
+    return "Puedo ayudarte con productos, precios, pedidos o la marca Vinicius Molding. Di “catálogo” o el nombre de un producto."
+
+
+def wa_graph_send(phone_number_id, token, to_phone, body):
+    url = "https://graph.facebook.com/v21.0/%s/messages" % urllib.parse.quote(phone_number_id)
+    payload = json.dumps({
+        "messaging_product": "whatsapp",
+        "to": "".join(ch for ch in str(to_phone) if ch.isdigit()),
+        "type": "text",
+        "text": {"preview_url": False, "body": body},
+    }).encode("utf-8")
+    req = urllib.request.Request(url, data=payload, method="POST", headers={
+        "Authorization": "Bearer " + token,
+        "Content-Type": "application/json",
+    })
+    with urllib.request.urlopen(req, timeout=20) as response:
+        return json.loads(response.read().decode("utf-8"))
 
 
 def wompi_base(public_key):
@@ -707,6 +837,30 @@ class Handler(BaseHTTPRequestHandler):
             self.wompi_event()
             return
 
+        if path == "/api/whatsapp/qr" and method == "GET":
+            self.whatsapp_qr(query)
+            return
+
+        if path == "/api/whatsapp/webhook" and method == "GET":
+            self.whatsapp_webhook_verify(query)
+            return
+
+        if path == "/api/whatsapp/webhook" and method == "POST":
+            self.whatsapp_webhook_event()
+            return
+
+        if path == "/api/admin/whatsapp" and method == "GET":
+            self.whatsapp_admin_get()
+            return
+
+        if path == "/api/admin/whatsapp" and method == "POST":
+            self.whatsapp_admin_save()
+            return
+
+        if path == "/api/admin/whatsapp/send" and method == "POST":
+            self.whatsapp_admin_send()
+            return
+
         if path == "/api/auth/login" and method == "POST":
             self.login()
             return
@@ -766,14 +920,21 @@ class Handler(BaseHTTPRequestHandler):
             cfg = read_config()
             wompi = cfg.get("wompi") or {}
             company = cfg.get("company") or {}
+            api = wa_cfg(cfg)
             self.send_json(200, {
-                "whatsapp": company.get("whatsapp") or "",
+                "whatsapp": company.get("whatsapp") or api["phone"] or "",
                 "publicKey": wompi.get("publicKey") or "",
                 "integritySecret": wompi.get("integritySecret") or "",
                 "eventsSecret": wompi.get("eventsSecret") or "",
                 "currency": wompi.get("currency") or "COP",
                 "wompiReady": wompi_ready(cfg),
                 "webhookUrl": self.base_url() + "/api/wompi/events",
+                "whatsappReady": wa_ready(cfg),
+                "whatsappWebhook": self.base_url() + "/api/whatsapp/webhook",
+                "whatsappPhoneNumberId": api["phoneNumberId"],
+                "whatsappVerifyToken": api["verifyToken"],
+                "whatsappAutoReply": api["autoReply"],
+                "whatsappHasToken": bool(api["token"]),
             })
             return
 
@@ -880,6 +1041,175 @@ class Handler(BaseHTTPRequestHandler):
                 wompi["currency"] = "COP"
             write_config(cfg)
         self.send_json(200, {"ok": True, "wompiReady": wompi_ready(cfg)})
+
+    def whatsapp_qr(self, query):
+        phone = (query.get("phone") or [""])[0]
+        cfg = wa_cfg()
+        digits = "".join(ch for ch in str(phone or cfg["phone"]) if ch.isdigit()) or cfg["phone"]
+        png = wa_qr_png(digits)
+        if not png:
+            self.send_json(500, {"error": "No se pudo generar el QR."})
+            return
+        self.send_bytes(200, png, "image/png", {"Cache-Control": "no-store"})
+
+    def whatsapp_webhook_verify(self, query):
+        mode = (query.get("hub.mode") or [""])[0]
+        token = (query.get("hub.verify_token") or [""])[0]
+        challenge = (query.get("hub.challenge") or [""])[0]
+        expected = wa_cfg()["verifyToken"]
+        if mode == "subscribe" and token and secrets.compare_digest(token, expected):
+            body = challenge.encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+        self.send_json(403, {"error": "Verify token inválido."})
+
+    def whatsapp_webhook_event(self):
+        body = self.read_json()
+        cfg = read_config()
+        api = wa_cfg(cfg)
+        replies = []
+        with LOCK:
+            store = load_store()
+            chats = store.setdefault("whatsappChats", {})
+            for entry in body.get("entry") or []:
+                for change in entry.get("changes") or []:
+                    value = change.get("value") or {}
+                    for msg in value.get("messages") or []:
+                        if msg.get("type") != "text":
+                            continue
+                        sender = str(msg.get("from") or "")
+                        text = ((msg.get("text") or {}).get("body") or "").strip()
+                        if not sender or not text:
+                            continue
+                        chat = chats.setdefault(sender, {
+                            "id": sender,
+                            "name": sender,
+                            "phone": sender,
+                            "messages": [],
+                            "updatedAt": now_iso(),
+                        })
+                        contacts = {c.get("wa_id"): c for c in (value.get("contacts") or [])}
+                        profile = ((contacts.get(sender) or {}).get("profile") or {}).get("name")
+                        if profile:
+                            chat["name"] = profile
+                        chat["messages"].append({
+                            "id": msg.get("id") or ("m_" + secrets.token_hex(6)),
+                            "from": "in",
+                            "text": text,
+                            "at": now_iso(),
+                        })
+                        chat["updatedAt"] = now_iso()
+                        chat["messages"] = chat["messages"][-80:]
+                        if api["autoReply"]:
+                            answer = wa_bot_reply(text, store.get("products") or [], api["phone"])
+                            chat["messages"].append({
+                                "id": "b_" + secrets.token_hex(6),
+                                "from": "out",
+                                "text": answer,
+                                "at": now_iso(),
+                                "bot": True,
+                            })
+                            replies.append((sender, answer))
+            save_store(store)
+        if api["autoReply"] and api["token"] and api["phoneNumberId"]:
+            for to_phone, answer in replies:
+                try:
+                    wa_graph_send(api["phoneNumberId"], api["token"], to_phone, answer)
+                except Exception:
+                    pass
+        self.send_json(200, {"ok": True})
+
+    def whatsapp_admin_get(self):
+        with LOCK:
+            store = load_store()
+            if not self.require_user(store):
+                return
+            chats = list((store.get("whatsappChats") or {}).values())
+        chats.sort(key=lambda item: item.get("updatedAt") or "", reverse=True)
+        cfg = read_config()
+        api = wa_cfg(cfg)
+        self.send_json(200, {
+            "ready": wa_ready(cfg),
+            "phone": api["phone"],
+            "phoneNumberId": api["phoneNumberId"],
+            "verifyToken": api["verifyToken"],
+            "autoReply": api["autoReply"],
+            "hasToken": bool(api["token"]),
+            "webhookUrl": self.base_url() + "/api/whatsapp/webhook",
+            "qrUrl": self.base_url() + "/api/whatsapp/qr?phone=" + urllib.parse.quote(api["phone"]),
+            "openUrl": wa_send_link(api["phone"], "Hola, quiero información de Vinicius Molding"),
+            "chats": chats,
+        })
+
+    def whatsapp_admin_save(self):
+        body = self.read_json()
+        with LOCK:
+            store = load_store()
+            if not self.require_user(store):
+                return
+            cfg = read_config()
+            company = cfg.setdefault("company", {})
+            wa = cfg.setdefault("whatsappApi", {})
+            if "phone" in body:
+                company["whatsapp"] = "".join(ch for ch in str(body.get("phone") or "") if ch.isdigit())[:15]
+            if "token" in body:
+                token = str(body.get("token") or "").strip()
+                if token and token != "********":
+                    wa["token"] = token[:500]
+            if "phoneNumberId" in body:
+                wa["phoneNumberId"] = str(body.get("phoneNumberId") or "").strip()[:80]
+            if "verifyToken" in body:
+                wa["verifyToken"] = str(body.get("verifyToken") or "vinicius-wa").strip()[:80] or "vinicius-wa"
+            if "autoReply" in body:
+                wa["autoReply"] = str(body.get("autoReply")).lower() in ("1", "true", "yes", "on", "si", "sí")
+            write_config(cfg)
+        self.send_json(200, {"ok": True, "ready": wa_ready(cfg)})
+
+    def whatsapp_admin_send(self):
+        body = self.read_json()
+        to_phone = "".join(ch for ch in str(body.get("to") or "") if ch.isdigit())
+        text = str(body.get("text") or "").strip()
+        if not to_phone or not text:
+            self.send_json(400, {"error": "Falta el número o el mensaje."})
+            return
+        with LOCK:
+            store = load_store()
+            if not self.require_user(store):
+                return
+            cfg = read_config()
+            api = wa_cfg(cfg)
+            chats = store.setdefault("whatsappChats", {})
+            chat = chats.setdefault(to_phone, {
+                "id": to_phone,
+                "name": to_phone,
+                "phone": to_phone,
+                "messages": [],
+                "updatedAt": now_iso(),
+            })
+            chat["messages"].append({
+                "id": "o_" + secrets.token_hex(6),
+                "from": "out",
+                "text": text,
+                "at": now_iso(),
+            })
+            chat["updatedAt"] = now_iso()
+            chat["messages"] = chat["messages"][-80:]
+            save_store(store)
+        if api["token"] and api["phoneNumberId"]:
+            try:
+                wa_graph_send(api["phoneNumberId"], api["token"], to_phone, text)
+            except urllib.error.HTTPError as err:
+                detail = err.read().decode("utf-8", errors="ignore")
+                self.send_json(502, {"error": "WhatsApp API rechazó el envío.", "detail": detail[:400]})
+                return
+            except Exception as exc:
+                self.send_json(502, {"error": "No se pudo enviar por la API.", "detail": str(exc)})
+                return
+        self.send_json(200, {"ok": True})
 
     def update_product(self, product_id):
         body = self.read_json()
