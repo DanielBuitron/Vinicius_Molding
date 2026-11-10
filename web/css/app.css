@@ -1577,6 +1577,9 @@ body.admin-body .wa-fab { display: none; }
   .wa-link-copy { padding: 36px 22px; }
 }
 
+body.shop-page #revista,
+body.shop-page .wa-fab { display: none !important; }
+body.shop-page #app { display: block !important; }
 .shop-app {
   min-height: 100vh;
   background:
@@ -1586,6 +1589,9 @@ body.admin-body .wa-fab { display: none; }
   color: #f2f2f2;
   padding: 18px 16px 110px;
   font-family: Outfit, Poppins, sans-serif;
+}
+.shop-card, .shop-bar, .shop-add, .shop-qty button {
+  transition: background-color .18s ease, transform .18s ease, opacity .18s ease;
 }
 .shop-top {
   display: grid;
