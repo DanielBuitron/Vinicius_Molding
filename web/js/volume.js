@@ -42,10 +42,8 @@ function mountOrbits(job) {
 }
 
 function mountVolumes() {
-  if (!window.THREE) return;
-  const job = ++volumeJob;
+  /* Sin 3D: solo foto plana del producto. */
   releaseVolumes();
-  mountOrbits(job);
 }
 
 function pumpVolumes() {

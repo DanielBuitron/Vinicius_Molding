@@ -237,7 +237,8 @@ function paint(html, bodyClass) {
   if (header) header.classList.toggle("scrolled", window.scrollY > 8);
   if (page !== "tienda") {
     bindOrbits();
-    if (typeof mountVolumes === "function") mountVolumes();
+    if (typeof releaseVolumes === "function") releaseVolumes();
+    // Sin 3D: solo foto real del empaque.
     bindShowcases();
     bindReel();
   }
@@ -287,76 +288,7 @@ function bindReel() {
 }
 
 function bindOrbits() {
-  const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
-  document.querySelectorAll("[data-orbit]").forEach((el) => {
-    const card = el.querySelector(".orbit-card");
-    if (!card) return;
-    let rx = 8;
-    let ry = -18;
-    let dragging = false;
-    let lastX = 0;
-    let lastY = 0;
-    let moved = 0;
-    const apply = () => {
-      if (el.dataset.solid === "1") return;
-      card.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
-      const shadow = el.querySelector(".orbit-shadow");
-      if (shadow) shadow.style.transform = `translateX(${ry * 1.2}px) scale(${1.08 - Math.abs(ry) / 90}, ${0.82 + Math.abs(rx) / 70})`;
-    };
-    apply();
-    el.addEventListener("pointerdown", (event) => {
-      if (event.target.closest("a, button")) return;
-      dragging = true;
-      moved = 0;
-      lastX = event.clientX;
-      lastY = event.clientY;
-      el.classList.add("dragging");
-      el.setPointerCapture(event.pointerId);
-    });
-    el.addEventListener("pointermove", (event) => {
-      if (!dragging) return;
-      const dx = event.clientX - lastX;
-      const dy = event.clientY - lastY;
-      moved += Math.abs(dx) + Math.abs(dy);
-      ry = clamp(ry + dx * 0.28, -50, 50);
-      rx = clamp(rx - dy * 0.24, -34, 34);
-      lastX = event.clientX;
-      lastY = event.clientY;
-      apply();
-    });
-    el.addEventListener("click", (event) => {
-      if (moved > 8) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-    });
-    el.addEventListener("dblclick", () => {
-      rx = 8;
-      ry = -18;
-      apply();
-    });
-    el.addEventListener("keydown", (event) => {
-      const step = event.shiftKey ? 4 : 8;
-      if (event.key === "ArrowLeft") ry = clamp(ry - step, -50, 50);
-      if (event.key === "ArrowRight") ry = clamp(ry + step, -50, 50);
-      if (event.key === "ArrowUp") rx = clamp(rx - step, -34, 34);
-      if (event.key === "ArrowDown") rx = clamp(rx + step, -34, 34);
-      if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
-        event.preventDefault();
-        apply();
-      }
-    });
-    const stop = () => {
-      dragging = false;
-      el.classList.remove("dragging");
-    };
-    el.addEventListener("pointerup", () => {
-      const open = moved < 8 && el.dataset.open;
-      stop();
-      if (open) location.hash = "#/producto/" + el.dataset.open;
-    });
-    el.addEventListener("pointercancel", stop);
-  });
+  /* Las fotos ya no giran en 3D; el enlace del product-shot abre el detalle. */
 }
 
 async function render() {
@@ -407,6 +339,7 @@ async function render() {
       VM.shopData = data;
       VM.shopCart = Array.isArray(data.cart) ? data.cart.slice() : [];
       VM.shopDone = data.status === "confirmed";
+      VM.shopFocus = "";
       if (data.quoteRef) VM.shopData.quoteRef = data.quoteRef;
       paint(viewShop(), "site");
     } catch (err) {
@@ -873,6 +806,15 @@ async function sendOrderWhatsapp(data) {
 }
 
 function bind() {
+  document.body.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    const node = event.target.closest("[data-act='shop-open']");
+    if (!node) return;
+    event.preventDefault();
+    VM.shopFocus = node.dataset.id || "";
+    refreshShop();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
   document.body.addEventListener("click", async (event) => {
     const node = event.target.closest("[data-act]");
     if (!node) return;
@@ -920,7 +862,19 @@ function bind() {
       addToCart(node.dataset.id, node.dataset.qty);
       return;
     }
+    if (act === "shop-open") {
+      VM.shopFocus = node.dataset.id || "";
+      refreshShop();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    if (act === "shop-back") {
+      VM.shopFocus = "";
+      refreshShop();
+      return;
+    }
     if (act === "shop-add" || act === "shop-qty") {
+      event.stopPropagation();
       const id = node.dataset.id;
       const product = (VM.shopData && VM.shopData.products || []).find((item) => item.id === id) || productById(id);
       if (!product) return;
@@ -940,10 +894,21 @@ function bind() {
           row.qty = Math.min(99, Number(row.qty || 0) + 1);
         }
       } else {
-        if (!row) return;
-        row.qty = Number(row.qty || 0) + Number(node.dataset.dir || 0);
-        if (row.qty < 1) cart = cart.filter((item) => item.id !== id);
-        else row.qty = Math.min(99, row.qty);
+        if (!row) {
+          if (Number(node.dataset.dir || 0) <= 0) return;
+          cart.push({
+            id: product.id,
+            name: product.name,
+            sku: product.sku || "",
+            size: product.size || "",
+            price: Number(product.price || 0),
+            qty: 1,
+          });
+        } else {
+          row.qty = Number(row.qty || 0) + Number(node.dataset.dir || 0);
+          if (row.qty < 1) cart = cart.filter((item) => item.id !== id);
+          else row.qty = Math.min(99, row.qty);
+        }
       }
       VM.shopCart = cart;
       refreshShop();

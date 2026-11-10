@@ -436,7 +436,7 @@ function viewProduct() {
           <a class="btn ghost" href="${waHref(t("wa.product", { name }))}" target="_blank" rel="noopener">${t("product.ask")}</a>
         </div>
       </div>
-      <div class="orbit-lg">${orbit(product.image, name)}</div>
+      <div class="product-shot-lg">${productShot(product.image, name)}</div>
       <nav class="product-dots" aria-label="${t("product.more")}">
         ${family.map((item) => `<a href="#/producto/${esc(item.id)}" class="${item.id === product.id ? "on" : ""}" aria-label="${esc(productField(item, "name") || item.name)}" style="--accent:${esc(item.accent)}"></a>`).join("")}
       </nav>
@@ -501,6 +501,60 @@ function shopTotal() {
   return (VM.shopCart || []).reduce((sum, item) => sum + Number(item.price || 0) * Number(item.qty || 0), 0);
 }
 
+function shopProductById(id) {
+  const list = (VM.shopData && VM.shopData.products) || VM.products || [];
+  return list.find((item) => item.id === id) || productById(id);
+}
+
+function viewShopDetail(product) {
+  const qty = shopQty(product.id) || 1;
+  const name = productField(product, "name") || product.name;
+  const finish = productField(product, "finish") || product.finish || "";
+  const description = productField(product, "description") || product.description || product.summary || "";
+  const facts = [
+    [t("product.line"), product.line || ""],
+    [t("product.size"), product.size || ""],
+    [t("product.finish"), finish],
+    [t("product.sku"), product.sku || ""],
+  ].filter((row) => row[1]);
+  return `
+    <section class="shop-app shop-detail-app">
+      <header class="shop-top">
+        <button type="button" class="shop-back" data-act="shop-back">${t("shop.back")}</button>
+        ${localeControlsHtml("lang-inline")}
+      </header>
+      <article class="shop-detail" style="--accent:${esc(product.accent || "#E52C3B")}">
+        <div class="shop-detail-shot">
+          <img src="${esc(cutoutSrc(product.image))}" alt="${esc(name)}">
+        </div>
+        <div class="shop-detail-copy">
+          <p class="kicker">${esc(categoryName(product.category) || product.line || "")}</p>
+          <h1>${esc(name)}</h1>
+          <p class="lede">${esc(description)}</p>
+          <div class="price">${money(product.price)}</div>
+          <p class="fine">${moneyAlt(product.price)}</p>
+          <dl class="facts">${facts.map(([label, value]) => `<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join("")}</dl>
+          <div class="meta">${(product.ingredients || []).map((item) => `<span class="tag">${esc(item)}</span>`).join("")}</div>
+          <div class="buy-row">
+            <div class="shop-qty">
+              <button type="button" data-act="shop-qty" data-id="${esc(product.id)}" data-dir="-1">−</button>
+              <b>${qty}</b>
+              <button type="button" data-act="shop-qty" data-id="${esc(product.id)}" data-dir="1">+</button>
+            </div>
+            <button type="button" class="shop-add" data-act="shop-add" data-id="${esc(product.id)}">${t("shop.add")}</button>
+          </div>
+        </div>
+      </article>
+      <footer class="shop-bar">
+        <div>
+          <strong>${money(shopTotal())}</strong>
+          <span>${t("shop.inCart", { n: (VM.shopCart || []).reduce((n, item) => n + Number(item.qty || 0), 0) })}</span>
+        </div>
+        <button type="button" class="shop-send" data-act="shop-confirm" ${(VM.shopCart || []).length ? "" : "disabled"}>${t("shop.send")}</button>
+      </footer>
+    </section>`;
+}
+
 function viewShop() {
   const data = VM.shopData || {};
   const products = data.products || VM.products || [];
@@ -520,6 +574,8 @@ function viewShop() {
         </div>
       </section>`;
   }
+  const focus = VM.shopFocus ? shopProductById(VM.shopFocus) : null;
+  if (focus) return viewShopDetail(focus);
   const groups = {};
   products.forEach((item) => {
     const key = item.category || "otros";
@@ -528,6 +584,7 @@ function viewShop() {
   });
   const labels = {
     molding: t("cat.molding"),
+    kits: t("cat.kits"),
     kids: t("cat.kids"),
     limpieza: t("cat.limpieza"),
     tratamiento: t("cat.tratamiento"),
@@ -552,7 +609,7 @@ function viewShop() {
               const name = productField(item, "name") || item.name;
               const summary = productField(item, "summary") || item.summary || "";
               return `
-                <article class="shop-card" style="--accent:${esc(item.accent || "#E52C3B")}">
+                <article class="shop-card" style="--accent:${esc(item.accent || "#E52C3B")}" data-act="shop-open" data-id="${esc(item.id)}" role="button" tabindex="0">
                   <img src="${esc(cutoutSrc(item.image))}" alt="${esc(name)}" loading="lazy">
                   <div class="shop-card-body">
                     <strong>${esc(name)}</strong>
@@ -561,12 +618,12 @@ function viewShop() {
                     <div class="shop-card-row">
                       <span>${money(item.price)}</span>
                       ${qty ? `
-                        <div class="shop-qty">
+                        <div class="shop-qty" data-stop="1">
                           <button type="button" data-act="shop-qty" data-id="${esc(item.id)}" data-dir="-1">−</button>
                           <b>${qty}</b>
                           <button type="button" data-act="shop-qty" data-id="${esc(item.id)}" data-dir="1">+</button>
                         </div>` : `
-                        <button type="button" class="shop-add" data-act="shop-add" data-id="${esc(item.id)}">${t("shop.add")}</button>`}
+                        <button type="button" class="shop-add" data-act="shop-add" data-id="${esc(item.id)}" data-stop="1">${t("shop.add")}</button>`}
                     </div>
                   </div>
                 </article>`;
