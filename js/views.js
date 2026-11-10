@@ -157,24 +157,26 @@ function viewHome() {
 }
 
 function viewTestimonials() {
+  const verified = getLang() === "en" ? "Verified purchase" : "Compra verificada";
+  const stars = getLang() === "en" ? "5 stars" : "5 estrellas";
   return `
     <section class="voices">
       <div class="voices-stats">
-        <p class="kicker">Testimonios</p>
-        <div><strong>+1000</strong><span>Órdenes entregadas a clientes en todo el país.</span></div>
-        <div><strong>4.9★</strong><span>Calificación promedio de nuestros clientes.</span></div>
-        <div><strong>100%</strong><span>Productos originales de cuidado capilar profesional.</span></div>
+        <p class="kicker">${getLang() === "en" ? "Testimonials" : "Testimonios"}</p>
+        <div><strong>+1000</strong><span>${getLang() === "en" ? "Orders delivered to clients nationwide." : "Órdenes entregadas a clientes en todo el país."}</span></div>
+        <div><strong>4.9★</strong><span>${getLang() === "en" ? "Average rating from our clients." : "Calificación promedio de nuestros clientes."}</span></div>
+        <div><strong>100%</strong><span>${getLang() === "en" ? "Original professional hair-care products." : "Productos originales de cuidado capilar profesional."}</span></div>
       </div>
       <div class="voices-grid">
         ${TESTIMONIOS.map((item) => `
           <article class="voice-card">
-            <p class="stars" aria-label="5 estrellas">★★★★★</p>
-            <p>“${esc(item.text)}”</p>
+            <p class="stars" aria-label="${stars}">★★★★★</p>
+            <p>“${esc(getLang() === "en" ? ensureTextEn(item.text) : item.text)}”</p>
             <div class="voice-who">
               <b>${esc(item.initials)}</b>
               <div>
                 <strong>${esc(item.name)}</strong>
-                <span>${esc(item.product)} · Compra verificada</span>
+                <span>${esc(getLang() === "en" ? ensureTextEn(item.product) : item.product)} · ${verified}</span>
               </div>
             </div>
           </article>`).join("")}

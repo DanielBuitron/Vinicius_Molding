@@ -102,6 +102,30 @@
       "mag.prevProduct": "Producto anterior",
       "mag.nextProduct": "Producto siguiente",
       "mag.waFab": "Hablar con un asesor",
+      "mag.whoTitle": "Quiénes somos",
+      "mag.whoP1": "Somos una marca de cuidado capilar masculino creada para hombres que no improvisan, que cuidan cada detalle y saben que el éxito también se construye desde el cuero cabelludo.",
+      "mag.whoP2": "No vendemos promesas, entregamos resultados.",
+      "mag.solution": "Somos la solución, no el problema",
+      "mag.solutionP": "Productos capilares que funcionan, sin rodeos ni falsas promesas.",
+      "mag.collectionTitle": "Colección",
+      "mag.collectionP": "{n} productos para moldear, limpiar y cuidar el cabello, la barba y el cuerpo.",
+      "mag.contents": "Contenido",
+      "mag.fullLine": "La línea completa",
+      "mag.fullLineP": "{n} piezas en la revista: molding, limpieza, tratamiento y cuerpo.",
+      "mag.orderYours": "Pide el tuyo",
+      "mag.orderP": "Fabricado por Cosmypro Lab, Cali-Valle. Comercializado por Vinicius Molding.",
+      "mag.price": "Precio",
+      "mag.size": "Contenido",
+      "mag.finishLabel": "Acabado",
+      "mag.contains": "Contiene",
+      "mag.base": "Base",
+      "mag.use": "Uso",
+      "mag.formula": "Fórmula",
+      "mag.add": "Añadir al carrito",
+      "mag.less": "Menos",
+      "mag.more": "Más",
+      "mag.waAsk": "Hola, quiero información de {name} (N.º {ref})",
+      "mag.ref": "N.º {ref} · Vinicius Molding",
       "wa.default": "Hola, quiero hablar con un asesor de Vinicius Molding.",
       "wa.catalog": "Hola, quiero el catálogo de Vinicius Molding",
       "wa.product": "Hola, quiero información de {name}.",
@@ -236,6 +260,30 @@
       "mag.prevProduct": "Previous product",
       "mag.nextProduct": "Next product",
       "mag.waFab": "Talk to an advisor",
+      "mag.whoTitle": "About us",
+      "mag.whoP1": "We are a men’s hair-care brand made for men who don’t improvise, who care about every detail and know that success is also built from the scalp up.",
+      "mag.whoP2": "We don’t sell promises. We deliver results.",
+      "mag.solution": "We are the solution, not the problem",
+      "mag.solutionP": "Hair products that work, with no fluff or empty promises.",
+      "mag.collectionTitle": "Collection",
+      "mag.collectionP": "{n} products to style, cleanse and care for hair, beard and body.",
+      "mag.contents": "Contents",
+      "mag.fullLine": "The full line",
+      "mag.fullLineP": "{n} pieces in the magazine: molding, cleansing, treatment and body.",
+      "mag.orderYours": "Get yours",
+      "mag.orderP": "Made by Cosmypro Lab, Cali-Valle. Marketed by Vinicius Molding.",
+      "mag.price": "Price",
+      "mag.size": "Size",
+      "mag.finishLabel": "Finish",
+      "mag.contains": "Contains",
+      "mag.base": "Base",
+      "mag.use": "Use",
+      "mag.formula": "Formula",
+      "mag.add": "Add to cart",
+      "mag.less": "Less",
+      "mag.more": "More",
+      "mag.waAsk": "Hi, I’d like info on {name} (No. {ref})",
+      "mag.ref": "No. {ref} · Vinicius Molding",
       "wa.default": "Hi, I’d like to talk to a Vinicius Molding advisor.",
       "wa.catalog": "Hi, I’d like the Vinicius Molding catalog",
       "wa.product": "Hi, I’d like info on {name}.",
@@ -390,6 +438,7 @@
       btn.setAttribute("aria-pressed", btn.getAttribute("data-lang-btn") === lang ? "true" : "false");
     });
     applyStaticLang();
+    if (lang === "en" && typeof window.VM !== "undefined") warmProductTranslations(window.VM.products || []);
     if (typeof window.refreshRevistaLang === "function") window.refreshRevistaLang();
     if (typeof window.onSiteLangChange === "function") window.onSiteLangChange(lang);
     return lang;
@@ -409,13 +458,82 @@
     ];
   }
 
+  const TR_KEY = "vm_tr_en";
+  let trCache = {};
+  try { trCache = JSON.parse(localStorage.getItem(TR_KEY) || "{}") || {}; } catch (_) { trCache = {}; }
+  const pendingTr = new Set();
+  let refreshTimer = 0;
+
+  function scheduleLangRefresh() {
+    clearTimeout(refreshTimer);
+    refreshTimer = setTimeout(() => {
+      if (typeof window.refreshRevistaLang === "function") window.refreshRevistaLang();
+      if (typeof window.onSiteLangChange === "function") window.onSiteLangChange(lang);
+    }, 350);
+  }
+
+  function cachedEn(text) {
+    const src = String(text || "").trim();
+    if (!src) return "";
+    return trCache[src] || "";
+  }
+
+  function saveEn(text, en) {
+    const src = String(text || "").trim();
+    const out = String(en || "").trim();
+    if (!src || !out) return;
+    trCache[src] = out;
+    try { localStorage.setItem(TR_KEY, JSON.stringify(trCache)); } catch (_) {}
+  }
+
+  function queueTranslate(text) {
+    const src = String(text || "").trim();
+    if (!src || cachedEn(src) || pendingTr.has(src) || src.length < 2) return;
+    pendingTr.add(src);
+    const url = "https://api.mymemory.translated.net/get?q=" + encodeURIComponent(src.slice(0, 450)) + "&langpair=es|en";
+    fetch(url)
+      .then((res) => res.json())
+      .then((data) => {
+        const out = data && data.responseData && data.responseData.translatedText;
+        if (out && String(out).trim() && String(out).trim() !== src) {
+          saveEn(src, out);
+          if (lang === "en") scheduleLangRefresh();
+        }
+      })
+      .catch(() => {})
+      .finally(() => pendingTr.delete(src));
+  }
+
+  function ensureTextEn(text) {
+    const src = String(text || "").trim();
+    if (!src) return "";
+    const hit = cachedEn(src);
+    if (hit) return hit;
+    queueTranslate(src);
+    return src;
+  }
+
   function productField(product, field) {
     if (!product) return "";
-    if (lang === "en") {
-      const row = productEn[product.id];
-      if (row && row[field]) return row[field];
-    }
-    return product[field] || "";
+    const raw = product[field] || "";
+    if (lang !== "en") return raw;
+    const row = productEn[product.id];
+    if (row && row[field]) return row[field];
+    if (product.en && product.en[field]) return product.en[field];
+    return ensureTextEn(raw);
+  }
+
+  function warmProductTranslations(list) {
+    if (lang !== "en") return;
+    (list || []).forEach((item) => {
+      ["name", "summary", "description", "finish", "line"].forEach((field) => {
+        const raw = item && item[field];
+        if (!raw) return;
+        if (productEn[item.id] && productEn[item.id][field]) return;
+        if (item.en && item.en[field]) return;
+        ensureTextEn(raw);
+      });
+    });
   }
 
   function langSwitcherHtml(extraClass) {
@@ -486,6 +604,8 @@
   window.getLang = getLang;
   window.localizedCatalog = localizedCatalog;
   window.productField = productField;
+  window.warmProductTranslations = warmProductTranslations;
+  window.ensureTextEn = ensureTextEn;
   window.langSwitcherHtml = langSwitcherHtml;
   window.applyStaticLang = applyStaticLang;
   window.ensureLangDock = ensureLangDock;

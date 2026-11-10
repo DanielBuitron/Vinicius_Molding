@@ -1310,6 +1310,9 @@ async function boot() {
     }
   }
   if (!location.hash) location.hash = "#/inicio";
+  if (typeof getLang === "function" && getLang() === "en" && typeof warmProductTranslations === "function") {
+    warmProductTranslations(VM.products || []);
+  }
   render();
 }
 
