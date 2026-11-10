@@ -147,12 +147,17 @@
 
   function waLink(text) {
     const phone = (typeof VM !== "undefined" && VM.config && VM.config.whatsapp) || (typeof SITE !== "undefined" && SITE.whatsapp) || "573235835137";
-    const msg = encodeURIComponent(text || "Hola, quiero hablar con Vinicius Molding.");
-    return "https://wa.me/" + phone + "?text=" + msg;
+    const q = new URLSearchParams({
+      phone: String(phone).replace(/\D/g, ""),
+      text: text || "Hola, quiero hablar con Vinicius Molding.",
+      type: "phone_number",
+      app_absent: "0",
+    });
+    return "https://api.whatsapp.com/send/?" + q.toString();
   }
 
   function qrSrc(data) {
-    return "https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=10&data=" + encodeURIComponent(data);
+    return "/api/whatsapp/qr?phone=" + encodeURIComponent(String(data || "").replace(/\D/g, "") || "573235835137");
   }
 
   window.ViniciusBot = { reply, waLink, qrSrc, products, listCatalog };
