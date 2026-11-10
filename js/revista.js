@@ -42,7 +42,7 @@ const S=[
  `<div class="pg">${hd(5)}<h2>Contenido</h2><ol class="idx">${PR.map((p,j)=>`<li data-go="${3+j}"><b>${p.n}</b><i>${p.sub}</i><span>${6+2*j}</span></li>`).join('')}</ol></div>`],
 ...PR.map((p,j)=>j%2? [imgP(j),infoP(j,7+2*j)] : [infoP(j,6+2*j),imgP(j)]),
 [`<div class="pg dark">${hd(6+PR.length*2)}<h2>La línea completa</h2><p>${PR.length} piezas en la revista: molding, limpieza, tratamiento y cuerpo.</p></div>`,
- `<div class="pg dark">${hd(7+PR.length*2)}<h2>Pide el tuyo</h2><p>Fabricado por Cosmypro Lab, Cali-Valle. Comercializado por Vinicius Molding.</p><a class="cta" href="${WA}" target="_blank" rel="noopener">WhatsApp Valle del Cauca</a><a class="cta w" href="https://wa.me/573235744284" target="_blank" rel="noopener">WhatsApp Risaralda</a><a class="cta w" href="${IG}" target="_blank" rel="noopener">@viniciusmolding</a></div>`]];
+ `<div class="pg dark">${hd(7+PR.length*2)}<h2>Pide el tuyo</h2><p>Fabricado por Cosmypro Lab, Cali-Valle. Comercializado por Vinicius Molding.</p><a class="cta" href="${WA}" target="_blank" rel="noopener">WhatsApp</a><a class="cta w" href="${IG}" target="_blank" rel="noopener">@viniciusmolding</a></div>`]];
 const CAP=['Cubierta','Quiénes somos','Colección · Contenido',...PR.map(p=>p.cap),'Contacto'];
 const fr=[cover],bk=[S[0][0]];for(let i=1;i<=S.length-1;i++){fr.push(S[i-1][1]);bk.push(S[i][0])}fr.push(S[S.length-1][1]);bk.push(back);
 // ---- hojas articuladas en tramos (se doblan de verdad)

@@ -9,6 +9,7 @@ function adminShell(title, body) {
         ${item("resumen", "Resumen")}
         ${item("inventario", "Inventario")}
         ${item("seguimiento", "Seguimiento")}
+        ${item("whatsapp", "WhatsApp")}
         ${item("contacto", "Contacto")}
         ${item("pedidos", "Pedidos")}
         ${item("wompi", "Wompi")}
@@ -165,6 +166,37 @@ function viewContact() {
       <label>Celular<input name="phone" inputmode="tel" required value="${esc(phone)}" placeholder="573235835137"></label>
       <button class="btn" type="submit">Guardar número</button>
     </form>`);
+}
+
+function viewWhatsapp() {
+  const phone = VM.config.whatsapp || SITE.whatsapp || "573235835137";
+  const link = window.ViniciusBot ? ViniciusBot.waLink("Hola, quiero información de Vinicius Molding") : ("https://wa.me/" + phone);
+  const qr = window.ViniciusBot ? ViniciusBot.qrSrc(link) : "";
+  const history = (VM.botChat || []).map((row) => `<div class="bot-msg ${row.role}"><span>${esc(row.text)}</span></div>`).join("");
+  return adminShell("WhatsApp", `
+    <div class="wa-panel">
+      <article class="panel-card wa-qr-card">
+        <h3>Escanear y abrir</h3>
+        <p class="fine">El cliente escanea el QR, abre WhatsApp y empieza a escribir. El bot responde con la información de Vinicius.</p>
+        <div class="wa-qr">
+          <img src="${esc(qr)}" alt="Código QR de WhatsApp" width="260" height="260">
+        </div>
+        <p class="wa-phone">+${esc(phone)}</p>
+        <div class="wa-actions">
+          <a class="btn" href="${esc(link)}" target="_blank" rel="noopener">Abrir WhatsApp</a>
+          <a class="btn ghost" href="#/panel/contacto">Cambiar número</a>
+        </div>
+      </article>
+      <article class="panel-card wa-chat-card">
+        <h3>Chatbot Vinicius</h3>
+        <p class="fine">Habla normal: precios, productos, uso, pedidos o la marca. La respuesta sale de tu catálogo.</p>
+        <div class="bot-thread" id="bot-thread">${history || `<div class="bot-msg bot"><span>Hola, soy el asistente de Vinicius Molding. Pregúntame por un producto o di “catálogo”.</span></div>`}</div>
+        <form class="bot-compose" data-form="bot-chat">
+          <input name="message" required placeholder="Escribe como el cliente…" autocomplete="off">
+          <button class="btn" type="submit">Enviar</button>
+        </form>
+      </article>
+    </div>`);
 }
 
 function viewWompi() {
