@@ -5,7 +5,14 @@
     es: {
       "lang.es": "ES",
       "lang.en": "EN",
+      "lang.zh": "中文",
       "lang.switch": "Idioma",
+      "voices.kicker": "Testimonios",
+      "voices.orders": "Órdenes entregadas a clientes en todo el país.",
+      "voices.rating": "Calificación promedio de nuestros clientes.",
+      "voices.original": "Productos originales de cuidado capilar profesional.",
+      "voices.stars": "5 estrellas",
+      "voices.verified": "Compra verificada",
       "cur.switch": "Moneda",
       "cur.cop": "COP",
       "cur.usd": "USD",
@@ -169,7 +176,14 @@
     en: {
       "lang.es": "ES",
       "lang.en": "EN",
+      "lang.zh": "中文",
       "lang.switch": "Language",
+      "voices.kicker": "Testimonials",
+      "voices.orders": "Orders delivered to clients nationwide.",
+      "voices.rating": "Average rating from our clients.",
+      "voices.original": "Original professional hair-care products.",
+      "voices.stars": "5 stars",
+      "voices.verified": "Verified purchase",
       "cur.switch": "Currency",
       "cur.cop": "COP",
       "cur.usd": "USD",
@@ -330,6 +344,177 @@
       "status.anulado": "Canceled",
       "status.error": "Error",
     },
+    zh: {
+      "lang.es": "ES",
+      "lang.en": "EN",
+      "lang.zh": "中文",
+      "lang.switch": "语言",
+      "voices.kicker": "用户评价",
+      "voices.orders": "已向全国客户完成超过一千笔订单。",
+      "voices.rating": "客户平均评分。",
+      "voices.original": "100% 专业男士护发正品。",
+      "voices.stars": "五星",
+      "voices.verified": "已验证购买",
+      "cur.switch": "货币",
+      "cur.cop": "COP",
+      "cur.usd": "USD",
+      "cur.noteCop": "价格以哥伦比亚比索显示。配送从卡利协调。",
+      "cur.noteUsd": "美元按哥伦比亚共和国银行 TRM 换算。付款以 COP 确认。",
+      "cur.trm": "BanRep TRM：{rate}",
+      "nav.home": "首页",
+      "nav.catalog": "目录",
+      "nav.panel": "后台",
+      "nav.login": "登录",
+      "nav.loginShort": "登录",
+      "nav.cart": "购物车",
+      "nav.menu": "菜单",
+      "nav.talk": "咨询",
+      "nav.askCatalog": "索取目录",
+      "nav.askCatalogShort": "目录",
+      "nav.advisor": "联系顾问",
+      "footer.house": "品牌",
+      "footer.advisor": "顾问",
+      "footer.blurb": "男士护发。{city}。",
+      "footer.lineMolding": "造型系列",
+      "footer.cleaning": "清洁",
+      "footer.treatment": "护理",
+      "footer.kids": "儿童",
+      "footer.body": "身体",
+      "home.tag": "全新 3D 场景",
+      "home.title": "可互动探索的<br>Lookbook",
+      "home.text": "滑动滚轮。封面打开，书页在桌面上翻动。",
+      "home.hint": "滑动打开",
+      "home.cta": "查看目录",
+      "catalog.kicker": "Lookbook · Vinicius",
+      "catalog.title": "目录",
+      "catalog.lede": "与桌面相同的产品线，一件一件呈现。",
+      "catalog.all": "全部",
+      "catalog.add": "加入",
+      "catalog.view": "查看",
+      "catalog.prev": "上一页",
+      "catalog.next": "下一页",
+      "product.missing": "找不到该产品。",
+      "product.back": "返回目录",
+      "product.line": "系列",
+      "product.size": "规格",
+      "product.finish": "效果",
+      "product.sku": "货号",
+      "product.add": "加入购物车",
+      "product.ask": "咨询",
+      "product.hold": "定型力 {n}/5",
+      "product.more": "同系列其他产品",
+      "product.recommend": "为你推荐",
+      "product.view": "查看产品",
+      "stock.out": "售罄",
+      "stock.low": "仅剩 {n}",
+      "stock.ok": "有货",
+      "cart.empty": "购物车是空的。",
+      "cart.back": "返回杂志",
+      "cart.title": "你的选择",
+      "cart.remove": "移除",
+      "cart.total": "合计",
+      "cart.note": "按所选货币显示价格。付款以 COP 在卡利确认。",
+      "cart.send": "提交订单",
+      "checkout.title": "联系信息",
+      "checkout.fine": "提交后，订单 PDF 会发送到顾问的 WhatsApp。",
+      "checkout.name": "姓名",
+      "checkout.phone": "手机",
+      "checkout.city": "城市",
+      "checkout.address": "地址",
+      "checkout.note": "备注",
+      "checkout.notePh": "时间、社区或说明",
+      "checkout.submit": "发送 PDF 给顾问",
+      "checkout.aside": "顾问会在 WhatsApp 收到，以确认产品、金额和配送。",
+      "order.confirming": "正在确认付款…",
+      "order.missing": "未找到该订单。",
+      "login.title": "登录",
+      "login.user": "用户名",
+      "login.pass": "密码",
+      "login.submit": "进入",
+      "login.hint": "销售团队内部入口。",
+      "shop.tagline": "我们是解决方案，不是问题。",
+      "shop.doneTitle": "完成！",
+      "shop.doneText": "精美报价 PDF 已发送到你的 WhatsApp{ref}。感谢选择我们。",
+      "shop.title": "Vinicius 目录",
+      "shop.lede": "慢慢浏览，加入喜欢的产品，最后我们会把报价发到你的 WhatsApp。",
+      "shop.add": "加入",
+      "shop.inCart": "购物车 {n} 件",
+      "shop.send": "发送报价到 WhatsApp",
+      "shop.missing": "缺少目录链接。",
+      "shop.missingHint": "请在 WhatsApp 发送“目录”以获取新链接。",
+      "shop.loading": "正在加载目录",
+      "shop.error": "无法打开目录。",
+      "shop.errorHint": "请再次在 WhatsApp 发送“目录”。",
+      "shop.sending": "发送中…",
+      "mag.cover": "封面",
+      "mag.about": "关于我们",
+      "mag.collection": "系列 · 目录",
+      "mag.contact": "联系",
+      "mag.prev": "上一页",
+      "mag.next": "下一页",
+      "mag.detail": "产品详情",
+      "mag.wa": "通过 WhatsApp 订购",
+      "mag.close": "关闭",
+      "mag.prevProduct": "上一个产品",
+      "mag.nextProduct": "下一个产品",
+      "mag.waFab": "联系顾问",
+      "mag.whoTitle": "关于我们",
+      "mag.whoP1": "我们是男士护发品牌，专为不将就、注重细节的男士而生，他们知道成功也从头皮开始。",
+      "mag.whoP2": "我们不卖承诺，只交付结果。",
+      "mag.solution": "我们是解决方案，不是问题",
+      "mag.solutionP": "真正有效的护发产品，不绕弯，不做虚假承诺。",
+      "mag.collectionTitle": "系列",
+      "mag.collectionP": "{n} 款产品，用于造型、清洁与护理头发、胡须和身体。",
+      "mag.contents": "目录",
+      "mag.fullLine": "完整产品线",
+      "mag.fullLineP": "杂志中共有 {n} 件产品：造型、清洁、护理与身体。",
+      "mag.orderYours": "立即选购",
+      "mag.orderP": "由 Cosmypro Lab（卡利-山谷）制造，Vinicius Molding 销售。",
+      "mag.price": "价格",
+      "mag.size": "规格",
+      "mag.finishLabel": "效果",
+      "mag.contains": "成分",
+      "mag.base": "基质",
+      "mag.use": "用法",
+      "mag.formula": "配方",
+      "mag.add": "加入购物车",
+      "mag.less": "减少",
+      "mag.more": "增加",
+      "mag.waAsk": "你好，我想了解 {name}（编号 {ref}）",
+      "mag.ref": "编号 {ref} · Vinicius Molding",
+      "wa.default": "你好，我想联系 Vinicius Molding 顾问。",
+      "wa.catalog": "你好，我想要 Vinicius Molding 目录",
+      "wa.product": "你好，我想了解 {name}。",
+      "cat.molding": "造型系列",
+      "cat.molding.blurb": "发蜡、发泥、发油与发胶，塑造并保持发型。",
+      "cat.kids": "儿童",
+      "cat.kids.blurb": "纤维发蜡的儿童版。",
+      "cat.limpieza": "清洁",
+      "cat.limpieza.blurb": "无盐洗发水与男士私密洗护。",
+      "cat.tratamiento": "护理",
+      "cat.tratamiento.blurb": "头皮精华与胡须精华。",
+      "cat.cuerpo": "身体",
+      "cat.cuerpo.blurb": "身体喷雾与剃须啫喱，适合日常护理。",
+      "piece.0": "零",
+      "piece.1": "一件",
+      "piece.n": "{n} 件",
+      "title.home": "Vinicius Molding · 男士护发",
+      "title.catalog": "目录",
+      "title.cart": "购物车",
+      "title.pay": "结算",
+      "title.order": "订单",
+      "title.login": "登录",
+      "title.panel": "后台",
+      "title.product": "产品",
+      "status.nuevo": "新",
+      "status.contactado": "已联系",
+      "status.cerrado": "已关闭",
+      "status.pendiente_pago": "待付款",
+      "status.aprobado": "已批准",
+      "status.rechazado": "已拒绝",
+      "status.anulado": "已取消",
+      "status.error": "错误",
+    },
   };
 
   const productEn = {
@@ -419,13 +604,104 @@
     },
   };
 
+  const productZh = {
+    "cera-brillo": {
+      name: "中亮泽发蜡",
+      finish: "中亮泽",
+      summary: "全天定型，呈现自然亮泽。",
+      description: "中亮泽造型发蜡。含角蛋白、迷迭香、芦荟与蜂蜡，持久塑形。",
+    },
+    "cera-fibra": {
+      name: "纤维发蜡",
+      finish: "湿润效果",
+      summary: "湿润造型，如同刚从理发店出来。",
+      description: "湿润效果纤维发蜡。随发型灵活调整，易梳理。含角蛋白、迷迭香、芦荟与蜂蜡。",
+    },
+    pasta: {
+      name: "造型发泥",
+      finish: "亮泽",
+      summary: "优雅亮泽与定型，打造专业外观。",
+      description: "亮泽造型发泥。含角蛋白、迷迭香、芦荟与蜂蜡。",
+    },
+    pomada: {
+      name: "哑光发油",
+      finish: "哑光效果",
+      summary: "强力控制不服帖头发，哑光质感。",
+      description: "哑光造型发油。含角蛋白、迷迭香、芦荟与蜂蜡，呈现自然发型。",
+    },
+    "gel-cubre-canas": {
+      name: "遮盖白发啫喱",
+      finish: "湿润亮泽",
+      summary: "遮盖白发，呈现湿润亮泽效果。",
+      description: "遮盖白发啫喱。湿润亮泽效果。含角蛋白、迷迭香、芦荟与蜂蜡。",
+    },
+    "pasta-minoxidil": {
+      name: "米诺地尔发泥",
+      finish: "蜂蜡基底",
+      summary: "含米诺地尔、泛醇与迷迭香的发泥。",
+      description: "米诺地尔发泥。以蜂蜡为基底，含米诺地尔、泛醇与迷迭香。用于干发或半干发。",
+    },
+    "cera-kids": {
+      name: "儿童纤维发蜡",
+      finish: "轻柔定型",
+      summary: "专为儿童头发设计的温和配方。",
+      description: "儿童纤维发蜡。温和定型，含角蛋白、迷迭香、芦荟与蜂蜡。",
+    },
+    "shampoo-proteccion": {
+      name: "护发洗发水",
+      finish: "无盐",
+      summary: "清洁并呵护头发。无盐配方。",
+      description: "护发洗发水，含迷迭香、角蛋白、洋葱、芦荟、胡萝卜与透明质酸。无盐配方。",
+    },
+    "shampoo-carbon": {
+      name: "活性炭洗发水",
+      finish: "无盐",
+      summary: "活性炭配方，舒缓头皮屑与瘙痒。无盐。",
+      description: "活性炭洗发水。有助于改善头皮屑与瘙痒。含迷迭香、角蛋白、洋葱、芦荟、胡萝卜与透明质酸。无盐。",
+    },
+    "ducha-intima": {
+      name: "男士私密洗护",
+      finish: "男士专用",
+      summary: "男士私密清洁。无香精、无色素、无对羟基苯甲酸酯。",
+      description: "男士私密洗护。无香精、无色素、无对羟基苯甲酸酯。",
+    },
+    tonico: {
+      name: "有机头皮精华",
+      finish: "头皮护理",
+      summary: "头皮植物精华。含 19 种活性成分。",
+      description: "有机头皮精华，含迷迭香、生物素、大黄、角蛋白、透明质酸与芦荟。用于头皮。",
+    },
+    "serum-barba": {
+      name: "胡须与唇须精华",
+      finish: "柔顺护理",
+      summary: "柔顺亮泽胡须。含阿甘油、荷荷巴油与芦荟。",
+      description: "胡须与唇须精华。阿甘油、荷荷巴油与芦荟，便于梳理并增添光泽。",
+    },
+    splash: {
+      name: "男士身体喷雾",
+      finish: "男士专用",
+      summary: "身体喷雾。桉树与薄荷醇。",
+      description: "男士身体喷雾。按需喷涂。含水、酒精、桉树与薄荷醇。",
+    },
+    "shaving-gel": {
+      name: "男士剃须啫喱",
+      finish: "含芦荟",
+      summary: "男士剃须啫喱。含芦荟。",
+      description: "男士剃须啫喱。含芦荟。250 毫升。",
+    },
+  };
+
+  const LANGS = ["es", "en", "zh"];
+
   function detectLang() {
     try {
       const saved = localStorage.getItem(KEY);
-      if (saved === "en" || saved === "es") return saved;
+      if (LANGS.includes(saved)) return saved;
     } catch (_) {}
     const nav = String((navigator.language || "es")).toLowerCase();
-    return nav.startsWith("en") ? "en" : "es";
+    if (nav.startsWith("zh")) return "zh";
+    if (nav.startsWith("en")) return "en";
+    return "es";
   }
 
   function detectCurrency(currentLang) {
@@ -451,16 +727,18 @@
   }
 
   function setLang(next) {
-    lang = next === "en" ? "en" : "es";
+    lang = LANGS.includes(next) ? next : "es";
     try { localStorage.setItem(KEY, lang); } catch (_) {}
-    document.documentElement.lang = lang;
+    document.documentElement.lang = lang === "zh" ? "zh-CN" : lang;
     document.body.dataset.lang = lang;
     document.querySelectorAll("[data-lang-btn]").forEach((btn) => {
       btn.classList.toggle("on", btn.getAttribute("data-lang-btn") === lang);
       btn.setAttribute("aria-pressed", btn.getAttribute("data-lang-btn") === lang ? "true" : "false");
     });
     applyStaticLang();
-    if (lang === "en" && typeof window.VM !== "undefined") warmProductTranslations(window.VM.products || []);
+    if ((lang === "en" || lang === "zh") && typeof window.VM !== "undefined") {
+      warmProductTranslations(window.VM.products || []);
+    }
     if (typeof window.refreshRevistaLang === "function") window.refreshRevistaLang();
     if (typeof window.onSiteLangChange === "function") window.onSiteLangChange(lang);
     return lang;
@@ -497,9 +775,9 @@
     ];
   }
 
-  const TR_KEY = "vm_tr_en";
-  let trCache = {};
-  try { trCache = JSON.parse(localStorage.getItem(TR_KEY) || "{}") || {}; } catch (_) { trCache = {}; }
+  const trCaches = { en: {}, zh: {} };
+  try { trCaches.en = JSON.parse(localStorage.getItem("vm_tr_en") || "{}") || {}; } catch (_) { trCaches.en = {}; }
+  try { trCaches.zh = JSON.parse(localStorage.getItem("vm_tr_zh") || "{}") || {}; } catch (_) { trCaches.zh = {}; }
   const pendingTr = new Set();
   let refreshTimer = 0;
 
@@ -511,66 +789,81 @@
     }, 350);
   }
 
-  function cachedEn(text) {
+  function cachedTr(target, text) {
     const src = String(text || "").trim();
-    if (!src) return "";
-    return trCache[src] || "";
+    if (!src || !trCaches[target]) return "";
+    return trCaches[target][src] || "";
   }
 
-  function saveEn(text, en) {
+  function saveTr(target, text, out) {
     const src = String(text || "").trim();
-    const out = String(en || "").trim();
-    if (!src || !out) return;
-    trCache[src] = out;
-    try { localStorage.setItem(TR_KEY, JSON.stringify(trCache)); } catch (_) {}
+    const translated = String(out || "").trim();
+    if (!src || !translated || !trCaches[target]) return;
+    trCaches[target][src] = translated;
+    try { localStorage.setItem("vm_tr_" + target, JSON.stringify(trCaches[target])); } catch (_) {}
   }
 
-  function queueTranslate(text) {
+  function queueTranslate(text, target) {
     const src = String(text || "").trim();
-    if (!src || cachedEn(src) || pendingTr.has(src) || src.length < 2) return;
-    pendingTr.add(src);
-    const url = "https://api.mymemory.translated.net/get?q=" + encodeURIComponent(src.slice(0, 450)) + "&langpair=es|en";
+    const dest = target === "zh" ? "zh" : "en";
+    const key = dest + ":" + src;
+    if (!src || cachedTr(dest, src) || pendingTr.has(key) || src.length < 2) return;
+    pendingTr.add(key);
+    const pair = dest === "zh" ? "es|zh-CN" : "es|en";
+    const url = "https://api.mymemory.translated.net/get?q=" + encodeURIComponent(src.slice(0, 450)) + "&langpair=" + pair;
     fetch(url)
       .then((res) => res.json())
       .then((data) => {
         const out = data && data.responseData && data.responseData.translatedText;
         if (out && String(out).trim() && String(out).trim() !== src) {
-          saveEn(src, out);
-          if (lang === "en") scheduleLangRefresh();
+          saveTr(dest, src, out);
+          if (lang === dest) scheduleLangRefresh();
         }
       })
       .catch(() => {})
-      .finally(() => pendingTr.delete(src));
+      .finally(() => pendingTr.delete(key));
+  }
+
+  function ensureTextTranslated(text, target) {
+    const src = String(text || "").trim();
+    const dest = target || (lang === "zh" ? "zh" : "en");
+    if (!src || dest === "es") return src;
+    const hit = cachedTr(dest, src);
+    if (hit) return hit;
+    queueTranslate(src, dest);
+    return src;
   }
 
   function ensureTextEn(text) {
-    const src = String(text || "").trim();
-    if (!src) return "";
-    const hit = cachedEn(src);
-    if (hit) return hit;
-    queueTranslate(src);
-    return src;
+    return ensureTextTranslated(text, "en");
   }
 
   function productField(product, field) {
     if (!product) return "";
     const raw = product[field] || "";
-    if (lang !== "en") return raw;
+    if (lang === "es") return raw;
+    if (lang === "zh") {
+      const row = productZh[product.id];
+      if (row && row[field]) return row[field];
+      if (product.zh && product.zh[field]) return product.zh[field];
+      return ensureTextTranslated(raw, "zh");
+    }
     const row = productEn[product.id];
     if (row && row[field]) return row[field];
     if (product.en && product.en[field]) return product.en[field];
-    return ensureTextEn(raw);
+    return ensureTextTranslated(raw, "en");
   }
 
   function warmProductTranslations(list) {
-    if (lang !== "en") return;
+    if (lang !== "en" && lang !== "zh") return;
+    const pack = lang === "zh" ? productZh : productEn;
     (list || []).forEach((item) => {
       ["name", "summary", "description", "finish", "line"].forEach((field) => {
         const raw = item && item[field];
         if (!raw) return;
-        if (productEn[item.id] && productEn[item.id][field]) return;
-        if (item.en && item.en[field]) return;
-        ensureTextEn(raw);
+        if (pack[item.id] && pack[item.id][field]) return;
+        if (item[lang] && item[lang][field]) return;
+        ensureTextTranslated(raw, lang);
       });
     });
   }
@@ -579,6 +872,7 @@
     return `<div class="lang-switch ${extraClass || ""}" role="group" aria-label="${t("lang.switch")}">
       <button type="button" data-lang-btn="es" aria-pressed="${lang === "es" ? "true" : "false"}" class="${lang === "es" ? "on" : ""}">ES</button>
       <button type="button" data-lang-btn="en" aria-pressed="${lang === "en" ? "true" : "false"}" class="${lang === "en" ? "on" : ""}">EN</button>
+      <button type="button" data-lang-btn="zh" aria-pressed="${lang === "zh" ? "true" : "false"}" class="${lang === "zh" ? "on" : ""}">中文</button>
     </div>`;
   }
 
@@ -664,6 +958,7 @@
   window.productField = productField;
   window.warmProductTranslations = warmProductTranslations;
   window.ensureTextEn = ensureTextEn;
+  window.ensureTextTranslated = ensureTextTranslated;
   window.langSwitcherHtml = langSwitcherHtml;
   window.currencySwitcherHtml = currencySwitcherHtml;
   window.localeControlsHtml = localeControlsHtml;

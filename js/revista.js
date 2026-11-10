@@ -22,6 +22,7 @@ const PR=[
 {id:'shaving',n:'Shaving Gel',sub:'For men · aloe vera',cap:'Shaving Gel For Men',c:'#FF6A00',v:'paper',d:'Gel de afeitar for men. Contiene aloe vera.',r:[['Contenido','250 ml'],['Contiene','Aloe vera · Eucalipto · Mentol'],['Uso','Afeitado']],img:'assets/products/shaving-gel.jpg',bleed:1},
 {id:'splash',n:'Body Splash',sub:'For men',cap:'Body Splash For Men',c:'#4BA3DC',tx:'#061018',v:'color',d:'Splash corporal. Eucalipto y mentol. Se aplica en la zona del cuerpo que se requiera.',r:[['Contenido','250 ml'],['Contiene','Eucalipto · Mentol'],['Uso','Cuerpo']],img:'assets/products/splash.jpg',bleed:1},
 {id:'ducha',n:'Ducha íntima',sub:'For men',cap:'Ducha Íntima For Men',c:'#A4D800',v:'dark',d:'Higiene masculina. Sin fragancia, sin colorantes y sin parabenos.',r:[['Contenido','180 g'],['Fórmula','Sin fragancia ni parabenos'],['Uso','Externo']],img:'assets/products/ducha-intima.jpg',bleed:1}];
+const TIN_ZH='角蛋白 · 迷迭香 · 芦荟',EXT_ZH='迷迭香 · 角蛋白 · 洋葱 · 芦荟 · 胡萝卜 · 透明质酸';
 const PR_EN={
 cera:{n:'Wax',sub:'Molding · medium shine',cap:'Molding Wax',d:'Shapes and defines with medium shine. Made with keratin, rosemary and aloe vera.',r:[['Size','150 g'],['Finish','Medium shine'],['Contains',TIN_EN]]},
 pasta:{n:'Paste',sub:'Molding · shiny',cap:'Molding Paste',d:'Hold with a shiny finish for defined styles. With keratin, rosemary and aloe vera.',r:[['Size','150 g'],['Finish','Shiny'],['Contains',TIN_EN]]},
@@ -38,22 +39,39 @@ shaving:{n:'Shaving Gel',sub:'For men · aloe vera',cap:'Shaving Gel For Men',d:
 splash:{n:'Body Splash',sub:'For men',cap:'Body Splash For Men',d:'Body splash. Eucalyptus and menthol. Apply where needed.',r:[['Size','250 ml'],['Contains','Eucalyptus · Menthol'],['Use','Body']]},
 ducha:{n:'Intimate wash',sub:'For men',cap:'Intimate Wash For Men',d:'Men’s hygiene. No fragrance, dyes or parabens.',r:[['Size','180 g'],['Formula','Fragrance-free, paraben-free'],['Use','External']]}
 };
+const PR_ZH={
+cera:{n:'发蜡',sub:'造型 · 中亮泽',cap:'造型发蜡',d:'中亮泽塑形定型。含角蛋白、迷迭香与芦荟。',r:[['规格','150 g'],['效果','中亮泽'],['成分',TIN_ZH]]},
+pasta:{n:'发泥',sub:'造型 · 亮泽',cap:'造型发泥',d:'亮泽定型，打造清晰发型。含角蛋白、迷迭香与芦荟。',r:[['规格','150 g'],['效果','亮泽'],['成分',TIN_ZH]]},
+pomada:{n:'发油',sub:'造型 · 哑光',cap:'造型发油',d:'哑光自然效果，满足日常发型所需定型力。',r:[['规格','150 g'],['效果','哑光'],['成分',TIN_ZH]]},
+'cera-fibra':{n:'纤维发蜡',sub:'湿润效果',cap:'纤维发蜡',d:'发蜡与纤维合一，打造有质感的湿润造型。',r:[['规格','200 g'],['效果','湿润'],['成分',TIN_ZH]]},
+kids:{n:'儿童纤维发蜡',sub:'儿童系列',cap:'儿童纤维发蜡',d:'专为儿童设计的版本，以蜂蜡为基底。',r:[['基质','蜂蜡'],['用法','干发或半干发'],['成分',TIN_ZH]]},
+anticaida:{n:'洗发水',sub:'护发 · 防脱',cap:'护发洗发水',d:'提升丰盈、光泽与柔顺感，同时呵护头皮。',r:[['规格','500 g'],['成分',EXT_ZH],['配方','无盐']]},
+carbon:{n:'洗发水',sub:'活性炭',cap:'活性炭洗发水',d:'有助于改善头皮屑与瘙痒。清洁头皮，保持发丝强韧。',r:[['规格','500 ml'],['成分',EXT_ZH],['配方','无盐']]},
+serum:{n:'精华',sub:'胡须 · 唇须',cap:'胡须 · 唇须精华',d:'胡须与唇须日常护理，含天然油脂。',r:[['规格','65 ml · 2.3 fl oz'],['成分','阿甘 · 荷荷巴 · 芦荟'],['用法','外用']]},
+tonico:{n:'精华液',sub:'有机 · 头皮',cap:'有机头皮精华',d:'头皮植物精华。含 19 种活性成分。',r:[['规格','65 ml'],['用法','头皮'],['成分','迷迭香 · 生物素 · 芦荟']]},
+'pasta-minoxidil':{n:'发泥',sub:'米诺地尔 · 蜂蜡',cap:'米诺地尔发泥',d:'以蜂蜡为基底，含米诺地尔、泛醇与迷迭香。用于干发或半干发。',r:[['规格','150 g'],['基质','蜂蜡'],['成分','米诺地尔 · 泛醇 · 迷迭香']]},
+'cubre-canas':{n:'啫喱',sub:'遮盖白发',cap:'遮盖白发啫喱',d:'遮盖白发，呈现湿润亮泽效果。',r:[['规格','150 g'],['效果','湿润亮泽'],['成分',TIN_ZH]]},
+shaving:{n:'剃须啫喱',sub:'男士 · 芦荟',cap:'男士剃须啫喱',d:'男士剃须啫喱。含芦荟。',r:[['规格','250 ml'],['成分','芦荟 · 桉树 · 薄荷醇'],['用法','剃须']]},
+splash:{n:'身体喷雾',sub:'男士专用',cap:'男士身体喷雾',d:'身体喷雾。桉树与薄荷醇。按需喷涂。',r:[['规格','250 ml'],['成分','桉树 · 薄荷醇'],['用法','身体']]},
+ducha:{n:'私密洗护',sub:'男士专用',cap:'男士私密洗护',d:'男士卫生护理。无香精、无色素、无对羟基苯甲酸酯。',r:[['规格','180 g'],['配方','无香精无防腐剂'],['用法','外用']]}
+};
 const PES={cera:24000,pasta:24000,pomada:24000,'cera-fibra':24000,kids:24000,anticaida:34000,carbon:32000,serum:20000,tonico:52000,'pasta-minoxidil':24000,'cubre-canas':24000,shaving:29000,splash:29000,ducha:29000};
 const cop=n=>typeof money==='function'?money(n):('$'+Number(n).toLocaleString('es-CO'));
 const LINK={cera:'cera-brillo',pasta:'pasta',pomada:'pomada','cera-fibra':'cera-fibra',kids:'cera-kids',anticaida:'shampoo-proteccion',carbon:'shampoo-carbon',serum:'serum-barba',tonico:'tonico','pasta-minoxidil':'pasta-minoxidil','cubre-canas':'gel-cubre-canas',shaving:'shaving-gel',splash:'splash',ducha:'ducha-intima'};
 PR.forEach((p,j)=>{p.ref=String(j+1).padStart(2,'0');p.price=PES[p.id]||0;p._es={n:p.n,sub:p.sub,cap:p.cap,d:p.d,r:p.r.map(row=>row.slice())};p.r=[['Precio',cop(p.price)],...p.r]});
 try{const saved=JSON.parse(localStorage.getItem('vm_catalog')||'{}');PR.forEach(p=>{const s=saved[LINK[p.id]||p.id];if(!s)return;if(s.name){p.n=s.name;p._es.n=s.name}if(s.finish){p.sub=s.finish;p._es.sub=s.finish}if(s.description){p.d=s.description;p._es.d=s.description}if(s.image){p.img=s.image;p.bleed=1}if(s.price!=null){p.price=Number(s.price)}if(s.size){const row=p._es.r.find(x=>x[0]==='Contenido');if(row)row[1]=s.size}if(s.ingredients){const txt=Array.isArray(s.ingredients)?s.ingredients.join(' · '):s.ingredients;const row=p._es.r.find(x=>x[0]==='Contiene');if(row)row[1]=txt}})}catch(e){}
 const tt=(k,vars)=>typeof t==='function'?t(k,vars):k;
-const enNow=()=>typeof getLang==='function'&&getLang()==='en';
-const labelMap=()=>({Precio:tt('mag.price'),Contenido:tt('mag.size'),Acabado:tt('mag.finishLabel'),Contiene:tt('mag.contains'),Base:tt('mag.base'),Uso:tt('mag.use'),Fórmula:tt('mag.formula'),Price:tt('mag.price'),Size:tt('mag.size'),Finish:tt('mag.finishLabel'),Contains:tt('mag.contains'),Use:tt('mag.use'),Formula:tt('mag.formula')});
+const langNow=()=>typeof getLang==='function'?getLang():'es';
+const labelMap=()=>({Precio:tt('mag.price'),Contenido:tt('mag.size'),Acabado:tt('mag.finishLabel'),Contiene:tt('mag.contains'),Base:tt('mag.base'),Uso:tt('mag.use'),Fórmula:tt('mag.formula'),Price:tt('mag.price'),Size:tt('mag.size'),Finish:tt('mag.finishLabel'),Contains:tt('mag.contains'),Use:tt('mag.use'),Formula:tt('mag.formula'),'价格':tt('mag.price'),'规格':tt('mag.size'),'效果':tt('mag.finishLabel'),'成分':tt('mag.contains'),'基质':tt('mag.base'),'用法':tt('mag.use'),'配方':tt('mag.formula')});
 function localizePR(){
-  const en=enNow(),map=labelMap();
+  const current=langNow(),map=labelMap();
+  const pack=current==='zh'?PR_ZH:current==='en'?PR_EN:null;
   PR.forEach(p=>{
-    const src=en&&PR_EN[p.id]?PR_EN[p.id]:p._es;
+    const src=pack&&pack[p.id]?pack[p.id]:p._es;
     let n=src.n,sub=src.sub,cap=src.cap,d=src.d,rows=src.r.map(row=>row.slice());
-    if(en&&!PR_EN[p.id]&&typeof ensureTextEn==='function'){
-      n=ensureTextEn(p._es.n);sub=ensureTextEn(p._es.sub);cap=ensureTextEn(p._es.cap);d=ensureTextEn(p._es.d);
-      rows=p._es.r.map(([a,b])=>[a, /[A-Za-zÁÉÍÓÚáéíóúñÑ]/.test(b)&&!/^\d/.test(b)?ensureTextEn(b):b]);
+    if((current==='en'||current==='zh')&&!(pack&&pack[p.id])&&typeof ensureTextTranslated==='function'){
+      n=ensureTextTranslated(p._es.n,current);sub=ensureTextTranslated(p._es.sub,current);cap=ensureTextTranslated(p._es.cap,current);d=ensureTextTranslated(p._es.d,current);
+      rows=p._es.r.map(([a,b])=>[a, /[A-Za-zÁÉÍÓÚáéíóúñÑ]/.test(b)&&!/^\d/.test(b)?ensureTextTranslated(b,current):b]);
     }
     p.n=n;p.sub=sub;p.cap=cap;p.d=d;
     p.r=[[map.Precio||tt('mag.price'),cop(p.price)],...rows.map(([a,b])=>[map[a]||a,b])];

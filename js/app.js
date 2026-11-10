@@ -1319,7 +1319,7 @@ async function boot() {
     }
   }
   if (!location.hash) location.hash = "#/inicio";
-  if (typeof getLang === "function" && getLang() === "en" && typeof warmProductTranslations === "function") {
+  if (typeof getLang === "function" && (getLang() === "en" || getLang() === "zh") && typeof warmProductTranslations === "function") {
     warmProductTranslations(VM.products || []);
   }
   render();
