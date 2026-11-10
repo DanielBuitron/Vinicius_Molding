@@ -322,7 +322,7 @@ async function render() {
 
 async function adminView() {
   const tab = VM.parts[1] || "resumen";
-  if (tab === "clave" || tab === "wompi" || tab === "asesor" || tab === "contacto") {
+  if (tab === "clave" || tab === "wompi" || tab === "asesor" || tab === "contacto" || tab === "whatsapp") {
     try {
       const settings = await api("/api/admin/settings");
       VM.config.wompi = {
@@ -336,6 +336,7 @@ async function adminView() {
       if (settings.webhookUrl) VM.config.webhookUrl = settings.webhookUrl;
     } catch (err) { /* en el sitio publicado quedan las llaves de este navegador */ }
     if (tab === "clave" || tab === "wompi") return viewWompi();
+    if (tab === "whatsapp") return viewWhatsapp();
     return viewContact();
   }
   const localMetrics = () => {
@@ -909,6 +910,21 @@ function bind() {
       }
       if (kind === "checkout") {
         await sendOrderWhatsapp(data);
+        return;
+      }
+      if (kind === "bot-chat") {
+        const text = String(data.message || "").trim();
+        if (!text) return;
+        if (!VM.botChat) VM.botChat = [];
+        VM.botChat.push({ role: "user", text });
+        const answer = window.ViniciusBot ? ViniciusBot.reply(text) : "El asistente no está cargado.";
+        VM.botChat.push({ role: "bot", text: answer });
+        if (VM.botChat.length > 40) VM.botChat = VM.botChat.slice(-40);
+        render();
+        requestAnimationFrame(() => {
+          const thread = document.getElementById("bot-thread");
+          if (thread) thread.scrollTop = thread.scrollHeight;
+        });
         return;
       }
     } catch (err) {
