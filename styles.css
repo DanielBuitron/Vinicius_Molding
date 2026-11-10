@@ -141,14 +141,35 @@ html.phone .wa-fab{bottom:max(76px,calc(env(safe-area-inset-bottom) + 68px))}
 .lang-switch button{appearance:none;border:0;cursor:pointer;min-width:32px;height:28px;border-radius:999px;padding:0 8px;font:700 11px/1 Poppins,sans-serif;letter-spacing:.04em;color:rgba(255,255,255,.78);background:transparent}
 .lang-switch button.on{background:#E52C3B;color:#fff}
 .currency-switch button.on{background:#00C8C2;color:#041212}
-#lang-dock{position:fixed;z-index:46;left:max(12px,env(safe-area-inset-left));bottom:max(18px,env(safe-area-inset-bottom));display:none}
-html.phone #lang-dock{bottom:max(76px,calc(env(safe-area-inset-bottom) + 68px))}
+#lang-dock{display:none!important}
 body.mode-home .top-actions .locale-controls{display:inline-flex}
-body.mode-app #lang-dock{display:none}
-body.shop-page #lang-dock{display:none}
-@media (max-width:700px){
-  body.mode-home .top-actions .locale-controls{display:none}
-  body.mode-home #lang-dock{display:block}
+#revista .top{z-index:50}
+@media (max-width:900px){
+  #revista .top{
+    flex-wrap:wrap;
+    align-items:center;
+    row-gap:8px;
+    padding-top:max(10px,env(safe-area-inset-top));
+  }
+  #revista .top-actions{
+    width:100%;
+    justify-content:flex-end;
+    flex-wrap:wrap;
+    gap:6px;
+  }
+  #revista .top-actions .locale-controls{
+    display:inline-flex!important;
+    order:-1;
+    width:100%;
+    justify-content:flex-end;
+    margin:0;
+  }
+  #revista .lang-switch button{
+    min-width:30px;
+    height:26px;
+    padding:0 7px;
+    font-size:10px;
+  }
 }
 html.phone #revista .book-light{opacity:calc(.82 - var(--o, 0) * .52)}
 #revista .short{display:none}
