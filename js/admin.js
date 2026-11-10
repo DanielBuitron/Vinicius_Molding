@@ -11,6 +11,7 @@ function adminShell(title, body, opts) {
         ${item("inventario", "Inventario")}
         ${item("seguimiento", "Seguimiento")}
         ${item("whatsapp", "WhatsApp")}
+        ${item("notificaciones", `Notificaciones${VM.notifUnread ? `<span class="side-badge">${VM.notifUnread}</span>` : ""}`)}
         ${item("contacto", "Contacto")}
         ${item("pedidos", "Pedidos")}
         ${item("wompi", "Wompi")}
@@ -264,6 +265,10 @@ function viewWhatsapp(payload) {
             <strong>WhatsApp</strong>
             <em>${sessionReady ? "Sesión vinculada" : (data.ready ? "API conectada" : "Sin vincular")}</em>
           </div>
+          <label class="wa-auto-mini" title="Bot automático global">
+            <input type="checkbox" data-act="wa-auto-global" ${data.autoReply !== false ? "checked" : ""}>
+            Bot
+          </label>
           <button type="button" class="wa-icon-btn" data-act="wa-settings" title="API">⚙</button>
         </header>
         <div class="wa-search"><input placeholder="Buscar o empezar un chat" disabled></div>
@@ -275,8 +280,12 @@ function viewWhatsapp(payload) {
             <span class="wa-avatar">${esc((active.name || "?").slice(0, 1).toUpperCase())}</span>
             <div>
               <strong>${esc(active.name || active.phone)}</strong>
-              <em>en línea · bot Vinicius</em>
+              <em>${active.autoReply === false || active.needsAdvisor ? "Bot en pausa · responde tú" : "en línea · bot Vinicius"}</em>
             </div>
+            <label class="wa-auto-mini" title="Respuesta automática en este chat">
+              <input type="checkbox" data-act="wa-chat-auto" data-id="${esc(active.id)}" ${active.autoReply === false ? "" : "checked"}>
+              Auto
+            </label>
           </header>
           <div class="wa-thread" id="wa-thread">${messages}</div>
           <form class="wa-composer" data-form="wa-send">
@@ -301,7 +310,8 @@ function viewWhatsapp(payload) {
       <label>Token permanente<input name="token" value="${data.hasToken ? "********" : ""}" placeholder="EAAG..." autocomplete="off"></label>
       <label>Phone number ID<input name="phoneNumberId" value="${esc(data.phoneNumberId || "")}" placeholder="ID de Meta"></label>
       <label>Verify token<input name="verifyToken" value="${esc(data.verifyToken || "vinicius-wa")}"></label>
-      <label class="wa-check"><input type="checkbox" name="autoReply" value="1" ${data.autoReply !== false ? "checked" : ""}> Respuesta automática del bot Vinicius</label>
+      <label class="wa-check"><input type="checkbox" name="autoReply" value="1" ${data.autoReply !== false ? "checked" : ""}> Seguir respondiendo automáticamente (bot Vinicius)</label>
+      <p class="fine">Si lo apagas, el bot deja de contestar y solo respondes tú desde el panel.</p>
       <p class="fine">Webhook Meta: <code>${esc(data.webhookUrl || "")}</code></p>
       <div class="wa-api-actions">
         <button class="btn" type="submit">Guardar API</button>
@@ -314,6 +324,60 @@ function viewWhatsapp(payload) {
       ${linked && !VM.waShowQr ? chatScreen : linkScreen}
       ${settings}
     </div>`, { whatsapp: true });
+}
+
+function viewNotifications(payload) {
+  const data = payload || VM.notifData || {};
+  const notes = data.notifications || [];
+  const quotes = data.quotes || [];
+  const list = notes.map((note) => `
+    <article class="notif-card ${note.read ? "" : "unread"}" data-act="notif-open" data-id="${esc(note.id)}" data-href="${esc(note.href || "#/panel/whatsapp")}">
+      <div>
+        <strong>${esc(note.title || "Aviso")}</strong>
+        <p>${esc(note.body || "")}</p>
+        <em>${esc(waTime(note.at))} · ${esc(note.type || "info")}</em>
+      </div>
+      ${note.read ? "" : `<span class="notif-dot"></span>`}
+    </article>`).join("");
+  const quoteRows = quotes.map((q) => `
+    <tr>
+      <td>${esc(q.id || "")}</td>
+      <td>${esc(q.name || q.phone || "")}</td>
+      <td>${money(q.total)}</td>
+      <td>${esc(waTime(q.at))}</td>
+    </tr>`).join("");
+  return adminShell("Notificaciones", `
+    <div class="notif-toolbar">
+      <label class="wa-check">
+        <input type="checkbox" data-act="wa-auto-global" ${data.autoReply !== false ? "checked" : ""}>
+        Seguir respondiendo automáticamente
+      </label>
+      <div class="notif-actions">
+        <button type="button" class="btn ghost" data-act="notif-read-all">Marcar leídas</button>
+        <a class="btn" href="#/panel/whatsapp">Ir a WhatsApp</a>
+      </div>
+    </div>
+    <div class="stats" style="margin-bottom:18px">
+      <article class="stat"><span>Sin leer</span><strong>${Number(data.unread || 0)}</strong><em>alertas nuevas</em></article>
+      <article class="stat"><span>Asesor</span><strong>${Number(data.advisorWaiting || 0)}</strong><em>chats esperando persona</em></article>
+      <article class="stat"><span>Cotizaciones</span><strong>${quotes.length}</strong><em>recientes</em></article>
+      <article class="stat"><span>Bot</span><strong>${data.autoReply === false ? "Pausa" : "Activo"}</strong><em>respuesta automática</em></article>
+    </div>
+    <div class="admin-grid">
+      <article class="panel-card">
+        <h3>Alertas</h3>
+        <div class="notif-list">${list || `<p class="fine">Sin notificaciones todavía.</p>`}</div>
+      </article>
+      <article class="panel-card">
+        <h3>Cotizaciones recientes</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Ref</th><th>Cliente</th><th>Total</th><th>Cuando</th></tr></thead>
+            <tbody>${quoteRows || `<tr><td colspan="4" class="empty">Sin cotizaciones.</td></tr>`}</tbody>
+          </table>
+        </div>
+      </article>
+    </div>`);
 }
 
 function viewWompi() {
