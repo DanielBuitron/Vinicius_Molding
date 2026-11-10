@@ -4,3 +4,5 @@ data/store.json
 data/store.tmp
 .tools/
 config.json
+wa-bridge/node_modules/
+wa-bridge/auth/

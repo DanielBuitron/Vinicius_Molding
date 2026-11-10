@@ -5,10 +5,13 @@ import base64
 import hashlib
 import io
 import json
+import os
 import re
 import secrets
+import subprocess
 import sys
 import threading
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -25,6 +28,11 @@ ROOT = Path(__file__).resolve().parent
 WEB = ROOT / "web"
 DATA = ROOT / "data" / "store.json"
 LOCK = threading.Lock()
+BRIDGE_PORT = 3100
+BRIDGE_URL = "http://127.0.0.1:%s" % BRIDGE_PORT
+SERVER_PORT = 8080
+_bridge_proc = None
+_bridge_lock = threading.Lock()
 
 try:
     sys.stdout.reconfigure(encoding="utf-8")
@@ -404,6 +412,88 @@ def wa_qr_png(phone):
     buf = io.BytesIO()
     picture.save(buf, format="PNG")
     return buf.getvalue()
+
+
+def node_bin():
+    portable = ROOT / ".tools" / "node" / ("node.exe" if os.name == "nt" else "node")
+    if portable.exists():
+        return str(portable)
+    return "node"
+
+
+def bridge_request(path, method="GET", body=None, timeout=3):
+    data = None if body is None else json.dumps(body).encode("utf-8")
+    req = urllib.request.Request(
+        BRIDGE_URL + path,
+        data=data,
+        method=method,
+        headers={"Content-Type": "application/json"} if data is not None else {},
+    )
+    with urllib.request.urlopen(req, timeout=timeout) as response:
+        raw = response.read()
+        ctype = response.headers.get("Content-Type") or ""
+        if "image/" in ctype:
+            return raw
+        if not raw:
+            return {}
+        return json.loads(raw.decode("utf-8"))
+
+
+def bridge_status():
+    try:
+        data = bridge_request("/status", timeout=2)
+        if isinstance(data, dict):
+            return data
+    except Exception:
+        pass
+    return {"ok": False, "status": "offline", "connected": False, "hasQr": False}
+
+
+def bridge_qr_png():
+    try:
+        data = bridge_request("/qr.png", timeout=2)
+        if isinstance(data, (bytes, bytearray)) and data:
+            return bytes(data)
+    except Exception:
+        pass
+    return None
+
+
+def ensure_wa_bridge():
+    global _bridge_proc
+    with _bridge_lock:
+        status = bridge_status()
+        if status.get("status") and status.get("status") != "offline":
+            return True
+        if _bridge_proc is not None and _bridge_proc.poll() is None:
+            return True
+        bridge_dir = ROOT / "wa-bridge"
+        entry = bridge_dir / "index.js"
+        if not entry.exists():
+            return False
+        node = node_bin()
+        modules = bridge_dir / "node_modules" / "@whiskeysockets" / "baileys"
+        if not modules.exists():
+            return False
+        creationflags = 0
+        if os.name == "nt":
+            creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+        env = os.environ.copy()
+        env["WA_BRIDGE_PORT"] = str(BRIDGE_PORT)
+        env["VM_API"] = "http://127.0.0.1:%s" % SERVER_PORT
+        try:
+            _bridge_proc = subprocess.Popen(
+                [node, str(entry)],
+                cwd=str(bridge_dir),
+                env=env,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                creationflags=creationflags,
+            )
+        except Exception:
+            _bridge_proc = None
+            return False
+        return True
 
 
 def wa_norm(text):
@@ -841,6 +931,10 @@ class Handler(BaseHTTPRequestHandler):
             self.whatsapp_qr(query)
             return
 
+        if path == "/api/whatsapp/bridge/inbound" and method == "POST":
+            self.whatsapp_bridge_inbound()
+            return
+
         if path == "/api/whatsapp/webhook" and method == "GET":
             self.whatsapp_webhook_verify(query)
             return
@@ -859,6 +953,10 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == "/api/admin/whatsapp/send" and method == "POST":
             self.whatsapp_admin_send()
+            return
+
+        if path == "/api/admin/whatsapp/logout" and method == "POST":
+            self.whatsapp_admin_logout()
             return
 
         if path == "/api/auth/login" and method == "POST":
@@ -1043,6 +1141,22 @@ class Handler(BaseHTTPRequestHandler):
         self.send_json(200, {"ok": True, "wompiReady": wompi_ready(cfg)})
 
     def whatsapp_qr(self, query):
+        ensure_wa_bridge()
+        mode = (query.get("mode") or [""])[0].strip().lower()
+        if mode != "link":
+            for _ in range(20):
+                png = bridge_qr_png()
+                if png:
+                    self.send_bytes(200, png, "image/png", {"Cache-Control": "no-store"})
+                    return
+                status = bridge_status()
+                if status.get("connected"):
+                    self.send_json(409, {"error": "Ya está vinculado.", "connected": True})
+                    return
+                time.sleep(0.35)
+            if mode == "session":
+                self.send_json(404, {"error": "Esperando QR de vinculación.", "status": bridge_status().get("status")})
+                return
         phone = (query.get("phone") or [""])[0]
         cfg = wa_cfg()
         digits = "".join(ch for ch in str(phone or cfg["phone"]) if ch.isdigit()) or cfg["phone"]
@@ -1051,6 +1165,52 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(500, {"error": "No se pudo generar el QR."})
             return
         self.send_bytes(200, png, "image/png", {"Cache-Control": "no-store"})
+
+    def whatsapp_bridge_inbound(self):
+        if self.client_address and self.client_address[0] not in ("127.0.0.1", "::1"):
+            self.send_json(403, {"error": "Solo local."})
+            return
+        body = self.read_json()
+        phone = "".join(ch for ch in str(body.get("phone") or "") if ch.isdigit())
+        text = str(body.get("text") or "").strip()
+        name = str(body.get("name") or phone).strip() or phone
+        if not phone or not text:
+            self.send_json(400, {"error": "Falta teléfono o texto."})
+            return
+        reply = ""
+        with LOCK:
+            store = load_store()
+            cfg = read_config()
+            api = wa_cfg(cfg)
+            chats = store.setdefault("whatsappChats", {})
+            chat = chats.setdefault(phone, {
+                "id": phone,
+                "name": name,
+                "phone": phone,
+                "messages": [],
+                "updatedAt": now_iso(),
+            })
+            if name:
+                chat["name"] = name
+            chat["messages"].append({
+                "id": str(body.get("messageId") or ("m_" + secrets.token_hex(6))),
+                "from": "in",
+                "text": text,
+                "at": now_iso(),
+            })
+            if api["autoReply"]:
+                reply = wa_bot_reply(text, store.get("products") or [], api["phone"])
+                chat["messages"].append({
+                    "id": "b_" + secrets.token_hex(6),
+                    "from": "out",
+                    "text": reply,
+                    "at": now_iso(),
+                    "bot": True,
+                })
+            chat["updatedAt"] = now_iso()
+            chat["messages"] = chat["messages"][-80:]
+            save_store(store)
+        self.send_json(200, {"ok": True, "reply": reply})
 
     def whatsapp_webhook_verify(self, query):
         mode = (query.get("hub.mode") or [""])[0]
@@ -1132,15 +1292,29 @@ class Handler(BaseHTTPRequestHandler):
         chats.sort(key=lambda item: item.get("updatedAt") or "", reverse=True)
         cfg = read_config()
         api = wa_cfg(cfg)
+        ensure_wa_bridge()
+        session = bridge_status()
+        session_ready = bool(session.get("connected"))
+        has_qr = bool(session.get("hasQr"))
+        qr_url = self.base_url() + "/api/whatsapp/qr?mode=session&t=" + str(int(time.time() * 1000))
+        if not has_qr and not session_ready:
+            qr_url = self.base_url() + "/api/whatsapp/qr?mode=session&wait=1&t=" + str(int(time.time() * 1000))
+        me = session.get("me") or {}
+        phone = me.get("phone") or api["phone"]
         self.send_json(200, {
             "ready": wa_ready(cfg),
-            "phone": api["phone"],
+            "sessionReady": session_ready,
+            "sessionStatus": session.get("status") or "offline",
+            "hasQr": has_qr,
+            "qrAt": session.get("qrAt") or 0,
+            "bridgeError": session.get("lastError") or "",
+            "phone": phone,
             "phoneNumberId": api["phoneNumberId"],
             "verifyToken": api["verifyToken"],
             "autoReply": api["autoReply"],
             "hasToken": bool(api["token"]),
             "webhookUrl": self.base_url() + "/api/whatsapp/webhook",
-            "qrUrl": self.base_url() + "/api/whatsapp/qr?phone=" + urllib.parse.quote(api["phone"]),
+            "qrUrl": qr_url,
             "openUrl": wa_send_link(api["phone"], "Hola, quiero información de Vinicius Molding"),
             "chats": chats,
         })
@@ -1199,6 +1373,15 @@ class Handler(BaseHTTPRequestHandler):
             chat["updatedAt"] = now_iso()
             chat["messages"] = chat["messages"][-80:]
             save_store(store)
+        session = bridge_status()
+        if session.get("connected"):
+            try:
+                bridge_request("/send", method="POST", body={"to": to_phone, "text": text}, timeout=12)
+                self.send_json(200, {"ok": True, "via": "session"})
+                return
+            except Exception as exc:
+                self.send_json(502, {"error": "No se pudo enviar por la sesión vinculada.", "detail": str(exc)})
+                return
         if api["token"] and api["phoneNumberId"]:
             try:
                 wa_graph_send(api["phoneNumberId"], api["token"], to_phone, text)
@@ -1209,6 +1392,19 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as exc:
                 self.send_json(502, {"error": "No se pudo enviar por la API.", "detail": str(exc)})
                 return
+        self.send_json(200, {"ok": True, "via": "local"})
+
+    def whatsapp_admin_logout(self):
+        with LOCK:
+            store = load_store()
+            if not self.require_user(store):
+                return
+        ensure_wa_bridge()
+        try:
+            bridge_request("/logout", method="POST", body={}, timeout=8)
+        except Exception as exc:
+            self.send_json(502, {"error": "No se pudo cerrar la sesión.", "detail": str(exc)})
+            return
         self.send_json(200, {"ok": True})
 
     def update_product(self, product_id):
@@ -1606,6 +1802,7 @@ def build_metrics(store):
 
 
 def main():
+    global SERVER_PORT, _bridge_proc
     load_store()
     server = None
     port = 8080
@@ -1619,12 +1816,15 @@ def main():
     if server is None:
         print("No hay un puerto libre entre 8080 y 8089.")
         return
+    SERVER_PORT = port
+    ensure_wa_bridge()
     print("")
     print("  Vinicius Molding")
     print(f"  Tienda    http://127.0.0.1:{port}")
     print(f"  Panel     http://127.0.0.1:{port}/#/login")
     print("  Usuario   admin")
     print("  Clave     admin123")
+    print("  WhatsApp  vinculación local (QR dispositivos vinculados)")
     print("")
     print("  Detener: Ctrl+C")
     print("", flush=True)
@@ -1633,6 +1833,8 @@ def main():
     except KeyboardInterrupt:
         print("\nServidor detenido.")
         server.shutdown()
+        if _bridge_proc is not None and _bridge_proc.poll() is None:
+            _bridge_proc.terminate()
 
 
 if __name__ == "__main__":

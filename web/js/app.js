@@ -114,30 +114,75 @@ function syncMagazine(home) {
   }
 }
 
+function stopWhatsappPoll() {
+  if (VM.waPollTimer) {
+    clearInterval(VM.waPollTimer);
+    VM.waPollTimer = 0;
+  }
+}
+
+function startWhatsappPoll() {
+  stopWhatsappPoll();
+  const onWhatsapp = ((VM.parts && VM.parts[0]) === "admin") && ((VM.parts[1] || "") === "whatsapp");
+  if (!onWhatsapp) return;
+  VM.waPollTimer = setInterval(async () => {
+    if (((VM.parts && VM.parts[0]) !== "admin") || ((VM.parts[1] || "") !== "whatsapp")) {
+      stopWhatsappPoll();
+      return;
+    }
+    try {
+      const data = await api("/api/admin/whatsapp");
+      const prev = VM.waData || {};
+      VM.waData = data;
+      if (data.sessionReady) {
+        VM.waLinked = true;
+        VM.waShowQr = false;
+        localStorage.setItem("vm_wa_linked", "1");
+        stopWhatsappPoll();
+        render();
+        return;
+      }
+      const qrChanged = data.qrAt && data.qrAt !== prev.qrAt;
+      const statusChanged = data.sessionStatus !== prev.sessionStatus || Boolean(data.hasQr) !== Boolean(prev.hasQr);
+      if ((VM.waShowQr || !VM.waLinked) && (qrChanged || statusChanged)) render();
+    } catch (err) { /* el bridge aún arranca */ }
+  }, 2200);
+}
+
 function mountWhatsappQr() {
   const box = document.getElementById("wa-qr");
-  if (!box) return;
+  if (!box) {
+    if (!(((VM.parts && VM.parts[0]) === "admin") && ((VM.parts[1] || "") === "whatsapp"))) stopWhatsappPoll();
+    return;
+  }
   const link = box.dataset.waQr || "";
   const imgUrl = box.dataset.waQrImg || "";
+  const sessionQr = box.dataset.waSession === "1";
   box.innerHTML = "";
   if (imgUrl) {
     const img = document.createElement("img");
-    img.src = imgUrl;
+    img.src = imgUrl + (imgUrl.includes("?") ? "&" : "?") + "r=" + Date.now();
     img.alt = "QR de WhatsApp";
     img.width = 264;
     img.height = 264;
     img.onerror = () => {
-      if (window.QRCode) {
+      if (sessionQr) {
+        box.innerHTML = "<p class=\"wa-qr-wait\">Generando código de vinculación…</p>";
+        return;
+      }
+      if (window.QRCode && link) {
         box.innerHTML = "";
         new QRCode(box, { text: link, width: 264, height: 264, correctLevel: QRCode.CorrectLevel.M });
       }
     };
     box.appendChild(img);
+    startWhatsappPoll();
     return;
   }
   if (window.QRCode && link) {
     new QRCode(box, { text: link, width: 264, height: 264, correctLevel: QRCode.CorrectLevel.M });
   }
+  startWhatsappPoll();
 }
 
 function paint(html, bodyClass) {
@@ -368,20 +413,32 @@ async function adminView() {
     if (tab === "whatsapp") {
       try {
         VM.waData = await api("/api/admin/whatsapp");
+        if (VM.waData.sessionReady) {
+          VM.waLinked = true;
+          VM.waShowQr = false;
+        } else {
+          VM.waLinked = false;
+          VM.waShowQr = true;
+        }
       } catch (err) {
         const phone = VM.config.whatsapp || SITE.whatsapp || "573235835137";
         VM.waData = {
           ready: false,
+          sessionReady: false,
+          sessionStatus: "offline",
+          hasQr: false,
           phone,
           phoneNumberId: "",
           verifyToken: "vinicius-wa",
           autoReply: true,
           hasToken: false,
           webhookUrl: "",
-          qrUrl: "",
+          qrUrl: "/api/whatsapp/qr?mode=session&t=" + Date.now(),
           openUrl: "https://api.whatsapp.com/send/?phone=" + phone + "&text=&type=phone_number&app_absent=0",
           chats: VM.waData && VM.waData.chats ? VM.waData.chats : [],
         };
+        VM.waLinked = false;
+        VM.waShowQr = true;
       }
       return viewWhatsapp(VM.waData);
     }
@@ -787,6 +844,17 @@ function bind() {
     }
     if (act === "wa-show-qr") {
       VM.waShowQr = true;
+      VM.waLinked = false;
+      render();
+      return;
+    }
+    if (act === "wa-logout") {
+      try {
+        await api("/api/admin/whatsapp/logout", { method: "POST", body: {} });
+      } catch (err) { /* se reintentará al refrescar */ }
+      VM.waLinked = false;
+      VM.waShowQr = true;
+      localStorage.removeItem("vm_wa_linked");
       render();
       return;
     }

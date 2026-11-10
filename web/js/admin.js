@@ -184,8 +184,9 @@ function viewWhatsapp(payload) {
   const activeId = VM.waChatId || (chats[0] && chats[0].id) || "";
   const active = chats.find((chat) => chat.id === activeId) || null;
   const openUrl = data.openUrl || ("https://api.whatsapp.com/send/?phone=" + phone + "&text=&type=phone_number&app_absent=0");
-  const qrUrl = data.qrUrl || ("/api/whatsapp/qr?phone=" + encodeURIComponent(phone) + "&t=" + Date.now());
-  const linked = Boolean(data.ready || VM.waLinked || chats.length);
+  const qrUrl = data.qrUrl || ("/api/whatsapp/qr?mode=session&t=" + Date.now());
+  const sessionReady = Boolean(data.sessionReady);
+  const linked = Boolean(sessionReady || data.ready || VM.waLinked || chats.length);
   const list = chats.map((chat) => {
     const last = (chat.messages || [])[(chat.messages || []).length - 1];
     return `
@@ -205,23 +206,26 @@ function viewWhatsapp(payload) {
       <span>${esc(waTime(msg.at))}${msg.bot ? " · bot" : ""}</span>
     </div>`).join("");
 
+  const statusLabel = sessionReady
+    ? "Vinculado"
+    : (data.sessionStatus === "qr" || data.hasQr ? "Escanea el código" : "Preparando QR…");
   const linkScreen = `
     <div class="wa-link">
       <div class="wa-link-copy">
-        <h2>Usa WhatsApp en Vinicius</h2>
+        <h2>Vincula WhatsApp</h2>
         <ol>
-          <li>Escanea el QR con la cámara o con WhatsApp</li>
-          <li>Se abre el chat oficial de Vinicius Molding</li>
-          <li>El cliente escribe normal y el bot responde con tu catálogo</li>
-          <li>Conecta la <b>Cloud API</b> de Meta (engranaje) para recibir y enviar desde aquí</li>
+          <li>Abre WhatsApp en tu celular</li>
+          <li>Menú · <b>Dispositivos vinculados</b> · Vincular un dispositivo</li>
+          <li>Escanea este código (no uses la cámara normal)</li>
+          <li>Cuando conecte, el bot Vinicius responde con el catálogo</li>
         </ol>
-        <p class="wa-link-note">WhatsApp Cloud API · Webhook: <code>${esc(data.webhookUrl || "/api/whatsapp/webhook")}</code></p>
+        <p class="wa-link-note">Estado: <b>${esc(statusLabel)}</b>${data.bridgeError ? " · " + esc(data.bridgeError) : ""}</p>
       </div>
       <div class="wa-link-qr">
-        <div class="wa-qr-frame" id="wa-qr" data-wa-qr="${esc(openUrl)}" data-wa-qr-img="${esc(qrUrl)}"></div>
-        <p>+${esc(phone)}</p>
-        <a class="wa-open-btn" href="${esc(openUrl)}" target="_blank" rel="noopener">Abrir WhatsApp</a>
-        <button type="button" class="wa-ghost-btn" data-act="wa-linked">Ya escaneé / continuar</button>
+        <div class="wa-qr-frame" id="wa-qr" data-wa-qr="" data-wa-qr-img="${esc(qrUrl)}" data-wa-session="1"></div>
+        <p>${sessionReady ? "Conectado · +" + esc(phone) : "QR de dispositivos vinculados"}</p>
+        <button type="button" class="wa-open-btn" data-act="wa-linked"${sessionReady ? "" : " disabled"}>Continuar al chat</button>
+        <button type="button" class="wa-ghost-btn" data-act="wa-logout">Desvincular</button>
       </div>
     </div>`;
 
@@ -231,7 +235,7 @@ function viewWhatsapp(payload) {
         <header class="wa-side-head">
           <div>
             <strong>WhatsApp</strong>
-            <em>${data.ready ? "API conectada" : "QR + chatbot Vinicius"}</em>
+            <em>${sessionReady ? "Sesión vinculada" : (data.ready ? "API conectada" : "Sin vincular")}</em>
           </div>
           <button type="button" class="wa-icon-btn" data-act="wa-settings" title="API">⚙</button>
         </header>
