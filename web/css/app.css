@@ -833,23 +833,23 @@ body.home .brand img { height: 36px; }
 .folio-sku .sku-shot {
   display: grid;
   place-items: center;
-  min-height: 280px;
+  min-height: 260px;
   aspect-ratio: 1;
   background:
-    radial-gradient(62% 52% at 50% 58%, color-mix(in srgb, var(--accent, var(--red)) 28%, transparent), transparent 72%),
-    #070708;
-  padding: 10px;
+    radial-gradient(60% 50% at 50% 58%, color-mix(in srgb, var(--accent, var(--red)) 20%, transparent), transparent 70%),
+    #0a0a0c;
+  padding: 14px;
   overflow: hidden;
 }
 .folio-sku .sku-shot img {
-  width: min(96%, 320px);
+  width: min(92%, 300px);
   height: auto;
-  max-height: 96%;
+  max-height: 92%;
   object-fit: contain;
-  filter: drop-shadow(0 16px 18px rgba(0, 0, 0, 0.55)) contrast(1.06) saturate(1.05) brightness(1.04);
+  filter: drop-shadow(0 14px 16px rgba(0, 0, 0, 0.45));
   transition: transform 0.4s ease;
 }
-.folio-sku:hover .sku-shot img { transform: translateY(-6px) scale(1.05); }
+.folio-sku:hover .sku-shot img { transform: translateY(-6px) scale(1.03); }
 
 .orbit {
   position: relative;
@@ -893,8 +893,7 @@ body.home .brand img { height: 36px; }
   height: 100%;
   object-fit: contain;
   pointer-events: none;
-  transform: scale(1.08);
-  filter: drop-shadow(0 24px 16px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 1px rgba(255, 255, 255, 0.35)) contrast(1.08) saturate(1.06) brightness(1.06);
+  filter: drop-shadow(0 24px 16px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 1px rgba(255, 255, 255, 0.35));
 }
 .vol-view {
   position: absolute;
