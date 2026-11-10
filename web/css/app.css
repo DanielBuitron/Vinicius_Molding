@@ -1506,13 +1506,89 @@ th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--lin
 th { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
 td img { width: 72px; height: 48px; object-fit: cover; border-radius: 8px; }
 .admin input, .admin select, .admin textarea { background: #0c0c0e; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; color: #fff; width: 100%; }
-.inv-tools { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.inv-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.inv-tools { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 10px; flex: 1; min-width: min(100%, 520px); }
 .inv-list { display: grid; gap: 8px; }
-.inv-row { display: grid; grid-template-columns: 72px 1fr auto; gap: 14px; align-items: center; width: 100%; text-align: left; background: #111113; color: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 10px 14px; }
+.inv-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  background: #111113;
+  color: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 10px 14px;
+}
+.inv-row-main {
+  display: grid;
+  grid-template-columns: 72px 1fr auto;
+  gap: 14px;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+}
 .inv-row img { width: 72px; height: 72px; object-fit: cover; border-radius: 12px; background: #000; }
 .inv-row strong { display: block; font-size: 16px; }
 .inv-row em { display: block; margin-top: 2px; font-style: normal; color: var(--muted); font-size: 12px; }
 .inv-row b { font-weight: 500; letter-spacing: .04em; color: var(--gold); }
+.inv-row-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.btn.danger, .btn.small.danger {
+  background: transparent;
+  color: #ff6b7a;
+  border: 1px solid color-mix(in srgb, #e52c3b 65%, #444);
+}
+.btn.danger:hover, .btn.small.danger:hover { background: #e52c3b; color: #fff; }
+.inv-pager {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 16px;
+}
+.inv-pages { display: flex; flex-wrap: wrap; gap: 6px; }
+.inv-page-btn {
+  min-width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #111113;
+  color: #fff;
+  cursor: pointer;
+  font: 600 13px Outfit, Poppins, sans-serif;
+}
+.inv-page-btn.on, .inv-page-btn:hover { background: var(--red); border-color: var(--red); }
+.inv-form-title {
+  grid-column: 1 / -1;
+  margin: 0 0 4px;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  color: #fff;
+}
+.inv-fields select {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 15px;
+  background: #0a0a0c;
+  color: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
 .inv-modal { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 18px; }
 .inv-back { position: absolute; inset: 0; border: 0; background: rgba(0,0,0,.72); }
 .inv-card { position: relative; z-index: 1; display: grid; grid-template-columns: 220px 1fr; gap: 18px; align-items: start; width: min(920px, 100%); max-height: min(92vh, 860px); overflow: auto; background: #101114; border: 1px solid var(--line); border-radius: 18px; padding: 16px; }
@@ -1526,8 +1602,11 @@ td img { width: 72px; height: 48px; object-fit: cover; border-radius: 8px; }
 .inv-fields input, .inv-fields textarea { text-transform: none; letter-spacing: 0; font-size: 15px; }
 @media (max-width: 800px) {
   .inv-card, .inv-tools { grid-template-columns: 1fr; }
-  .inv-row { grid-template-columns: 64px 1fr; }
+  .inv-toolbar { align-items: stretch; }
+  .inv-row { grid-template-columns: 1fr; }
+  .inv-row-main { grid-template-columns: 64px 1fr; }
   .inv-row b { grid-column: 2; }
+  .inv-row-actions { justify-content: flex-start; }
 }
 .status { border-radius: 99px; padding: 4px 8px; font-size: 12px; background: #2a2a2e; }
 .status.aprobado, .status.contactado { background: #07332b; color: var(--teal); }

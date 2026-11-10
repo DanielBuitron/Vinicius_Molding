@@ -78,44 +78,95 @@ function viewDashboard(data) {
 }
 
 function viewInventory(payload) {
-  const rows = payload.products.map((product) => `
-    <button type="button" class="inv-row" data-act="inv-open" data-id="${esc(product.id)}" data-name="${esc(product.name)}" data-line="${esc(product.line || "")}" data-sku="${esc(product.sku || "")}">
-      <img src="${esc(product.image)}" alt="">
-      <span><strong>${esc(product.name)}</strong><em>${esc(product.line || "")}</em></span>
-      <b>${esc(product.sku || "")}</b>
-    </button>`).join("");
-  const open = payload.products.find((product) => product.id === VM.invId);
-  const editor = open ? `
+  const pageSize = 8;
+  const filters = VM.invFilter || { name: "", line: "", sku: "" };
+  const filtered = (payload.products || []).filter((product) => {
+    const name = String(product.name || "").toLowerCase();
+    const line = String(product.line || "").toLowerCase();
+    const sku = String(product.sku || "").toLowerCase();
+    return name.includes(String(filters.name || "").toLowerCase())
+      && line.includes(String(filters.line || "").toLowerCase())
+      && sku.includes(String(filters.sku || "").toLowerCase());
+  });
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const page = Math.min(Math.max(1, Number(VM.invPage || 1)), totalPages);
+  VM.invPage = page;
+  const slice = filtered.slice((page - 1) * pageSize, page * pageSize);
+  const rows = slice.map((product) => `
+    <div class="inv-row" data-name="${esc(product.name)}" data-line="${esc(product.line || "")}" data-sku="${esc(product.sku || "")}">
+      <button type="button" class="inv-row-main" data-act="inv-open" data-id="${esc(product.id)}">
+        <img src="${esc(product.image)}" alt="">
+        <span><strong>${esc(product.name)}</strong><em>${esc(product.line || "")} · ${money(product.price)}</em></span>
+        <b>${esc(product.sku || "")}</b>
+      </button>
+      <div class="inv-row-actions">
+        <button type="button" class="btn small ghost" data-act="inv-open" data-id="${esc(product.id)}">Editar</button>
+        <button type="button" class="btn small danger" data-act="inv-delete" data-id="${esc(product.id)}" data-name="${esc(product.name)}">Eliminar</button>
+      </div>
+    </div>`).join("");
+  const open = (payload.products || []).find((product) => product.id === VM.invId);
+  const creating = VM.invCreating;
+  const draft = creating ? (VM.invDraft || {
+    name: "", price: 36000, line: "Línea Molding", finish: "", size: "150 g", sku: "",
+    category: "molding", summary: "", description: "", ingredients: "", stock: 12, minStock: 6,
+    image: "assets/products/cera-brillo.jpg",
+  }) : null;
+  const editorProduct = open || draft;
+  const editor = editorProduct ? `
     <div class="inv-modal">
       <button type="button" class="inv-back" data-act="inv-close" aria-label="Cerrar"></button>
-      <form class="inv-card form" data-form="product" data-id="${esc(open.id)}">
+      <form class="inv-card form" data-form="${creating ? "product-create" : "product"}" ${creating ? "" : `data-id="${esc(open.id)}"`}>
         <div class="inv-photo">
-          <img src="${esc(open.image)}" alt="${esc(open.name)}">
+          <img src="${esc(editorProduct.image || "assets/products/cera-brillo.jpg")}" alt="${esc(editorProduct.name || "Nuevo producto")}">
           <label class="btn small">Subir foto<input name="photo" type="file" accept="image/*" hidden></label>
-          <p class="fine">La foto se ajusta a la hoja, en Full HD y con mejor luz.</p>
+          <p class="fine">${creating ? "Crea el producto y súbele foto." : "La foto se ajusta a la hoja, en Full HD y con mejor luz."}</p>
         </div>
         <div class="inv-fields">
-          <label>Nombre<input name="name" required value="${esc(open.name)}"></label>
-          <label>Precio<input name="price" type="number" min="0" required value="${open.price}"></label>
-          <label>Línea<input name="line" value="${esc(open.line || "")}"></label>
-          <label>Acabado<input name="finish" value="${esc(open.finish || "")}"></label>
-          <label>Contenido<input name="size" value="${esc(open.size || "")}"></label>
-          <label>Referencia<input name="sku" value="${esc(open.sku || "")}"></label>
-          <label class="wide">Frase<input name="summary" value="${esc(open.summary || "")}"></label>
-          <label class="wide">Descripción<textarea name="description" rows="3">${esc(open.description || "")}</textarea></label>
-          <label class="wide">Contiene<input name="ingredients" value="${esc((open.ingredients || []).join(" · "))}"></label>
-          <div class="inv-actions"><button class="btn ghost" type="button" data-act="inv-close">Cerrar</button><button class="btn" type="submit">Guardar</button></div>
+          <h3 class="inv-form-title">${creating ? "Crear producto" : "Editar producto"}</h3>
+          <label>Nombre<input name="name" required value="${esc(editorProduct.name || "")}"></label>
+          <label>Precio<input name="price" type="number" min="0" required value="${Number(editorProduct.price || 0)}"></label>
+          <label>Línea<input name="line" value="${esc(editorProduct.line || "")}"></label>
+          <label>Categoría
+            <select name="category">
+              ${[["molding","Molding"],["kits","Kits"],["limpieza","Limpieza"],["tratamiento","Tratamiento"],["kids","Kids"],["cuerpo","Cuerpo"]].map(([id, label]) => `<option value="${id}" ${String(editorProduct.category || "") === id ? "selected" : ""}>${label}</option>`).join("")}
+            </select>
+          </label>
+          <label>Acabado<input name="finish" value="${esc(editorProduct.finish || "")}"></label>
+          <label>Contenido<input name="size" value="${esc(editorProduct.size || "")}"></label>
+          <label>Referencia<input name="sku" value="${esc(editorProduct.sku || "")}"></label>
+          <label>Stock<input name="stock" type="number" min="0" value="${Number(editorProduct.stock || 0)}"></label>
+          <label>Mínimo<input name="minStock" type="number" min="0" value="${Number(editorProduct.minStock || 6)}"></label>
+          <label class="wide">Frase<input name="summary" value="${esc(editorProduct.summary || "")}"></label>
+          <label class="wide">Descripción<textarea name="description" rows="3">${esc(editorProduct.description || "")}</textarea></label>
+          <label class="wide">Contiene<input name="ingredients" value="${esc(Array.isArray(editorProduct.ingredients) ? editorProduct.ingredients.join(" · ") : (editorProduct.ingredients || ""))}"></label>
+          <div class="inv-actions">
+            <button class="btn ghost" type="button" data-act="inv-close">Cerrar</button>
+            ${creating ? "" : `<button class="btn danger" type="button" data-act="inv-delete" data-id="${esc(open.id)}" data-name="${esc(open.name)}">Eliminar</button>`}
+            <button class="btn" type="submit">${creating ? "Crear" : "Guardar"}</button>
+          </div>
         </div>
       </form>
     </div>` : "";
+  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
   return adminShell("Inventario", `
-    <div class="inv-tools">
-      <input data-inv-filter="name" placeholder="Buscar por nombre" aria-label="Buscar por nombre">
-      <input data-inv-filter="line" placeholder="Línea" aria-label="Buscar por línea">
-      <input data-inv-filter="sku" placeholder="Referencia" aria-label="Buscar por referencia">
+    <div class="inv-toolbar">
+      <div class="inv-tools">
+        <input data-inv-filter="name" value="${esc(filters.name || "")}" placeholder="Buscar por nombre" aria-label="Buscar por nombre">
+        <input data-inv-filter="line" value="${esc(filters.line || "")}" placeholder="Línea" aria-label="Buscar por línea">
+        <input data-inv-filter="sku" value="${esc(filters.sku || "")}" placeholder="Referencia" aria-label="Buscar por referencia">
+      </div>
+      <button type="button" class="btn" data-act="inv-create">+ Crear producto</button>
     </div>
-    <div class="inv-list">${rows}</div>
-    <p class="empty" id="inv-empty" hidden>Ningún producto coincide.</p>
+    <div class="inv-list">${rows || ""}</div>
+    <p class="empty" id="inv-empty" ${filtered.length ? "hidden" : ""}>Ningún producto coincide.</p>
+    <div class="inv-pager" ${filtered.length ? "" : "hidden"}>
+      <button type="button" class="btn ghost small" data-act="inv-page" data-page="${page - 1}" ${page <= 1 ? "disabled" : ""}>Anterior</button>
+      <div class="inv-pages">
+        ${pages.map((n) => `<button type="button" class="inv-page-btn ${n === page ? "on" : ""}" data-act="inv-page" data-page="${n}">${n}</button>`).join("")}
+      </div>
+      <button type="button" class="btn ghost small" data-act="inv-page" data-page="${page + 1}" ${page >= totalPages ? "disabled" : ""}>Siguiente</button>
+      <span class="fine">${filtered.length} producto${filtered.length === 1 ? "" : "s"} · pág. ${page}/${totalPages}</span>
+    </div>
     ${editor}`);
 }
 

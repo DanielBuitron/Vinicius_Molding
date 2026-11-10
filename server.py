@@ -2355,9 +2355,18 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(200, {"products": products, "movements": list(reversed(movements))})
             return
 
+        if path == "/api/admin/products" and method == "POST":
+            self.create_product()
+            return
+
         if path.startswith("/api/admin/products/") and method == "PUT":
             product_id = path.rsplit("/", 1)[-1]
             self.update_product(product_id)
+            return
+
+        if path.startswith("/api/admin/products/") and method == "DELETE":
+            product_id = path.rsplit("/", 1)[-1]
+            self.delete_product(product_id)
             return
 
         if path == "/api/admin/settings" and method == "GET":
@@ -3124,6 +3133,116 @@ class Handler(BaseHTTPRequestHandler):
             return
         self.send_json(200, {"ok": True})
 
+    def _slug_product_id(self, name, existing):
+        import unicodedata
+        raw = unicodedata.normalize("NFD", str(name or "").lower())
+        raw = "".join(ch for ch in raw if unicodedata.category(ch) != "Mn")
+        slug = re.sub(r"[^a-z0-9]+", "-", raw).strip("-")[:48] or ("producto-" + secrets.token_hex(3))
+        base = slug
+        n = 2
+        while any(item.get("id") == slug for item in existing):
+            slug = "%s-%s" % (base, n)
+            n += 1
+        return slug
+
+    def create_product(self):
+        body = self.read_json()
+        name = str(body.get("name") or "").strip()[:120]
+        if len(name) < 2:
+            self.send_json(400, {"error": "El nombre es obligatorio."})
+            return
+        try:
+            price = int(body.get("price") or 0)
+        except Exception:
+            price = 0
+        if price < 0:
+            self.send_json(400, {"error": "El precio no puede ser negativo."})
+            return
+        with LOCK:
+            store = load_store()
+            if not self.require_user(store):
+                return
+            products = store.setdefault("products", [])
+            product_id = str(body.get("id") or "").strip() or self._slug_product_id(name, products)
+            product_id = re.sub(r"[^a-z0-9\-]", "-", product_id.lower())[:64]
+            if any(item.get("id") == product_id for item in products):
+                self.send_json(400, {"error": "Ya existe un producto con esa referencia interna."})
+                return
+            category = str(body.get("category") or "molding").strip()[:40] or "molding"
+            product = {
+                "id": product_id,
+                "sku": str(body.get("sku") or "").strip()[:40],
+                "name": name,
+                "line": str(body.get("line") or "").strip()[:80],
+                "finish": str(body.get("finish") or "").strip()[:80],
+                "category": category,
+                "size": str(body.get("size") or "").strip()[:40],
+                "price": price,
+                "stock": max(0, int(body.get("stock") or 0)),
+                "minStock": max(0, int(body.get("minStock") or 6)),
+                "accent": str(body.get("accent") or "#E52C3B").strip()[:20] or "#E52C3B",
+                "image": "assets/products/cera-brillo.jpg",
+                "summary": str(body.get("summary") or "").strip()[:240],
+                "description": str(body.get("description") or "").strip()[:800],
+                "ingredients": [],
+                "hold": 3,
+                "featured": False,
+                "views": 0,
+                "active": True,
+            }
+            raw_ing = body.get("ingredients")
+            if isinstance(raw_ing, list):
+                parts = [str(item).strip() for item in raw_ing]
+            else:
+                parts = str(raw_ing or "").replace("·", ",").split(",")
+            product["ingredients"] = [part[:80] for part in parts if part.strip()][:16]
+            image = str(body.get("image") or "")
+            if image.startswith("data:image"):
+                payload = image.split(",", 1)[1]
+                blob = base64.b64decode(payload)
+                dest = WEB / "assets" / "products" / ("%s.jpg" % product_id)
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                dest.write_bytes(blob)
+                product["image"] = "assets/products/%s.jpg" % product_id
+            products.append(product)
+            store["movements"].append({
+                "id": "mov_" + secrets.token_hex(4),
+                "productId": product["id"],
+                "name": product["name"],
+                "before": 0,
+                "after": product["stock"],
+                "reason": "alta de producto",
+                "at": now_iso(),
+            })
+            store["movements"] = store["movements"][-200:]
+            save_store(store)
+            saved = dict(product)
+        self.send_json(200, {"product": saved})
+
+    def delete_product(self, product_id):
+        with LOCK:
+            store = load_store()
+            if not self.require_user(store):
+                return
+            products = store.get("products") or []
+            product = next((item for item in products if item.get("id") == product_id), None)
+            if product is None:
+                self.send_json(404, {"error": "Producto no encontrado."})
+                return
+            store["products"] = [item for item in products if item.get("id") != product_id]
+            store["movements"].append({
+                "id": "mov_" + secrets.token_hex(4),
+                "productId": product_id,
+                "name": product.get("name") or product_id,
+                "before": int(product.get("stock") or 0),
+                "after": 0,
+                "reason": "baja de producto",
+                "at": now_iso(),
+            })
+            store["movements"] = store["movements"][-200:]
+            save_store(store)
+        self.send_json(200, {"ok": True, "id": product_id})
+
     def update_product(self, product_id):
         body = self.read_json()
         with LOCK:
@@ -3142,6 +3261,12 @@ class Handler(BaseHTTPRequestHandler):
                     self.send_json(400, {"error": "El precio no puede ser negativo."})
                     return
                 product["price"] = price
+            if "stock" in body:
+                product["stock"] = max(0, int(body.get("stock") or 0))
+            if "minStock" in body:
+                product["minStock"] = max(0, int(body.get("minStock") or 0))
+            if "category" in body:
+                product["category"] = str(body.get("category") or product.get("category") or "molding").strip()[:40]
             for key in ("name", "line", "finish", "size", "summary", "description", "sku"):
                 if key in body:
                     product[key] = str(body.get(key) or "").strip()[:800]
