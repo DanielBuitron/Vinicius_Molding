@@ -267,7 +267,7 @@ function viewWhatsapp(payload) {
           <button type="button" class="wa-icon-btn" data-act="wa-settings" title="API">⚙</button>
         </header>
         <div class="wa-search"><input placeholder="Buscar o empezar un chat" disabled></div>
-        <div class="wa-chat-list">${list || `<div class="wa-empty-side">Cuando un cliente escriba por la API, el chat aparece aquí.</div>`}</div>
+        <div class="wa-chat-list">${list || `<div class="wa-empty-side">Cuando un cliente escriba, el chat aparece aquí.</div>`}</div>
       </aside>
       <section class="wa-stage">
         ${active ? `

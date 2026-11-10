@@ -1194,6 +1194,7 @@ class Handler(BaseHTTPRequestHandler):
             return
         body = self.read_json()
         phone = "".join(ch for ch in str(body.get("phone") or "") if ch.isdigit())
+        jid = str(body.get("jid") or "").strip()
         text = str(body.get("text") or "").strip()
         name = str(body.get("name") or phone).strip() or phone
         if not phone or not text:
@@ -1209,11 +1210,16 @@ class Handler(BaseHTTPRequestHandler):
                 "id": phone,
                 "name": name,
                 "phone": phone,
+                "jid": jid,
                 "messages": [],
                 "updatedAt": now_iso(),
             })
             if name:
                 chat["name"] = name
+            if jid:
+                chat["jid"] = jid
+            if phone and phone != chat.get("phone"):
+                chat["phone"] = phone
             chat["messages"].append({
                 "id": str(body.get("messageId") or ("m_" + secrets.token_hex(6))),
                 "from": "in",
@@ -1372,6 +1378,7 @@ class Handler(BaseHTTPRequestHandler):
         if not to_phone or not text:
             self.send_json(400, {"error": "Falta el número o el mensaje."})
             return
+        chat_jid = ""
         with LOCK:
             store = load_store()
             if not self.require_user(store):
@@ -1386,6 +1393,7 @@ class Handler(BaseHTTPRequestHandler):
                 "messages": [],
                 "updatedAt": now_iso(),
             })
+            chat_jid = chat.get("jid") or ""
             chat["messages"].append({
                 "id": "o_" + secrets.token_hex(6),
                 "from": "out",
@@ -1398,7 +1406,7 @@ class Handler(BaseHTTPRequestHandler):
         session = bridge_status()
         if session.get("connected"):
             try:
-                bridge_request("/send", method="POST", body={"to": to_phone, "text": text}, timeout=12)
+                bridge_request("/send", method="POST", body={"to": to_phone, "jid": chat_jid, "text": text}, timeout=12)
                 self.send_json(200, {"ok": True, "via": "session"})
                 return
             except Exception as exc:

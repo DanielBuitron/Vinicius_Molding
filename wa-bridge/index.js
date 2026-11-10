@@ -36,6 +36,18 @@ function jidPhone(jid) {
   return String(jid || "").split("@")[0].split(":")[0].replace(/\D/g, "");
 }
 
+function contactFromMessage(msg) {
+  const key = msg.key || {};
+  const jid = key.remoteJid || "";
+  const alt = key.remoteJidAlt || key.participantAlt || key.senderPn || "";
+  const phone = jidPhone(alt) || jidPhone(jid);
+  return {
+    jid,
+    phone,
+    name: msg.pushName || phone,
+  };
+}
+
 function msgText(msg) {
   const m = msg.message || {};
   return (
@@ -185,13 +197,13 @@ async function startSock() {
         if (!jid || jid.endsWith("@g.us") || jid === "status@broadcast") continue;
         const text = msgText(msg);
         if (!text) continue;
-        const phone = jidPhone(jid);
-        const name = msg.pushName || phone;
+        const contact = contactFromMessage(msg);
         let answer = "";
         try {
           const res = await postJson(API + "/api/whatsapp/bridge/inbound", {
-            phone,
-            name,
+            phone: contact.phone,
+            name: contact.name,
+            jid: contact.jid,
             text,
             messageId: msg.key.id || "",
           });
@@ -207,14 +219,18 @@ async function startSock() {
   });
 }
 
-async function sendText(to, text) {
+async function sendText(to, text, jid) {
   if (!sock || session.status !== "connected") {
     throw new Error("WhatsApp no está vinculado.");
   }
-  const digits = String(to || "").replace(/\D/g, "");
-  if (!digits || !text) throw new Error("Falta destino o texto.");
-  const jid = digits.includes("@") ? digits : digits + "@s.whatsapp.net";
-  await sock.sendMessage(jid, { text: String(text) });
+  const target = String(jid || to || "").trim();
+  if (!target || !text) throw new Error("Falta destino o texto.");
+  let dest = target;
+  if (!dest.includes("@")) {
+    const digits = dest.replace(/\D/g, "");
+    dest = digits + (digits.length > 15 ? "@lid" : "@s.whatsapp.net");
+  }
+  await sock.sendMessage(dest, { text: String(text) });
   return { ok: true };
 }
 
@@ -295,7 +311,7 @@ const server = http.createServer(async (req, res) => {
     }
     if (req.method === "POST" && u.pathname === "/send") {
       const body = await readBody(req);
-      await sendText(body.to, body.text);
+      await sendText(body.to, body.text, body.jid);
       return sendJson(res, 200, { ok: true });
     }
     if (req.method === "POST" && u.pathname === "/logout") {
