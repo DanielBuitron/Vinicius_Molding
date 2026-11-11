@@ -28,7 +28,7 @@ const CATALOG = [
 const SITE = {
   whatsapp: "573235835137",
   city: "Cali, Valle del Cauca",
-  apiBase: "https://sampling-peterson-latinas-corners.trycloudflare.com",
+  apiBase: "https://grey-rid-gorgeous-toolkit.trycloudflare.com",
   siteBase: "https://danielbuitron.github.io/Vinicius_Molding",
   usdRate: 4000, // fallback si la TRM del BanRep no carga
   products: [
