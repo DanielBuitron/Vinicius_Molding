@@ -120,6 +120,10 @@ function stopWhatsappPoll() {
     clearInterval(VM.waPollTimer);
     VM.waPollTimer = 0;
   }
+  if (VM.waQrRetry) {
+    clearTimeout(VM.waQrRetry);
+    VM.waQrRetry = 0;
+  }
 }
 
 function whatsappRoute() {
@@ -225,7 +229,7 @@ function startWhatsappPoll() {
         const data = await api("/api/whatsapp/session");
         const prev = VM.waPublic || {};
         VM.waPublic = data;
-        if (data.sessionReady || (data.qrAt && data.qrAt !== prev.qrAt) || data.sessionStatus !== prev.sessionStatus) {
+        if (data.sessionReady || (data.qrAt && data.qrAt !== prev.qrAt) || data.sessionStatus !== prev.sessionStatus || (data.bridgeError || "") !== (prev.bridgeError || "")) {
           render();
         }
         return;
@@ -247,7 +251,8 @@ function startWhatsappPoll() {
       const qrChanged = data.qrAt && data.qrAt !== prev.qrAt;
       const statusChanged = data.sessionStatus !== prev.sessionStatus
         || Boolean(data.hasQr) !== Boolean(prev.hasQr)
-        || Boolean(data.sessionReady) !== Boolean(prev.sessionReady);
+        || Boolean(data.sessionReady) !== Boolean(prev.sessionReady)
+        || (data.bridgeError || "") !== (prev.bridgeError || "");
       const chatsChanged = waChatsFingerprint(data) !== waChatsFingerprint(prev);
       if (!wasLinked && data.sessionReady) {
         render();
@@ -268,6 +273,10 @@ function mountWhatsappQr() {
   const link = box.dataset.waQr || "";
   const imgUrl = box.dataset.waQrImg || "";
   const sessionQr = box.dataset.waSession === "1";
+  if (VM.waQrRetry) {
+    clearTimeout(VM.waQrRetry);
+    VM.waQrRetry = 0;
+  }
   box.innerHTML = "";
   if (imgUrl) {
     const img = document.createElement("img");
@@ -277,8 +286,13 @@ function mountWhatsappQr() {
     img.width = 264;
     img.height = 264;
     img.onerror = () => {
+      if (!box.isConnected) return;
       if (sessionQr) {
         box.innerHTML = "<p class=\"wa-qr-wait\">Generando código de vinculación…</p>";
+        VM.waQrRetry = setTimeout(() => {
+          VM.waQrRetry = 0;
+          if (box.isConnected) mountWhatsappQr();
+        }, 2500);
         return;
       }
       if (window.QRCode && link) {

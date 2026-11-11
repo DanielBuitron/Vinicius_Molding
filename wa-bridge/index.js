@@ -9,7 +9,9 @@ const {
   default: makeWASocket,
   useMultiFileAuthState,
   DisconnectReason,
+  Browsers,
   fetchLatestBaileysVersion,
+  fetchLatestWaWebVersion,
   makeCacheableSignalKeyStore,
 } = require("@whiskeysockets/baileys");
 
@@ -30,7 +32,10 @@ const session = {
 };
 
 let sock = null;
+let sockGen = 0;
 let restartTimer = null;
+let versionCache = null;
+let versionCacheAt = 0;
 
 function jidPhone(jid) {
   return String(jid || "").split("@")[0].split(":")[0].replace(/\D/g, "");
@@ -131,9 +136,33 @@ async function sendMediaItem(dest, item) {
   throw new Error("Tipo de media no soportado");
 }
 
+async function resolveVersion(force) {
+  if (!force && versionCache && Date.now() - versionCacheAt < 10 * 60 * 1000) {
+    return versionCache;
+  }
+  try {
+    const live = await fetchLatestWaWebVersion();
+    if (live && Array.isArray(live.version) && live.version.length) {
+      versionCache = live.version;
+      versionCacheAt = Date.now();
+      return versionCache;
+    }
+  } catch (_) {}
+  try {
+    const bundled = await fetchLatestBaileysVersion();
+    if (bundled && Array.isArray(bundled.version) && bundled.version.length) {
+      versionCache = bundled.version;
+      versionCacheAt = Date.now();
+      return versionCache;
+    }
+  } catch (_) {}
+  return versionCache;
+}
+
 async function setQr(text) {
   session.qr = text;
   session.status = "qr";
+  session.lastError = null;
   session.qrAt = Date.now();
   session.qrPng = await qrcode.toBuffer(text, {
     type: "png",
@@ -162,9 +191,24 @@ function scheduleRestart(ms) {
 }
 
 async function startSock() {
+  const gen = ++sockGen;
+  const previous = sock;
+  sock = null;
+  if (previous) {
+    try { previous.end(undefined); } catch (_) {}
+  }
+  if (!session.qr) session.status = "starting";
+  const version = await resolveVersion(false);
+  if (gen !== sockGen) return;
+  if (!version) {
+    session.status = "reconnecting";
+    session.lastError = "No pude leer la versión de WhatsApp Web.";
+    scheduleRestart(4000);
+    return;
+  }
   const { state, saveCreds } = await useMultiFileAuthState(AUTH);
-  const { version } = await fetchLatestBaileysVersion();
-  sock = makeWASocket({
+  if (gen !== sockGen) return;
+  const next = makeWASocket({
     version,
     auth: {
       creds: state.creds,
@@ -174,12 +218,16 @@ async function startSock() {
     printQRInTerminal: false,
     syncFullHistory: false,
     markOnlineOnConnect: false,
-    browser: ["Vinicius Molding", "Chrome", "120.0.0"],
+    browser: Browsers.windows("Chrome"),
+    qrTimeout: 60000,
+    connectTimeoutMs: 20000,
   });
+  sock = next;
 
-  sock.ev.on("creds.update", saveCreds);
+  next.ev.on("creds.update", saveCreds);
 
-  sock.ev.on("connection.update", async (update) => {
+  next.ev.on("connection.update", async (update) => {
+    if (gen !== sockGen) return;
     const { connection, lastDisconnect, qr } = update;
     if (qr) {
       try {
@@ -192,11 +240,11 @@ async function startSock() {
       clearQr();
       session.status = "connected";
       session.lastError = null;
-      const id = sock.user && sock.user.id;
+      const id = next.user && next.user.id;
       session.me = {
         id,
         phone: jidPhone(id),
-        name: (sock.user && sock.user.name) || "",
+        name: (next.user && next.user.name) || "",
       };
     }
     if (connection === "close") {
@@ -208,8 +256,10 @@ async function startSock() {
       const loggedOut = code === DisconnectReason.loggedOut;
       clearQr();
       session.me = null;
+      if (code === 405) versionCache = null;
       if (loggedOut) {
         session.status = "logged_out";
+        session.lastError = null;
         try {
           fs.rmSync(AUTH, { recursive: true, force: true });
           fs.mkdirSync(AUTH, { recursive: true });
@@ -217,12 +267,21 @@ async function startSock() {
         scheduleRestart(1200);
       } else {
         session.status = "reconnecting";
-        scheduleRestart(2500);
+        const expected = !code
+          || code === DisconnectReason.restartRequired
+          || code === DisconnectReason.timedOut
+          || code === DisconnectReason.connectionLost
+          || code === DisconnectReason.connectionClosed;
+        session.lastError = code === 405
+          ? "WhatsApp rechazó el cliente. Pidiendo un código nuevo..."
+          : (expected ? null : "Conexión cerrada (" + code + "). Pidiendo un código nuevo...");
+        scheduleRestart(code === 405 ? 1200 : 2500);
       }
     }
   });
 
-  sock.ev.on("messages.upsert", async ({ messages }) => {
+  next.ev.on("messages.upsert", async ({ messages }) => {
+    if (gen !== sockGen) return;
     for (const msg of messages || []) {
       try {
         if (!msg || !msg.message || msg.key.fromMe) continue;
@@ -258,13 +317,13 @@ async function startSock() {
         }
         if (mediaItems.length && !mediaOk) {
           try {
-            await sock.sendMessage(jid, {
+            await next.sendMessage(jid, {
               text: "No pude adjuntar la foto ahora. ¿Me la pides otra vez en un momento?",
             });
           } catch (_) {}
         }
         if (answer) {
-          await sock.sendMessage(jid, { text: String(answer).slice(0, 3500) });
+          await next.sendMessage(jid, { text: String(answer).slice(0, 3500) });
         }
       } catch (err) {
         session.lastError = String(err && err.message ? err.message : err);
