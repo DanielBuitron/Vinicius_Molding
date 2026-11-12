@@ -175,9 +175,30 @@ body.mode-home .top-actions .locale-controls{display:inline-flex}
     font-size:10px;
   }
 }
-html.phone #revista .desk{display:none}
-html.phone #revista .book-light{opacity:calc(.55 - var(--o, 0) * .35)}
-html.phone #revista .tilt{top:47%}
+html.phone #revista .book-light{opacity:calc(.28 - var(--o, 0) * .16)}
+html.phone #revista .pg:not(.img):not(.cover){font-size:12px;line-height:1.32;padding:9px 8px 8px;overflow:auto}
+html.phone #revista .hd{font-size:10px;opacity:.9}
+html.phone #revista .hd img{height:14px}
+html.phone #revista h2{font-size:18px;line-height:1.02}
+html.phone #revista h2 em{font-size:11.5px;line-height:1.25;margin-top:4px;padding-bottom:3px}
+html.phone #revista .pg p{margin-top:6px;font-size:12px;line-height:1.35;color:inherit}
+html.phone #revista .pg.dark p,html.phone #revista .pg.dark dt{color:#e6e6e8}
+html.phone #revista dl{padding-top:6px}
+html.phone #revista dl div{gap:6px;padding:5px 0}
+html.phone #revista dt{font-size:11.5px;opacity:1;font-weight:500}
+html.phone #revista .pg:not(.dark):not(.col) dt{color:#3a3d42}
+html.phone #revista dd{font-size:12.5px;font-weight:600}
+html.phone #revista .num{font-size:54px}
+html.phone #revista .buy{margin-top:8px;gap:6px}
+html.phone #revista .buy b{font-size:13px}
+html.phone #revista .buy .add{font-size:12px;padding:8px 10px}
+html.phone #revista .pg.img .capline span{font-size:12px}
+html.phone #revista .pg.img .px{font-size:16px}
+html.phone #revista .idx b{font-size:13px}
+html.phone #revista .idx i{font-size:11.5px;opacity:.85}
+html.phone #revista .idx span{font-size:14px}
+html.phone #revista .cta{font-size:13px;padding:8px 12px}
+html.phone #revista .big{font-size:20px}
 #revista .short{display:none}
 body.mode-home{overflow-x:hidden}
 #revista .sticky{height:100vh;height:100dvh}

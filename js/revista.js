@@ -3,7 +3,7 @@ const WA='https://wa.me/573235835137',IG='https://instagram.com/viniciusmolding'
 const A=f=>(window.IMGS&&IMGS[f])||'assets/'+f;
 const PHONE=()=>innerWidth<700;
 const PORTF=()=>!PHONE()&&(innerWidth<980||innerWidth<innerHeight*1.05);window.PORT=PORTF();
-const PW=()=>{const w=innerWidth,h=innerHeight;if(PHONE()){const byW=w*.8,byH=(h-96)/1.28;return Math.max(170,Math.min(byW,byH))}if(window.PORT&&h<560){const byH=(h-108)/1.28,byW=w*.52;return Math.max(160,Math.min(byW,byH))}if(window.PORT){const byH=(h-140)/1.28,byW=w*.82;return Math.max(220,Math.min(byW,byH,680))}const byW=w*.4,byH=(h-96)/1.28*.9;return Math.max(220,Math.min(byW,byH,540))};
+const PW=()=>{const w=innerWidth,h=innerHeight;if(PHONE()){const byW=w*.47,byH=(h-118)/1.28;return Math.max(132,Math.min(byW,byH))}if(window.PORT&&h<560){const byH=(h-108)/1.28,byW=w*.52;return Math.max(160,Math.min(byW,byH))}if(window.PORT){const byH=(h-140)/1.28,byW=w*.82;return Math.max(220,Math.min(byW,byH,680))}const byW=w*.4,byH=(h-96)/1.28*.9;return Math.max(220,Math.min(byW,byH,540))};
 const sp=()=>{window.PORT=PORTF();const w=innerWidth,r=document.documentElement;r.classList.toggle('port',window.PORT);r.classList.toggle('phone',w<700);r.classList.toggle('tab',w>=700&&w<1100);const pw=PW();r.style.setProperty('--pwpx',pw);r.style.setProperty('--pw',pw+'px');r.style.setProperty('--ph','calc(var(--pw) * 1.28)');const st=document.getElementById('stage');if(st)st.style.height=w<700?'260dvh':window.PORT?'480dvh':'380dvh'};sp();addEventListener('resize',sp);
 const TIN='Keratina · Romero · Aloe vera',EXT='Romero · Keratina · Cebolla · Aloe vera · Zanahoria · Ácido hialurónico';
 const TIN_EN='Keratin · Rosemary · Aloe vera',EXT_EN='Rosemary · Keratin · Onion · Aloe vera · Carrot · Hyaluronic acid';
@@ -140,11 +140,6 @@ const vig=document.querySelector('.vig'),cap=document.getElementById('cap'),bar=
 const cl=x=>Math.max(0,Math.min(1,x)),ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
 const STEP=.80/(N-2),DUR=Math.max(.008,STEP*.2),KP=.80/(N-2),PDUR=Math.max(.008,KP*.2);
 const win=i=>window.PORT?[.02+i*KP,.02+i*KP+PDUR]:(i===0?[.03,.08]:[.1+(i-1)*STEP,.1+(i-1)*STEP+DUR]);
-let phoneSide=-1,phoneShown=-1;
-function phonePan(p){if(p<win(0)[0])return 0;
- for(let i=0;i<N-1;i++){const[a,b]=win(i);if(p>=a&&p<=b){const t=ease((p-a)/(b-a));return i===0?-t:1-2*t}}
- return phoneShown}
-function tickPhone(){if(!PHONE())return;phoneShown+=(phoneSide-phoneShown)*.34;if(Math.abs(phoneSide-phoneShown)<.012)phoneShown=phoneSide;draw(cur);if(phoneShown!==phoneSide)requestAnimationFrame(tickPhone)}
 function pan(p){if(!window.PORT)return 0;if(p<win(0)[0])return 0;
  for(let i=0;i<N-1;i++){const[a,b]=win(i);if(p>=a&&p<=b){const t=ease((p-a)/(b-a));return i===0?-t:1-2*t}
   const nx=i<N-2?win(i+1)[0]:1;if(p>b&&p<nx){const u=(p-b)/(nx-b);return u<.28?-1:u<.58?-1+2*ease((u-.28)/.3):1}}return 1}
@@ -163,15 +158,15 @@ function setLeaf(i,p){const [a,b]=win(i),t=cl((p-a)/(b-a)),e=ease(t),L=leaves[i]
  return e>=.5}
 function draw(p){
  const c=ease(cl(p/.2)),w0=win(0),o=ease(cl((p-w0[0])/(w0[1]-w0[0])));
- const phone=innerWidth<700,cP=window.PORT?ease(cl(p/.06)):c,sc=phone?1.16-.1*o:window.PORT?.96:.8+.36*c,pn=phone?phonePan(p):pan(p),px=-pn*PW()/2*sc/innerWidth*100;
+ const phone=innerWidth<700,cP=window.PORT?ease(cl(p/.06)):c,sc=phone?1.78-.74*o:window.PORT?.96:.8+.36*c,pn=pan(p),px=-pn*PW()/2*sc/innerWidth*100;
  const deskRx=innerHeight<780?44:56,deskDrop=innerHeight<780?14:22;
- window.CAMT=phone?{rx:2,s:sc,tx:px,ty:-6,rz:0}:window.PORT?{rx:24-4*cP,s:sc,tx:px,ty:-2*cP,rz:-.6+.6*cP}:{rx:deskRx-deskDrop*c,s:sc,tx:3*(1-c),ty:-3*(1-c)-2.5*c,rz:-3+2.4*c};
+ window.CAMT=phone?{rx:8,s:sc,tx:0,ty:-1,rz:0}:window.PORT?{rx:24-4*cP,s:sc,tx:px,ty:-2*cP,rz:-.6+.6*cP}:{rx:deskRx-deskDrop*c,s:sc,tx:3*(1-c),ty:-3*(1-c)-2.5*c,rz:-3+2.4*c};
  if(!window.GLon)tilt.style.transform=`translate3d(${CAMT.tx}vw,${CAMT.ty}vh,0) rotateX(${CAMT.rx}deg) rotateZ(${CAMT.rz}deg) scale(${CAMT.s})`;
  book.style.setProperty('--o',o);window.BOOKO=o;book.style.transform=`translateX(calc(var(--pw)*${-.5*(1-o)}))`;
  vig.style.opacity=1-.85*ease(cl((p-.04)/.2));hero.style.opacity=1-cl((p-.02)/.08);hero.style.transform=`translateY(${-cl(p/.12)*30}px)`;
  let fl=0;leaves.forEach((_,i)=>{if(setLeaf(i,p))fl++});
  book.style.setProperty('--tl',(2+fl*1.1)+'px');book.style.setProperty('--tr',(2+(N-1-fl)*1.1)+'px');
- bar.style.width=p*100+'%';if(fl!==state){state=fl;cap.textContent=CAP[fl];if(phone&&fl>0){phoneSide=-1;phoneShown=-1}}}
+ bar.style.width=p*100+'%';if(fl!==state){state=fl;cap.textContent=CAP[fl]}}
 let flipJob=0,lock=0;
 function loop(){if(lock)return;cur+=(target-cur)*.46;if(Math.abs(target-cur)<.0008)cur=target;draw(cur);if(cur!==target)requestAnimationFrame(loop)}
 function playTo(p){const job=++flipJob,from=cur,t0=performance.now(),dur=400;lock=1;const step=now=>{if(job!==flipJob)return;const t=Math.min(1,(now-t0)/dur);cur=from+(p-from)*ease(t);draw(cur);if(t<1)requestAnimationFrame(step);else{cur=p;draw(p);lock=0}};requestAnimationFrame(step)}
@@ -216,14 +211,13 @@ window.refreshRevistaLang=refreshRevistaLang;
 function magAt(x,y){let best=null,bestI=null;document.querySelectorAll('#book>.leaf').forEach((leaf,i)=>{leaf.querySelectorAll(':scope>.seg, :scope .seg').forEach(seg=>{const sr=seg.getBoundingClientRect();if(x<sr.left||x>sr.right||y<sr.top||y>sr.bottom)return;[0,1].forEach(fi=>{const face=seg.children[fi];if(!face||face.style.pointerEvents==='none')return;const back=fi===1;face.querySelectorAll('[data-mag]').forEach(el=>{const r=el.getBoundingClientRect();if(x<r.left-2||x>r.right+2||y<r.top-2||y>r.bottom+2)return;if(bestI===null||(back?i>bestI:i<bestI)){bestI=i;best=el}})})})});return best}
 function openExternal(href){if(!href)return;const tab=window.open(href,'_blank','noopener');if(!tab)location.href=href}
 function linkAt(x,y){const stack=document.elementsFromPoint?document.elementsFromPoint(x,y):[];for(const el of stack){const a=el.closest&&el.closest('a[href]');if(a&&/^https?:/i.test(a.href))return a}let found=null;document.querySelectorAll('#book a[href]').forEach(a=>{const r=a.getBoundingClientRect();if(r.width<8||r.height<8)return;if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom)found=a});return found}
-function focusPeek(e){if(innerWidth>=700||state===0)return false;if(e.target.closest&&e.target.closest('button,a,[data-mag],[data-go]'))return false;const fx=e.clientX/innerWidth;if(phoneSide<0&&fx>.88){phoneSide=1;tickPhone();return true}if(phoneSide>0&&fx<.12){phoneSide=-1;tickPhone();return true}return false}
-book.addEventListener('click',e=>{if(focusPeek(e)){e.preventDefault();e.stopPropagation();return}const link=(e.target.closest&&e.target.closest('a[href]'))||linkAt(e.clientX,e.clientY);if(link&&/^https?:/i.test(link.href)){e.preventDefault();e.stopPropagation();openExternal(link.href);return}
+book.addEventListener('click',e=>{const link=(e.target.closest&&e.target.closest('a[href]'))||linkAt(e.clientX,e.clientY);if(link&&/^https?:/i.test(link.href)){e.preventDefault();e.stopPropagation();openExternal(link.href);return}
  const mag=(e.target.closest&&e.target.closest('[data-mag]'))||magAt(e.clientX,e.clientY);if(mag){const j=+mag.dataset.p;if(mag.dataset.mag==='q')setMagQty(j,+mag.dataset.dir);else if(window.addToCart)window.addToCart(LINK[PR[j].id]||PR[j].id,magQty[j]||1);return}
  const g=e.target.closest('[data-go]');if(g){go(+g.dataset.go);return}
  if(e.target.closest('a'))return;if(state===0){nav(1);return}
  const z=e.target.closest('[data-p]');if(z&&z.matches('h2')){openZ(+z.dataset.p);return}
  const r=book.getBoundingClientRect(),x=(e.clientX-r.left)/r.width;
- if(innerWidth>=700&&!window.PORT){if(x>.94){nav(1);return}if(x<.06){nav(-1);return}}
+ if(!window.PORT){if(x>.94){nav(1);return}if(x<.06){nav(-1);return}}
  if(z)openZ(+z.dataset.p)});
 book.style.cursor='pointer';
 let sx=0,sy0=0;stage.addEventListener('pointerdown',e=>{sx=e.clientX;sy0=e.clientY});
