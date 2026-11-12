@@ -158,7 +158,7 @@ function frame(t){
  const LP2=[0,.02*P*(1.-op),980.-260.*op],t2=[0,0,0],a2=[t2[0]-LP2[0],t2[1]-LP2[1],t2[2]-LP2[2]],l2=Math.hypot(...a2);gl.uniform3fv(u('uLP2'),LP2);gl.uniform3f(u('uAx2'),a2[0]/l2,a2[1]/l2,a2[2]/l2);
  gl.uniform3fv(u('uLP'),LP);gl.uniform3f(u('uAx'),ax[0]/al,ax[1]/al,ax[2]/al);gl.uniform3f(u('uEye'),0,1700*Math.sin(rx),1700*Math.cos(rx));
  const R=.165*P,Hb=.1*P,Hl=.045*P,Ho=Hb+Hl,Ro=.19*P,Hh=.15*P,st=.004*P,rec=.004*P,lw=.02*P;
- dr('quad',{p:[0,0,-8],s:[3200,3200,1],mode:0,tex:T.wood,rep:[7,7]});
+ if(innerWidth>=700)dr('quad',{p:[0,0,-8],s:[3200,3200,1],mode:0,tex:T.wood,rep:[7,7]});
  const shd=(x,y,r,h,a)=>{const dx=x-LP[0],dy=y-LP[1],l=Math.hypot(dx,dy),ux=dx/l,uy=dy/l,L=h*.9;[[0,1.08,.9],[.5,1.2,.5*a],[1,1.4,.28*a]].forEach(([f,s,al])=>dr('quad',{p:[x+ux*L*f,y+uy*L*f,-7],s:[r*s,r*s,1],mode:4,col:[al,0,0]}))};
  // disposición: nada invade el espacio de la revista (cerrada o abierta)
  const side=1.62;

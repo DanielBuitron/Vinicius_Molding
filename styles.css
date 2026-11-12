@@ -15,7 +15,7 @@ body.mode-home{font-family:Poppins,sans-serif;color:#fff;background:#050505;-web
 #revista .btn.login:hover{background:#fff;color:#111}
 #revista .btn:hover{background:var(--red);color:#fff}
 #revista .btn:focus-visible, #revista button:focus-visible, #revista a:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
-#revista #stage{height:720vh;position:relative}
+#revista #stage{height:380vh;position:relative}
 #revista .sticky{position:sticky;top:0;height:100vh;overflow:hidden}
 #revista .hero{position:absolute;z-index:10;left:clamp(20px,6vw,90px);top:19vh;max-width:min(30ch,86vw);pointer-events:none}
 #revista .hero h1{font:700 clamp(26px,3.3vw,50px)/1.08 Poppins;letter-spacing:-.025em;max-width:13ch}
@@ -39,6 +39,10 @@ background-image:repeating-linear-gradient(118deg,#0000 0 2.4cqw,#00000009 2.4cq
 #revista .pg.img .capline{position:absolute;left:0;right:0;bottom:0;z-index:4;display:flex;justify-content:space-between;align-items:flex-end;gap:3cqw;padding:9cqw 5.5cqw 4.2cqw;background:linear-gradient(#0000 0,#000c 42%,#000 100%)}
 #revista .pg.img .capline span{position:static;font:600 3.3cqw/1.15 Poppins;color:#fff;text-shadow:none}
 #revista .pg.img .px{font:700 5cqw/1 Poppins;color:#FFD300;letter-spacing:-.03em}
+#revista .pg.img.studio{background:radial-gradient(ellipse at 50% 40%,#fff 0%,#efece6 68%,#e4e0d8 100%)}
+#revista .pg.img.studio .capline{background:linear-gradient(#0000 0,#efece6ee 62%,#efece6 100%)}
+#revista .pg.img.studio .capline span{color:#141416}
+#revista .pg.img.studio .px{color:#111}
 #revista .pg.img.bleed img{object-fit:contain;object-position:center 46%;padding:3cqw;box-sizing:border-box}
 #revista .cover{align-items:center;justify-content:center;text-align:center;background:url(assets/cover.jpg) center/cover;border-left:.5cqw solid #1d1d1f}#revista .cover.dk{background-image:url(assets/cover.jpg),none}
 #revista .cover img.iso{width:52cqw;margin-top:12cqw}#revista .cover img.lg{width:56cqw}#revista .cover small{font:300 2.7cqw Poppins;letter-spacing:.25em;color:#9a9da1;margin-top:3cqw;display:block}
@@ -54,7 +58,7 @@ background-image:repeating-linear-gradient(118deg,#0000 0 2.4cqw,#00000009 2.4cq
 #revista dt{opacity:.62}#revista dd{font-weight:500;text-align:right}
 #revista .mini{margin-top:4cqw;display:grid;gap:2.2cqw}
 #revista .mini div{display:flex;justify-content:space-between;border-bottom:1px solid #fff3;padding-bottom:2cqw}#revista .mini b{font-weight:500}#revista .mini span{opacity:.6}
-#revista .cta{display:inline-block;margin-top:3.2cqw;padding:1.6cqw 3.4cqw;border-radius:1.2cqw;background:var(--red);color:#fff;text-decoration:none;font-weight:500;width:max-content}
+#revista .cta{position:relative;z-index:8;display:inline-block;margin-top:3.2cqw;padding:1.6cqw 3.4cqw;border-radius:1.2cqw;background:var(--red);color:#fff;text-decoration:none;font-weight:500;width:max-content;pointer-events:auto;cursor:pointer}
 #revista .cta.w{background:#fff;color:#000}
 #revista .vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 48% 42% at 50% 54%,#0000 0,#000a 58%,#000 100%)}
 #revista .grain{position:absolute;inset:0;z-index:9;pointer-events:none;background:url(assets/grain.png);opacity:.018;mix-blend-mode:soft-light}
@@ -171,7 +175,9 @@ body.mode-home .top-actions .locale-controls{display:inline-flex}
     font-size:10px;
   }
 }
-html.phone #revista .book-light{opacity:calc(.82 - var(--o, 0) * .52)}
+html.phone #revista .desk{display:none}
+html.phone #revista .book-light{opacity:calc(.55 - var(--o, 0) * .35)}
+html.phone #revista .tilt{top:47%}
 #revista .short{display:none}
 body.mode-home{overflow-x:hidden}
 #revista .sticky{height:100vh;height:100dvh}

@@ -3,8 +3,8 @@ const WA='https://wa.me/573235835137',IG='https://instagram.com/viniciusmolding'
 const A=f=>(window.IMGS&&IMGS[f])||'assets/'+f;
 const PHONE=()=>innerWidth<700;
 const PORTF=()=>!PHONE()&&(innerWidth<980||innerWidth<innerHeight*1.05);window.PORT=PORTF();
-const PW=()=>{const w=innerWidth,h=innerHeight;if(PHONE()){const byW=w*.47,byH=(h-118)/1.28;return Math.max(132,Math.min(byW,byH))}if(window.PORT&&h<560){const byH=(h-108)/1.28,byW=w*.52;return Math.max(160,Math.min(byW,byH))}if(window.PORT){const byH=(h-140)/1.28,byW=w*.82;return Math.max(220,Math.min(byW,byH,680))}const byW=w*.4,byH=(h-96)/1.28*.9;return Math.max(220,Math.min(byW,byH,540))};
-const sp=()=>{window.PORT=PORTF();const w=innerWidth,r=document.documentElement;r.classList.toggle('port',window.PORT);r.classList.toggle('phone',w<700);r.classList.toggle('tab',w>=700&&w<1100);const pw=PW();r.style.setProperty('--pwpx',pw);r.style.setProperty('--pw',pw+'px');r.style.setProperty('--ph','calc(var(--pw) * 1.28)');const st=document.getElementById('stage');if(st)st.style.height=w<700?'460dvh':window.PORT?'900dvh':'720dvh'};sp();addEventListener('resize',sp);
+const PW=()=>{const w=innerWidth,h=innerHeight;if(PHONE()){const byW=w*.8,byH=(h-96)/1.28;return Math.max(170,Math.min(byW,byH))}if(window.PORT&&h<560){const byH=(h-108)/1.28,byW=w*.52;return Math.max(160,Math.min(byW,byH))}if(window.PORT){const byH=(h-140)/1.28,byW=w*.82;return Math.max(220,Math.min(byW,byH,680))}const byW=w*.4,byH=(h-96)/1.28*.9;return Math.max(220,Math.min(byW,byH,540))};
+const sp=()=>{window.PORT=PORTF();const w=innerWidth,r=document.documentElement;r.classList.toggle('port',window.PORT);r.classList.toggle('phone',w<700);r.classList.toggle('tab',w>=700&&w<1100);const pw=PW();r.style.setProperty('--pwpx',pw);r.style.setProperty('--pw',pw+'px');r.style.setProperty('--ph','calc(var(--pw) * 1.28)');const st=document.getElementById('stage');if(st)st.style.height=w<700?'260dvh':window.PORT?'480dvh':'380dvh'};sp();addEventListener('resize',sp);
 const TIN='Keratina · Romero · Aloe vera',EXT='Romero · Keratina · Cebolla · Aloe vera · Zanahoria · Ácido hialurónico';
 const TIN_EN='Keratin · Rosemary · Aloe vera',EXT_EN='Rosemary · Keratin · Onion · Aloe vera · Carrot · Hyaluronic acid';
 const PR=[
@@ -105,7 +105,7 @@ const hd=n=>`<div class="hd"><img src="assets/isotipo-rojo.png" alt=""><span>${n
 const rows=r=>r.map(x=>`<div><dt>${x[0]}</dt><dd>${x[1]}</dd></div>`).join('');
 const shot=p=>p.img||A('p-'+p.id+'.jpg');
 const magQty={};
-const imgP=j=>{const p=PR[j];return `<div class="pg img${p.bleed?' bleed':''}" data-p="${j}"><img src="${shot(p)}" alt="${p.cap}"><div class="capline"><span>${p.cap}</span><b class="px">${cop(p.price)}</b></div><b class="zm">+</b></div>`};
+const imgP=j=>{const p=PR[j];const studio=String(p.id).indexOf('kit-')===0?' studio':'';return `<div class="pg img${p.bleed?' bleed':''}${studio}" data-p="${j}"><img src="${shot(p)}" alt="${p.cap}"><div class="capline"><span>${p.cap}</span><b class="px">${cop(p.price)}</b></div><b class="zm">+</b></div>`};
 const infoP=(j,n)=>{const p=PR[j],cls=p.v==='color'?'pg col':p.v==='dark'?'pg dark':'pg',st=`--ac:${p.c}`+(p.v==='color'?`;--bg:${p.c};--fg:${p.tx}`:'');
  return `<div class="${cls}" style="${st}">${hd(n)}<div class="num">${p.ref}</div><h2 data-p="${j}">${p.n}<em>${p.sub}</em></h2><p>${p.d}</p><dl>${rows(p.r)}</dl><div class="buy"><button type="button" class="q" data-mag="q" data-p="${j}" data-dir="-1" aria-label="${tt('mag.less')}">−</button><b data-mag-qty="${j}">${magQty[j]||1}</b><button type="button" class="q" data-mag="q" data-p="${j}" data-dir="1" aria-label="${tt('mag.more')}">+</button><button type="button" class="add" data-mag="add" data-p="${j}">${tt('mag.add')}</button></div></div>`};
 const cover=`<div class="pg cover brand-cover"><div class="velvet"><img class="mark" src="assets/isotipo-rojo.png" alt=""><b>VINICIUS MOLDING</b></div></div>`;
@@ -119,7 +119,7 @@ function buildFaces(){
    `<div class="pg">${hd(5)}<h2>${tt('mag.contents')}</h2><ol class="idx">${PR.map((p,j)=>`<li data-go="${3+j}"><b>${p.n}</b><i>${p.sub}</i><span>${6+2*j}</span></li>`).join('')}</ol></div>`],
   ...PR.map((p,j)=>j%2? [imgP(j),infoP(j,7+2*j)] : [infoP(j,6+2*j),imgP(j)]),
   [`<div class="pg dark">${hd(6+PR.length*2)}<h2>${tt('mag.fullLine')}</h2><p>${tt('mag.fullLineP',{n:PR.length})}</p></div>`,
-   `<div class="pg dark">${hd(7+PR.length*2)}<h2>${tt('mag.orderYours')}</h2><p>${tt('mag.orderP')}</p><a class="cta" href="${WA}" target="_blank" rel="noopener">WhatsApp</a><a class="cta w" href="${IG}" target="_blank" rel="noopener">@viniciusmolding</a></div>`]];
+   `<div class="pg dark">${hd(7+PR.length*2)}<h2>${tt('mag.orderYours')}</h2><p>${tt('mag.orderP')}</p><a class="cta" data-ext="wa" href="${WA}" target="_blank" rel="noopener">WhatsApp</a><a class="cta w" data-ext="ig" href="${IG}" target="_blank" rel="noopener">@viniciusmolding</a></div>`]];
   const fr=[cover],bk=[S[0][0]];for(let i=1;i<=S.length-1;i++){fr.push(S[i-1][1]);bk.push(S[i][0])}fr.push(S[S.length-1][1]);bk.push(back);
   CAP=[tt('mag.cover'),tt('mag.about'),tt('mag.collection'),...PR.map(p=>p.cap),tt('mag.contact')];
   return {fr,bk};
@@ -128,7 +128,7 @@ let CAP=['Cubierta','Quiénes somos','Colección · Contenido',...PR.map(p=>p.ca
 let faces=buildFaces();
 let fr=faces.fr,bk=faces.bk;
 // ---- hojas articuladas en tramos (se doblan de verdad)
-const SG=innerWidth<700?3:6,book=document.getElementById('book');book.innerHTML='<i class="bsh"></i><i class="edge el"></i><i class="edge er"></i>';
+const SG=innerWidth<700?3:4,book=document.getElementById('book');book.innerHTML='<i class="bsh"></i><i class="edge el"></i><i class="edge er"></i>';
 const leaves=fr.map((f,i)=>{const l=document.createElement('div');l.className='leaf';let par=l;const segs=[];
  for(let k=0;k<SG;k++){const s=document.createElement('div');s.className='seg';s.style.cssText=`left:${k?`calc(var(--pw)/${SG})`:0};width:calc(var(--pw)/${SG})`;
   s.innerHTML=`<div class="sf${k?'':' g'}"><div class="cl" style="left:calc(var(--pw)/-${SG}*${k})">${f}</div></div><div class="sb${k?'':' g'}"><div class="cl" style="left:calc(var(--pw)/-${SG}*${SG-1-k})">${bk[i]}</div></div>`;
@@ -138,13 +138,20 @@ const glow=document.createElement('i');glow.className='book-light';glow.setAttri
 const N=leaves.length,stage=document.getElementById('stage'),tilt=document.getElementById('tilt'),hero=document.getElementById('hero'),desk=document.getElementById('desk');
 const vig=document.querySelector('.vig'),cap=document.getElementById('cap'),bar=document.getElementById('bar');
 const cl=x=>Math.max(0,Math.min(1,x)),ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
-const STEP=.78/(N-2),DUR=.03,KP=.84/(N-2);
-const win=i=>window.PORT?[.02+i*KP,.02+i*KP+.02]:(i===0?[.03,.07]:[.1+(i-1)*STEP,.1+(i-1)*STEP+DUR]);
+const STEP=.80/(N-2),DUR=Math.max(.008,STEP*.2),KP=.80/(N-2),PDUR=Math.max(.008,KP*.2);
+const win=i=>window.PORT?[.02+i*KP,.02+i*KP+PDUR]:(i===0?[.03,.08]:[.1+(i-1)*STEP,.1+(i-1)*STEP+DUR]);
+let phoneSide=-1,phoneShown=-1;
+function phonePan(p){if(p<win(0)[0])return 0;
+ for(let i=0;i<N-1;i++){const[a,b]=win(i);if(p>=a&&p<=b){const t=ease((p-a)/(b-a));return i===0?-t:1-2*t}}
+ return phoneShown}
+function tickPhone(){if(!PHONE())return;phoneShown+=(phoneSide-phoneShown)*.34;if(Math.abs(phoneSide-phoneShown)<.012)phoneShown=phoneSide;draw(cur);if(phoneShown!==phoneSide)requestAnimationFrame(tickPhone)}
 function pan(p){if(!window.PORT)return 0;if(p<win(0)[0])return 0;
  for(let i=0;i<N-1;i++){const[a,b]=win(i);if(p>=a&&p<=b){const t=ease((p-a)/(b-a));return i===0?-t:1-2*t}
   const nx=i<N-2?win(i+1)[0]:1;if(p>b&&p<nx){const u=(p-b)/(nx-b);return u<.28?-1:u<.58?-1+2*ease((u-.28)/.3):1}}return 1}
 const steps=()=>{const a=[0];for(let s=1;s<N;s++){const b=win(s-1)[1],nx=s<N-1?win(s)[0]:1,pl=nx-b;a.push(b+pl*.14,b+pl*.8)}return a};
-const endP=s=>s===0?0:win(s-1)[1]+.004;
+const flatAt=s=>{if(s<=0)return 0;if(window.PORT){const a=steps();return a[Math.min(a.length-1,s*2-1)]}const done=win(s-1)[1],next=s<N-1?win(s)[0]:1;return done+Math.max(0,next-done)*.55};
+const endP=s=>flatAt(s);
+const nearestFlat=()=>{let best=0,bd=99;for(let s=0;s<N;s++){const p=flatAt(s),d=Math.abs(p-target);if(d<bd){bd=d;best=p}}return best};
 let target=0,cur=0,state=-1;const sy=()=>stage.offsetHeight-innerHeight;
 const D=Math.PI/180;
 function setLeaf(i,p){const [a,b]=win(i),t=cl((p-a)/(b-a)),e=ease(t),L=leaves[i],key=i===N-1?'x':t.toFixed(4);if(L.key===key)return e>=.5;L.key=key;
@@ -156,19 +163,20 @@ function setLeaf(i,p){const [a,b]=win(i),t=cl((p-a)/(b-a)),e=ease(t),L=leaves[i]
  return e>=.5}
 function draw(p){
  const c=ease(cl(p/.2)),w0=win(0),o=ease(cl((p-w0[0])/(w0[1]-w0[0])));
- const phone=innerWidth<700,cP=window.PORT?ease(cl(p/.06)):c,sc=phone?1.78-.74*o:window.PORT?.96:.8+.36*c,pn=phone?0:pan(p),px=-pn*PW()/2*sc/innerWidth*100;
+ const phone=innerWidth<700,cP=window.PORT?ease(cl(p/.06)):c,sc=phone?1.16-.1*o:window.PORT?.96:.8+.36*c,pn=phone?phonePan(p):pan(p),px=-pn*PW()/2*sc/innerWidth*100;
  const deskRx=innerHeight<780?44:56,deskDrop=innerHeight<780?14:22;
- window.CAMT=phone?{rx:11,s:sc,tx:0,ty:-1,rz:0}:window.PORT?{rx:24-4*cP,s:sc,tx:px,ty:-2*cP,rz:-.6+.6*cP}:{rx:deskRx-deskDrop*c,s:sc,tx:3*(1-c),ty:-3*(1-c)-2.5*c,rz:-3+2.4*c};
+ window.CAMT=phone?{rx:2,s:sc,tx:px,ty:-6,rz:0}:window.PORT?{rx:24-4*cP,s:sc,tx:px,ty:-2*cP,rz:-.6+.6*cP}:{rx:deskRx-deskDrop*c,s:sc,tx:3*(1-c),ty:-3*(1-c)-2.5*c,rz:-3+2.4*c};
  if(!window.GLon)tilt.style.transform=`translate3d(${CAMT.tx}vw,${CAMT.ty}vh,0) rotateX(${CAMT.rx}deg) rotateZ(${CAMT.rz}deg) scale(${CAMT.s})`;
  book.style.setProperty('--o',o);window.BOOKO=o;book.style.transform=`translateX(calc(var(--pw)*${-.5*(1-o)}))`;
  vig.style.opacity=1-.85*ease(cl((p-.04)/.2));hero.style.opacity=1-cl((p-.02)/.08);hero.style.transform=`translateY(${-cl(p/.12)*30}px)`;
  let fl=0;leaves.forEach((_,i)=>{if(setLeaf(i,p))fl++});
  book.style.setProperty('--tl',(2+fl*1.1)+'px');book.style.setProperty('--tr',(2+(N-1-fl)*1.1)+'px');
- bar.style.width=p*100+'%';if(fl!==state){state=fl;cap.textContent=CAP[fl]}}
+ bar.style.width=p*100+'%';if(fl!==state){state=fl;cap.textContent=CAP[fl];if(phone&&fl>0){phoneSide=-1;phoneShown=-1}}}
 let flipJob=0,lock=0;
-function loop(){if(lock)return;cur+=(target-cur)*.2;if(Math.abs(target-cur)<.0004)cur=target;draw(cur);if(cur!==target)requestAnimationFrame(loop)}
-function playTo(p){const job=++flipJob,from=cur,t0=performance.now(),dur=920;lock=1;const step=now=>{if(job!==flipJob)return;const t=Math.min(1,(now-t0)/dur);cur=from+(p-from)*ease(t);draw(cur);if(t<1)requestAnimationFrame(step);else{cur=p;draw(p);lock=0}};requestAnimationFrame(step)}
-const read=()=>{if(lock)return;flipJob++;target=cl(scrollY/sy());loop()};
+function loop(){if(lock)return;cur+=(target-cur)*.46;if(Math.abs(target-cur)<.0008)cur=target;draw(cur);if(cur!==target)requestAnimationFrame(loop)}
+function playTo(p){const job=++flipJob,from=cur,t0=performance.now(),dur=400;lock=1;const step=now=>{if(job!==flipJob)return;const t=Math.min(1,(now-t0)/dur);cur=from+(p-from)*ease(t);draw(cur);if(t<1)requestAnimationFrame(step);else{cur=p;draw(p);lock=0}};requestAnimationFrame(step)}
+let idle=0;
+const read=()=>{if(lock)return;flipJob++;target=cl(scrollY/sy());loop();clearTimeout(idle);idle=setTimeout(()=>{if(lock)return;const p=nearestFlat();if(Math.abs(p-cur)<.003)return;lock=1;scrollTo({top:p*sy(),behavior:'auto'});playTo(p)},120)};
 const go=s=>{s=Math.max(0,Math.min(N-1,s));const p=window.PORT?steps()[s?2*s-1:0]:endP(s);if(Math.abs(p-cur)<.001)return;lock=1;scrollTo({top:p*sy(),behavior:'auto'});playTo(p)};
 const nav=d=>{if(!window.PORT){go(state+d);return}const a=steps();let k=0;a.forEach((v,i)=>{if(Math.abs(v-cur)<Math.abs(a[k]-cur))k=i});k=Math.max(0,Math.min(a.length-1,k+d));const p=a[k];lock=1;scrollTo({top:p*sy(),behavior:'auto'});playTo(p)};
 addEventListener('wheel',()=>{if(!lock)return;flipJob++;lock=0},{passive:true});
@@ -206,16 +214,20 @@ function refreshRevistaLang(){
 }
 window.refreshRevistaLang=refreshRevistaLang;
 function magAt(x,y){let best=null,bestI=null;document.querySelectorAll('#book>.leaf').forEach((leaf,i)=>{leaf.querySelectorAll(':scope>.seg, :scope .seg').forEach(seg=>{const sr=seg.getBoundingClientRect();if(x<sr.left||x>sr.right||y<sr.top||y>sr.bottom)return;[0,1].forEach(fi=>{const face=seg.children[fi];if(!face||face.style.pointerEvents==='none')return;const back=fi===1;face.querySelectorAll('[data-mag]').forEach(el=>{const r=el.getBoundingClientRect();if(x<r.left-2||x>r.right+2||y<r.top-2||y>r.bottom+2)return;if(bestI===null||(back?i>bestI:i<bestI)){bestI=i;best=el}})})})});return best}
-book.addEventListener('click',e=>{const mag=(e.target.closest&&e.target.closest('[data-mag]'))||magAt(e.clientX,e.clientY);if(mag){const j=+mag.dataset.p;if(mag.dataset.mag==='q')setMagQty(j,+mag.dataset.dir);else if(window.addToCart)window.addToCart(LINK[PR[j].id]||PR[j].id,magQty[j]||1);return}
+function openExternal(href){if(!href)return;const tab=window.open(href,'_blank','noopener');if(!tab)location.href=href}
+function linkAt(x,y){const stack=document.elementsFromPoint?document.elementsFromPoint(x,y):[];for(const el of stack){const a=el.closest&&el.closest('a[href]');if(a&&/^https?:/i.test(a.href))return a}let found=null;document.querySelectorAll('#book a[href]').forEach(a=>{const r=a.getBoundingClientRect();if(r.width<8||r.height<8)return;if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom)found=a});return found}
+function focusPeek(e){if(innerWidth>=700||state===0)return false;if(e.target.closest&&e.target.closest('button,a,[data-mag],[data-go]'))return false;const fx=e.clientX/innerWidth;if(phoneSide<0&&fx>.88){phoneSide=1;tickPhone();return true}if(phoneSide>0&&fx<.12){phoneSide=-1;tickPhone();return true}return false}
+book.addEventListener('click',e=>{if(focusPeek(e)){e.preventDefault();e.stopPropagation();return}const link=(e.target.closest&&e.target.closest('a[href]'))||linkAt(e.clientX,e.clientY);if(link&&/^https?:/i.test(link.href)){e.preventDefault();e.stopPropagation();openExternal(link.href);return}
+ const mag=(e.target.closest&&e.target.closest('[data-mag]'))||magAt(e.clientX,e.clientY);if(mag){const j=+mag.dataset.p;if(mag.dataset.mag==='q')setMagQty(j,+mag.dataset.dir);else if(window.addToCart)window.addToCart(LINK[PR[j].id]||PR[j].id,magQty[j]||1);return}
  const g=e.target.closest('[data-go]');if(g){go(+g.dataset.go);return}
  if(e.target.closest('a'))return;if(state===0){nav(1);return}
  const z=e.target.closest('[data-p]');if(z&&z.matches('h2')){openZ(+z.dataset.p);return}
  const r=book.getBoundingClientRect(),x=(e.clientX-r.left)/r.width;
- if(!window.PORT){if(x>.94){nav(1);return}if(x<.06){nav(-1);return}}
+ if(innerWidth>=700&&!window.PORT){if(x>.94){nav(1);return}if(x<.06){nav(-1);return}}
  if(z)openZ(+z.dataset.p)});
 book.style.cursor='pointer';
 let sx=0,sy0=0;stage.addEventListener('pointerdown',e=>{sx=e.clientX;sy0=e.clientY});
-stage.addEventListener('pointerup',e=>{const dx=e.clientX-sx,dy=e.clientY-sy0;if(Math.abs(dx)>60&&Math.abs(dy)<45)nav(dx<0?1:-1)});
+stage.addEventListener('pointerup',e=>{if(e.target.closest&&e.target.closest('a,button,[data-mag],[data-go]'))return;const dx=e.clientX-sx,dy=e.clientY-sy0;if(Math.abs(dx)>70&&Math.abs(dy)<40)nav(dx<0?1:-1)});
 addEventListener('scroll',read,{passive:true});addEventListener('resize',read);
 read();draw(cur);
 try{paintRevistaFaces()}catch(e){}
