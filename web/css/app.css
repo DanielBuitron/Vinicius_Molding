@@ -1025,6 +1025,13 @@ body.home .brand img { height: 36px; }
   padding: 3px 9px; border-radius: 999px; color: #fff; background: #181519de;
   font-size: 11px; pointer-events: none;
 }
+.photo-carousel-playback {
+  position: absolute; z-index: 2; right: 8px; bottom: 8px;
+  display: grid; place-items: center; width: 36px; height: 36px; padding: 0;
+  border: 1px solid #ffffff54; border-radius: 50%; color: #fff; background: #141216e0;
+  font: 600 13px/1 system-ui, sans-serif; cursor: pointer;
+}
+.photo-carousel-playback:hover { background: #941e2c; }
 .photo-gallery-controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px; }
 .photo-gallery-controls > button,
 .photo-gallery-dialog form button {

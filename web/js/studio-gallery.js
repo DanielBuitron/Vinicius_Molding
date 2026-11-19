@@ -41,18 +41,19 @@ function studioCover(id) {
 function studioPhotoChoices(id) {
   const cover = studioCover(id);
   if (!cover) return [];
-  const slide = (src, label) => ({
-    src,
-    small: src.replace(/\.webp$/, "-480.webp"),
+  const slide = (src, label, version = "") => ({
+    src: src + version,
+    small: src.replace(/\.webp$/, "-480.webp") + version,
     label: t("gallery." + label),
   });
   return [
     slide(cover, "front"),
-    ...STUDIO_GALLERY_VIEWS[id].map(([file, label]) => slide(`assets/estudio/detalles/${file}.webp`, label)),
+    ...STUDIO_GALLERY_VIEWS[id].map(([file, label]) => slide(`assets/estudio/detalles/${file}.webp`, label, "?v=2")),
   ];
 }
 
 function selectStudioPhoto(gallery, index) {
+  studioCatalogPlayback.get(gallery)?.reset();
   const photos = JSON.parse(gallery.dataset.photos);
   const current = (index + photos.length) % photos.length;
   const photo = photos[current];
@@ -74,10 +75,125 @@ function selectStudioPhoto(gallery, index) {
 
 const studioSwipes = new WeakMap();
 const studioSwipedAt = new WeakMap();
+const studioCatalogPlayback = new WeakMap();
+const studioReducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+const studioHover = matchMedia("(hover: hover)");
+const STUDIO_SLIDE_DURATION = 5000;
+const studioPlaybackStates = new Map();
+const studioVisiblePlayback = new Set();
+let studioPlaybackTimer;
+
+function scheduleStudioPlayback() {
+  if (studioPlaybackTimer || document.hidden || ![...studioVisiblePlayback].some((state) => !state.paused)) return;
+  studioPlaybackTimer = setTimeout(() => {
+    studioPlaybackTimer = undefined;
+    if (document.hidden) return;
+    const now = performance.now();
+    for (const state of studioVisiblePlayback) {
+      if (state.paused || state.busy() || (studioHover.matches && state.target.matches(":hover"))) {
+        state.reset();
+      } else if (now >= state.next) {
+        state.advance();
+        state.reset();
+      }
+    }
+    scheduleStudioPlayback();
+  }, 250);
+}
+
+const studioPlaybackObserver = new IntersectionObserver((entries) => {
+  for (const entry of entries) {
+    const state = studioPlaybackStates.get(entry.target);
+    if (!state) continue;
+    if (entry.isIntersecting && entry.intersectionRatio >= 0.55) {
+      state.reset();
+      studioVisiblePlayback.add(state);
+    } else {
+      studioVisiblePlayback.delete(state);
+    }
+  }
+  scheduleStudioPlayback();
+}, { threshold: 0.55 });
+
+function startStudioPlayback(target, button, advance, busy = () => false) {
+  const state = {
+    target, advance, busy,
+    paused: studioReducedMotion.matches,
+    reset() { state.next = performance.now() + STUDIO_SLIDE_DURATION; },
+  };
+  const updateButton = () => {
+    const label = t(state.paused ? "gallery.play" : "gallery.pause");
+    button.textContent = state.paused ? "▶" : "Ⅱ";
+    button.setAttribute("aria-label", label);
+    button.title = label;
+    target.querySelector("[data-photo-count]")?.setAttribute("aria-live", state.paused ? "polite" : "off");
+  };
+  const toggle = () => {
+    state.paused = !state.paused;
+    state.reset();
+    updateButton();
+    scheduleStudioPlayback();
+  };
+  const updateMotion = (event) => {
+    if (!event.matches) return;
+    state.paused = true;
+    updateButton();
+  };
+  updateButton();
+  button.addEventListener("click", toggle);
+  studioReducedMotion.addEventListener("change", updateMotion);
+  studioPlaybackStates.set(target, state);
+  studioPlaybackObserver.observe(target);
+  return {
+    reset: state.reset,
+    dispose() {
+      studioVisiblePlayback.delete(state);
+      studioPlaybackStates.delete(target);
+      studioPlaybackObserver.unobserve(target);
+      button.removeEventListener("click", toggle);
+      studioReducedMotion.removeEventListener("change", updateMotion);
+    },
+  };
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) clearTimeout(studioPlaybackTimer);
+  studioPlaybackTimer = undefined;
+  studioVisiblePlayback.forEach((state) => state.reset());
+  scheduleStudioPlayback();
+});
+
+function visitStudioGalleries(node, visit) {
+  if (!(node instanceof Element)) return;
+  if (node.matches("[data-photo-gallery]")) visit(node);
+  node.querySelectorAll("[data-photo-gallery]").forEach(visit);
+}
+
+const studioGalleryMounts = new MutationObserver((records) => {
+  for (const record of records) {
+    for (const node of record.removedNodes) visitStudioGalleries(node, (gallery) => {
+      if (gallery.isConnected) return;
+      studioCatalogPlayback.get(gallery)?.dispose();
+      studioCatalogPlayback.delete(gallery);
+    });
+    for (const node of record.addedNodes) visitStudioGalleries(node, (gallery) => {
+      const button = gallery.querySelector("[data-studio-playback]");
+      if (!gallery.isConnected || !button || studioCatalogPlayback.has(gallery)) return;
+      const stage = gallery.querySelector("[data-photo-stage]");
+      studioCatalogPlayback.set(gallery, startStudioPlayback(
+        stage, button,
+        () => selectStudioPhoto(gallery, Number(gallery.dataset.photoIndex) + 1),
+        () => (gallery.matches(":focus-within") && !!gallery.querySelector(":focus-visible")) ||
+          !!gallery.querySelector("dialog[open]") || studioSwipes.has(stage),
+      ));
+    });
+  }
+});
+studioGalleryMounts.observe(document.getElementById("app"), { childList: true, subtree: true });
 
 document.addEventListener("pointerdown", (event) => {
   const stage = event.target.closest("[data-photo-stage]");
-  if (!stage || !event.isPrimary || event.pointerType === "mouse" || event.target.closest("[data-photo-step]")) return;
+  if (!stage || !event.isPrimary || event.pointerType === "mouse" || event.target.closest("[data-photo-step], [data-studio-playback]")) return;
   studioSwipes.set(stage, { id: event.pointerId, x: event.clientX, y: event.clientY });
 });
 
@@ -113,6 +229,7 @@ document.addEventListener("click", (event) => {
   if (button.hasAttribute("data-photo-step")) selectStudioPhoto(gallery, current + Number(button.dataset.photoStep));
   if (button.hasAttribute("data-photo-select")) selectStudioPhoto(gallery, Number(button.dataset.photoSelect));
   if (button.hasAttribute("data-studio-zoom")) {
+    studioCatalogPlayback.get(gallery)?.reset();
     const dialog = gallery.querySelector("dialog");
     const photo = JSON.parse(gallery.dataset.photos)[current];
     const target = dialog.querySelector("img");

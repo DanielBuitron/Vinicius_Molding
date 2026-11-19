@@ -156,6 +156,7 @@ function catalogPhoto(product, alt, linked) {
   return `<div class="photo-gallery ${linked ? "photo-carousel-card" : "photo-carousel-detail"}" data-photo-gallery data-photos="${esc(JSON.stringify(photos))}" data-photo-index="0" data-photo-name="${esc(alt)}">
     <div class="photo-carousel-stage" data-photo-stage>${slide}${arrows}
       <span class="photo-carousel-count" data-photo-count aria-live="polite" ${studio ? "" : "hidden"}>1 / ${photos.length}</span>
+      ${studio ? `<button type="button" class="photo-carousel-playback" data-studio-playback aria-label="${esc(t("gallery.pause"))}">Ⅱ</button>` : ""}
     </div>
     ${linked ? "" : `<div class="photo-gallery-controls">
       ${studio ? `<div class="photo-thumbnails">${photos.map((photo, index) =>
