@@ -42,14 +42,14 @@ const MOLDING_STAGE_ART = {
   "cera-fibra": { box: "frente.jpg", boxBack: true, edge: "canto-nombre.jpg", ingredients: "canto-ingredientes.jpg", tone: "#d1cbb4" },
   pasta: { box: "frente.jpg", boxBack: true, edge: "canto-3d.webp", ingredients: "canto-ingredientes-3d.webp", tone: "#5c9da9" },
   pomada: { box: "frente.jpg", boxBack: true, edge: "canto-3d.webp", ingredients: "canto-ingredientes-3d.webp", tone: "#b6a23d" },
-  "gel-cubre-canas": { edge: "canto-3d.webp", tone: "#131314", creamTint: "#303030", creamRoughness: 0.68, creamRelief: 0.003 },
-  "cera-kids": { edge: "banda-3d.webp", band: "banda-3d.webp", tone: "#85628f", boxColor: "#be1b29", flipTopV: true },
+  "gel-cubre-canas": { edge: "canto-3d.webp", ingredients: "canto-ingredientes-3d.webp", tone: "#131314", creamTint: "#303030", creamRoughness: 0.68, creamRelief: 0.003 },
+  "cera-kids": { edge: "canto-3d.webp", ingredients: "canto-ingredientes-3d.webp", contact: "canto-contacto-3d.webp", band: "banda-3d.webp", tone: "#85628f", boxColor: "#be1b29" },
 };
 
 const FORM = {
   "shampoo-proteccion": { top: "pump", body: "#f7f5f2", face: "white", box: "#f3f0ea", boxDepth: 1, boxBack: true, boxSide: true, boxLeft: true, boxWindow: "corner", emboss: true, wrapFront: 0.5, labelRange: [0.045, 0.65] },
   "shampoo-carbon": { top: "pump", body: "#121214", face: "carbon", box: "#222120", boxDepth: 1, boxBack: true, boxSide: true, boxLeft: true, boxWindow: "corner", emboss: true, wrapFront: 0.5, labelRange: [0.05, 0.69] },
-  "ducha-intima": { top: "tube", body: "#221f1f", face: "tube", labelBack: true, labelRange: [0.1, 0.91] },
+  "ducha-intima": { top: "tube", body: "#221f1f", face: "tube", labelBack: true, badge: true, labelRange: [0.1, 0.91] },
   tonico: { top: "spray", body: "#151619", face: "tonico", box: "#094b53", boxDepth: 0.53, boxBack: true, boxSide: true, boxLeft: true, boxTop: true, boxWindow: "front", boxLining: "#123d43", wrapFront: 0.25, labelRange: [0.045, 0.79] },
   "tonico-minoxidil": { top: "spray", body: "#160d0e", face: "minox", box: "#a52224", boxDepth: 0.53, boxSide: "left", boxBack: true, boxRight: true, boxWindow: "right", wrapFront: 0.25, wrapFile: "envoltura-3d.webp", labelRange: [0.035, 0.79] },
   "tonico-23": { top: "spray", box: "#1b1b1c", boxDepth: 0.55, boxSide: "left", boxBack: true, boxRight: true, boxWindow: "right", boxLining: "#251a1b", wrapFront: 0.25, wrapFile: "envoltura-3d.webp", labelRange: [0.045, 0.8] },
@@ -307,8 +307,8 @@ function loadLocalVolumeTextures() {
     localVolumeTextures = new Promise((resolve, reject) => {
       const script = document.createElement("script");
       script.src = volumeScriptUrl
-        ? new URL("volume-textures.local.js?v=5", volumeScriptUrl).href
-        : "js/volume-textures.local.js?v=5";
+        ? new URL("volume-textures.local.js?v=6", volumeScriptUrl).href
+        : "js/volume-textures.local.js?v=6";
       script.onload = () => {
         script.remove();
         if (window.VOLUME_LOCAL_TEXTURES) resolve(window.VOLUME_LOCAL_TEXTURES);
@@ -1740,6 +1740,7 @@ async function makeForm(id) {
   if (spec.labelRange) {
     const files = [[spec.wrapFront == null ? "photo" : "wrap", spec.wrapFile || "etiqueta-3d.webp"]];
     if (spec.labelBack) files.push(["back", "reverso-3d.webp"]);
+    if (spec.badge) files.push(["badge", "sello-3d.webp"]);
     if (spec.box) files.push(["box", "caja-3d.webp?v=3"]);
     if (spec.boxSide) files.push(["boxSide", "caja-lateral-3d.webp"]);
     if (spec.boxBack) files.push(["boxBack", "caja-reverso-3d.webp"]);
@@ -1790,7 +1791,7 @@ async function makeShelf(id) {
   return group;
 }
 
-function photographicMoldBox(front, canto, ingredients, { color = "#141418", flipTopV = false, rear } = {}) {
+function photographicMoldBox(front, canto, ingredients, { color = "#141418", contact, rear } = {}) {
   const board = new THREE.MeshStandardMaterial({ color, roughness: 0.8, metalness: 0.02, side: THREE.DoubleSide });
   const face = (img) => (img ? photoMat(img, 0.5, 0.04) : board);
   const width = 2.35;
@@ -1823,7 +1824,7 @@ function photographicMoldBox(front, canto, ingredients, { color = "#141418", fli
     new THREE.Vector3(right, top, frontZ),
     new THREE.Vector3(right, top, backZ),
     new THREE.Vector3(left, top, backZ),
-  ], flipTopV ? [0, 0, 1, 0, 1, 1, 0, 1] : [0, 1, 1, 1, 1, 0, 0, 0], face(canto)));
+  ], [0, 1, 1, 1, 1, 0, 0, 0], face(canto)));
   box.add(faceQuad([
     new THREE.Vector3(right, top, frontZ),
     new THREE.Vector3(0, bottom, frontZ),
@@ -1835,14 +1836,14 @@ function photographicMoldBox(front, canto, ingredients, { color = "#141418", fli
     new THREE.Vector3(left, top, frontZ),
     new THREE.Vector3(left, top, backZ),
     new THREE.Vector3(0, bottom, backZ),
-  ], [0, 1, 1, 1, 1, 0, 0, 0], board));
+  ], [0, 1, 1, 1, 1, 0, 0, 0], face(contact)));
   box.position.set(0.55, -bottom, -0.25);
   return box;
 }
 
 async function makeMoldingStage(pack, spec) {
   const base = "productos_3d/" + pack.id + "/texturas/";
-  const [front, lid, cream, edge, ingredients, band, rear] = await Promise.all([
+  const [front, lid, cream, edge, ingredients, band, rear, contact] = await Promise.all([
     loadBitmap(base + (spec.box || "caja-3d.webp")),
     loadBitmap(base + "tapa-3d.webp"),
     loadBitmap(base + (spec.cream || "crema-3d.webp")),
@@ -1850,8 +1851,9 @@ async function makeMoldingStage(pack, spec) {
     spec.ingredients && loadBitmap(base + spec.ingredients),
     loadBitmap(spec.band ? base + spec.band : LID_ART[pack.id][1]),
     spec.boxBack && loadBitmap(base + "caja-reverso-3d.webp"),
+    spec.contact && loadBitmap(base + spec.contact),
   ]);
-  const box = photographicMoldBox(front, edge, ingredients, { color: spec.boxColor, flipTopV: spec.flipTopV, rear });
+  const box = photographicMoldBox(front, edge, ingredients, { color: spec.boxColor, rear, contact });
   box.position.set(0.02, box.position.y, -0.49);
   box.rotation.y = -0.08;
   const jar = makeOpenableJar(lid, null, cream, {
@@ -2612,6 +2614,10 @@ function bodyPrint(pack, art, vBottom, vTop, span, labelOnly = false) {
   };
   stamp(artCanvas, 0);
   if (art.back || !art.photo) stamp(art.back || artCanvas, Math.round(canvas.width / 2));
+  if (art.badge) {
+    const badgeWidth = canvas.width * 0.112;
+    ctx.drawImage(art.badge, (canvas.width - badgeWidth) / 2, canvas.height * 0.12, badgeWidth, canvas.height * 0.062);
+  }
   return canvasTexture(canvas, 0.5);
 }
 
