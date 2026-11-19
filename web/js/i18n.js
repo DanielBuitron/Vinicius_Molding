@@ -22,7 +22,6 @@
       "nav.home": "Inicio",
       "nav.catalog": "Catálogo",
       "nav.voices": "Testimonios",
-      "nav.voicesShort": "Voces",
       "nav.panel": "Panel",
       "nav.login": "Iniciar sesión",
       "nav.loginShort": "Entrar",
@@ -207,7 +206,6 @@
       "nav.home": "Home",
       "nav.catalog": "Catalog",
       "nav.voices": "Testimonials",
-      "nav.voicesShort": "Voices",
       "nav.panel": "Dashboard",
       "nav.login": "Sign in",
       "nav.loginShort": "Sign in",
@@ -392,7 +390,6 @@
       "nav.home": "首页",
       "nav.catalog": "目录",
       "nav.voices": "评价",
-      "nav.voicesShort": "评价",
       "nav.panel": "后台",
       "nav.login": "登录",
       "nav.loginShort": "登录",
@@ -955,13 +952,7 @@
       ask.removeAttribute("rel");
     }
     const voices = document.getElementById("voices-link");
-    if (voices) {
-      const long = voices.querySelector(".long");
-      const short = voices.querySelector(".short");
-      if (long) long.textContent = t("nav.voices");
-      if (short) short.textContent = t("nav.voicesShort");
-      voices.setAttribute("href", "#/testimonios");
-    }
+    if (voices) voices.textContent = t("nav.voices");
     const cart = document.getElementById("mag-cart");
     if (cart) cart.setAttribute("aria-label", t("nav.cart"));
     const prev = document.getElementById("prev");
