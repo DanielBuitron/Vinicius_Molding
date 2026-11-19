@@ -44,7 +44,6 @@ background-image:repeating-linear-gradient(118deg,#0000 0 2.4cqw,#00000009 2.4cq
 #revista .pg.img.studio .capline{background:linear-gradient(#0000 0,#efece6ee 62%,#efece6 100%)}
 #revista .pg.img.studio .capline span{color:#141416}
 #revista .pg.img.studio .px{color:#111}
-#revista .pg.img.bleed img{object-fit:contain;object-position:center 46%;padding:3cqw;box-sizing:border-box}
 #revista .cover{align-items:center;justify-content:center;text-align:center;background:url(assets/cover.jpg) center/cover;border-left:.5cqw solid #1d1d1f}#revista .cover.dk{background-image:url(assets/cover.jpg),none}
 #revista .cover img.iso{width:52cqw;margin-top:12cqw}#revista .cover img.lg{width:56cqw}#revista .cover small{font:300 2.7cqw Poppins;letter-spacing:.25em;color:#9a9da1;margin-top:3cqw;display:block}
 #revista .hd{display:flex;justify-content:space-between;align-items:center;font:400 2.3cqw Poppins;opacity:.7}

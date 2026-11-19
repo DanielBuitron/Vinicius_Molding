@@ -6,18 +6,18 @@ let layout;
 const TIN='Keratina · Romero · Aloe vera',EXT='Romero · Keratina · Cebolla · Aloe vera · Zanahoria · Ácido hialurónico';
 const TIN_EN='Keratin · Rosemary · Aloe vera',EXT_EN='Rosemary · Keratin · Onion · Aloe vera · Carrot · Hyaluronic acid';
 const PR=[
-{id:'cera',n:'Cera',studio:1,img:'assets/revista-productos/cera.webp',sub:'Moldeadora · brillo medio',cap:'Cera Moldeadora',c:'#E52C3B',v:'paper',d:'Define y moldea con brillo medio. Hecha con keratina, romero y aloe vera.',r:[['Contenido','150 g'],['Acabado','Brillo medio'],['Contiene',TIN]]},
-{id:'pasta',n:'Pasta',sub:'Moldeadora · brillante',cap:'Pasta Moldeadora',c:'#00C8C2',tx:'#06100f',v:'color',studio:1,img:'assets/revista-productos/pasta.webp',d:'Fijación con acabado brillante para peinados definidos. Con keratina, romero y aloe vera.',r:[['Contenido','150 g'],['Acabado','Brillante'],['Contiene',TIN]]},
-{id:'pomada',n:'Pomada',sub:'Moldeadora · mate',cap:'Pomada Moldeadora',c:'#A4D800',v:'dark',studio:1,img:'assets/revista-productos/pomada.webp',d:'Acabado mate y natural, con la fuerza que necesita un peinado de todos los días.',r:[['Contenido','150 g'],['Acabado','Mate'],['Contiene',TIN]]},
-{id:'cera-fibra',n:'Cera & Fibra',sub:'Acabado húmedo',cap:'Cera & Fibra',c:'#7B5CB8',v:'paper',studio:1,img:'assets/revista-productos/cera-fibra.webp',d:'Cera y fibra en una sola fórmula para un acabado húmedo con textura.',r:[['Contenido','1200 g'],['Acabado','Húmedo'],['Contiene',TIN]]},
-{id:'kids',n:'Cera & Fibra Kids',sub:'Línea Kids',cap:'Cera & Fibra Kids',c:'#FFD300',tx:'#14110a',v:'color',studio:1,img:'assets/revista-productos/kids.webp?v=2',d:'Versión para los más jóvenes, a base de cera de abeja.',r:[['Base','Cera de abeja'],['Uso','Pelo seco o semi seco'],['Contiene',TIN]]},
-{id:'anticaida',n:'Shampoo',studio:1,img:'assets/revista-productos/anticaida.webp',sub:'Protección capilar · anticaída',cap:'Shampoo Protección Capilar',c:'#E52C3B',v:'dark',d:'Aporta apariencia de mayor volumen, brillo y suavidad, y cuida el cuero cabelludo.',r:[['Contenido','500 g'],['Contiene',EXT],['Fórmula','Sin sal']]},
-{id:'carbon',n:'Shampoo',sub:'Carbón activo',cap:'Shampoo Carbón Activo',c:'#A4D800',v:'paper',studio:1,img:'assets/revista-productos/carbon.webp',d:'Adiós caspa y picazón. Limpia el cuero cabelludo y mantiene el cabello fuerte.',r:[['Contenido','500 ml'],['Contiene',EXT],['Fórmula','Sin sal']]},
-{id:'serum',n:'Serum',sub:'Barba · bigote',cap:'Serum Barba · Bigote',c:'#A4D800',tx:'#0c1204',v:'color',studio:1,img:'assets/revista-productos/serum.webp',d:'Cuidado diario para barba y bigote, con aceites naturales.',r:[['Contenido','65 ml · 2.3 fl oz'],['Contiene','Argán · Jojoba · Aloe vera'],['Uso','Externo']]},
-{id:'tonico',n:'Tónico',sub:'Orgánico · cuero cabelludo',cap:'Tónico Orgánico',c:'#FFD300',tx:'#14110a',v:'color',d:'Tónico de extractos para el cuero cabelludo. 19 activos.',r:[['Contenido','65 ml'],['Uso','Cuero cabelludo'],['Contiene','Romero · Biotina · Aloe vera']],studio:1,img:'assets/revista-productos/tonico.webp'},
-{id:'cubre-canas',n:'Gel',sub:'Cubre canas',cap:'Gel Cubre Canas',c:'#E52C3B',v:'dark',d:'Cubre las canas con un acabado húmedo brillante.',r:[['Contenido','150 g'],['Acabado','Húmedo brillante'],['Contiene',TIN]],studio:1,img:'assets/revista-productos/cubre-canas.webp'},
-{id:'tonico-minoxidil',n:'Tónico',sub:'Minoxidil 12.5%',cap:'Tónico Minoxidil 12.5%',c:'#00C8C2',v:'dark',d:'Nutre, fortalece y estimula el crecimiento en cabello, barba y cejas.',r:[['Contenido','65 ml'],['Uso','Cabello · barba · cejas'],['Contiene','Minoxidil 12.5%']],studio:1,img:'assets/revista-productos/tonico-minoxidil.webp'},
-{id:'tonico-23',n:'Tónico',sub:'Minoxidil 23%',cap:'Tónico Minoxidil 23%',c:'#E52C3B',v:'dark',d:'Tónico capilar en presentación de 65 ml.',r:[['Contenido','65 ml'],['Contiene','Minoxidil 23%']],studio:1,img:'assets/revista-productos/tonico-23.webp'},
+{id:'cera',n:'Cera',studio:1,img:'assets/estudio/revista/cera-moldeadora.webp',sub:'Moldeadora · brillo medio',cap:'Cera Moldeadora',c:'#E52C3B',v:'paper',d:'Define y moldea con brillo medio. Hecha con keratina, romero y aloe vera.',r:[['Contenido','150 g'],['Acabado','Brillo medio'],['Contiene',TIN]]},
+{id:'pasta',n:'Pasta',sub:'Moldeadora · brillante',cap:'Pasta Moldeadora',c:'#00C8C2',tx:'#06100f',v:'color',studio:1,img:'assets/estudio/revista/pasta-moldeadora.webp',d:'Fijación con acabado brillante para peinados definidos. Con keratina, romero y aloe vera.',r:[['Contenido','150 g'],['Acabado','Brillante'],['Contiene',TIN]]},
+{id:'pomada',n:'Pomada',sub:'Moldeadora · mate',cap:'Pomada Moldeadora',c:'#A4D800',v:'dark',studio:1,img:'assets/estudio/revista/pomada-moldeadora.webp',d:'Acabado mate y natural, con la fuerza que necesita un peinado de todos los días.',r:[['Contenido','150 g'],['Acabado','Mate'],['Contiene',TIN]]},
+{id:'cera-fibra',n:'Cera & Fibra',sub:'Acabado húmedo',cap:'Cera & Fibra',c:'#7B5CB8',v:'paper',studio:1,img:'assets/estudio/revista/cera-y-fibra.webp',d:'Cera y fibra en una sola fórmula para un acabado húmedo con textura.',r:[['Contenido','1200 g'],['Acabado','Húmedo'],['Contiene',TIN]]},
+{id:'kids',n:'Cera & Fibra Kids',sub:'Línea Kids',cap:'Cera & Fibra Kids',c:'#FFD300',tx:'#14110a',v:'color',studio:1,img:'assets/estudio/revista/cera-y-fibra-kids.webp',d:'Versión para los más jóvenes, a base de cera de abeja.',r:[['Base','Cera de abeja'],['Uso','Pelo seco o semi seco'],['Contiene',TIN]]},
+{id:'anticaida',n:'Shampoo',studio:1,img:'assets/estudio/revista/shampoo-proteccion-capilar.webp',sub:'Protección capilar · anticaída',cap:'Shampoo Protección Capilar',c:'#E52C3B',v:'dark',d:'Aporta apariencia de mayor volumen, brillo y suavidad, y cuida el cuero cabelludo.',r:[['Contenido','500 g'],['Contiene',EXT],['Fórmula','Sin sal']]},
+{id:'carbon',n:'Shampoo',sub:'Carbón activo',cap:'Shampoo Carbón Activo',c:'#A4D800',v:'paper',studio:1,img:'assets/estudio/revista/shampoo-carbon-activo.webp',d:'Adiós caspa y picazón. Limpia el cuero cabelludo y mantiene el cabello fuerte.',r:[['Contenido','500 ml'],['Contiene',EXT],['Fórmula','Sin sal']]},
+{id:'serum',n:'Serum',sub:'Barba · bigote',cap:'Serum Barba · Bigote',c:'#A4D800',tx:'#0c1204',v:'color',studio:1,img:'assets/estudio/revista/serum-barba-y-bigote.webp',d:'Cuidado diario para barba y bigote, con aceites naturales.',r:[['Contenido','65 ml · 2.3 fl oz'],['Contiene','Argán · Jojoba · Aloe vera'],['Uso','Externo']]},
+{id:'tonico',n:'Tónico',sub:'Orgánico · cuero cabelludo',cap:'Tónico Orgánico',c:'#FFD300',tx:'#14110a',v:'color',d:'Tónico de extractos para el cuero cabelludo. 19 activos.',r:[['Contenido','65 ml'],['Uso','Cuero cabelludo'],['Contiene','Romero · Biotina · Aloe vera']],studio:1,img:'assets/estudio/revista/tonico-organico.webp'},
+{id:'cubre-canas',n:'Gel',sub:'Cubre canas',cap:'Gel Cubre Canas',c:'#E52C3B',v:'dark',d:'Cubre las canas con un acabado húmedo brillante.',r:[['Contenido','150 g'],['Acabado','Húmedo brillante'],['Contiene',TIN]],studio:1,img:'assets/estudio/revista/gel-cubre-canas.webp'},
+{id:'tonico-minoxidil',n:'Tónico',sub:'Minoxidil 12.5%',cap:'Tónico Minoxidil 12.5%',c:'#00C8C2',v:'dark',d:'Nutre, fortalece y estimula el crecimiento en cabello, barba y cejas.',r:[['Contenido','65 ml'],['Uso','Cabello · barba · cejas'],['Contiene','Minoxidil 12.5%']],studio:1,img:'assets/estudio/revista/tonico-minoxidil-12-5.webp'},
+{id:'tonico-23',n:'Tónico',sub:'Minoxidil 23%',cap:'Tónico Minoxidil 23%',c:'#E52C3B',v:'dark',d:'Tónico capilar en presentación de 65 ml.',r:[['Contenido','65 ml'],['Contiene','Minoxidil 23%']],studio:1,img:'assets/estudio/revista/tonico-minoxidil-23.webp'},
 {id:'kit-capilar',n:'Kit Capilar',sub:'Anticaída',cap:'Kit Capilar',c:'#E52C3B',v:'paper',d:'Fortalece el cabello y ayuda a reducir la caída con una rutina completa.',r:[['Tipo','Combo'],['Uso','Rutina diaria'],['Incluye','Shampoo · Tónico']],studio:1,img:'assets/revista-productos/kit-capilar.webp'},
 {id:'kit-capilar-completo',n:'Kit Completo',sub:'Con dermaroller',cap:'Kit Capilar Completo',c:'#FFD300',tx:'#14110a',v:'color',d:'Rutina completa con dermaroller de microagujas.',r:[['Tipo','Combo'],['Incluye','Rutina · Dermaroller'],['Enfoque','Crecimiento']],studio:1,img:'assets/revista-productos/kit-capilar-completo.webp'},
 {id:'kit-capilar-avanzado',n:'Kit Avanzado',sub:'Cabello · barba · cejas',cap:'Kit Capilar Avanzado',c:'#00C8C2',v:'dark',d:'Kit avanzado para cabello, barba y cejas con dermaroller.',r:[['Tipo','Combo'],['Incluye','Tónico · Dermaroller'],['Enfoque','Avanzado']],studio:1,img:'assets/revista-productos/kit-capilar-avanzado.webp'},
@@ -28,9 +28,9 @@ const PR=[
 {id:'kit-organico-avanzado',n:'Kit Orgánico Avanzado',sub:'Con rodillo',cap:'Kit Orgánico Avanzado',c:'#FFD300',v:'dark',d:'Tratamiento de crecimiento para cabello, barba y cejas + rodillo.',r:[['Tipo','Combo'],['Incluye','Tónico · Rodillo'],['Enfoque','Avanzado']],studio:1,img:'assets/revista-productos/kit-organico-avanzado.webp'},
 {id:'kit-restaurador',n:'Kit Restaurador',sub:'Shampoo + tónico',cap:'Kit Restaurador Capilar',c:'#585E65',v:'paper',d:'Shampoo + tónico orgánico para combatir la caída.',r:[['Tipo','Combo'],['Incluye','Shampoo · Tónico orgánico'],['Enfoque','Restauración']],studio:1,img:'assets/revista-productos/kit-restaurador.webp'},
 {id:'kit-crecimiento-23',n:'Kit 23%',sub:'Shampoo + minoxidil 23%',cap:'Kit Crecimiento 23%',c:'#E52C3B',v:'dark',d:'Shampoo protección capilar + tónico minoxidil 23% para cabello y barba.',r:[['Tipo','Combo'],['Incluye','Shampoo · Minoxidil 23%'],['Enfoque','Crecimiento']],studio:1,img:'assets/revista-productos/kit-crecimiento-23.webp'},
-{id:'shaving',n:'Shaving Gel',sub:'For men · aloe vera',cap:'Shaving Gel For Men',c:'#FF6A00',v:'paper',d:'Gel de afeitar for men. Contiene aloe vera.',r:[['Contenido','250 ml'],['Contiene','Aloe vera · Eucalipto · Mentol'],['Uso','Afeitado']],studio:1,img:'assets/revista-productos/shaving.webp'},
-{id:'splash',n:'Body Splash',sub:'For men',cap:'Body Splash For Men',c:'#4BA3DC',tx:'#061018',v:'color',d:'Splash corporal. Eucalipto y mentol. Se aplica en la zona del cuerpo que se requiera.',r:[['Contenido','250 ml'],['Contiene','Eucalipto · Mentol'],['Uso','Cuerpo']],studio:1,img:'assets/revista-productos/splash.webp'},
-{id:'ducha',n:'Ducha íntima',sub:'For men',cap:'Ducha Íntima For Men',c:'#A4D800',v:'dark',d:'Higiene masculina. Sin fragancia, sin colorantes y sin parabenos.',r:[['Contenido','180 g'],['Fórmula','Sin fragancia ni parabenos'],['Uso','Externo']],studio:1,img:'assets/revista-productos/ducha.webp'}];
+{id:'shaving',n:'Shaving Gel',sub:'For men · aloe vera',cap:'Shaving Gel For Men',c:'#FF6A00',v:'paper',d:'Gel de afeitar for men. Contiene aloe vera.',r:[['Contenido','250 ml'],['Contiene','Aloe vera · Eucalipto · Mentol'],['Uso','Afeitado']],studio:1,img:'assets/estudio/revista/shaving-gel-for-men.webp'},
+{id:'splash',n:'Body Splash',sub:'For men',cap:'Body Splash For Men',c:'#4BA3DC',tx:'#061018',v:'color',d:'Splash corporal. Eucalipto y mentol. Se aplica en la zona del cuerpo que se requiera.',r:[['Contenido','250 ml'],['Contiene','Eucalipto · Mentol'],['Uso','Cuerpo']],studio:1,img:'assets/estudio/revista/body-splash-for-men.webp'},
+{id:'ducha',n:'Ducha íntima',sub:'For men',cap:'Ducha Íntima For Men',c:'#A4D800',v:'dark',d:'Higiene masculina. Sin fragancia, sin colorantes y sin parabenos.',r:[['Contenido','180 g'],['Fórmula','Sin fragancia ni parabenos'],['Uso','Externo']],studio:1,img:'assets/estudio/revista/ducha-intima-for-men.webp'}];
 const accessoryStart=PR.length;
 for(const item of CATALOG_ACCESSORIES){
   const copy=Object.fromEntries(['es','en','zh'].map(lang=>{
@@ -113,8 +113,6 @@ try{
   if(s.name){p.n=s.name;p._es.n=s.name}
   if(s.finish){p.sub=s.finish;p._es.sub=s.finish}
   if(s.description){p.d=s.description;p._es.d=s.description}
-  const stockTonicPhoto=p.id==='tonico-23'&&/^\/?assets\/products\/tonico-23\.(?:jpe?g|png)(?:[?#]|$)/i.test(s.image);
-  if(s.image&&!studioCover(p.id)&&!stockTonicPhoto){p.img=s.image;p.bleed=1}
   if(s.price!=null)p.price=Number(s.price);
   if(s.size){
    const row=p._es.r.find(x=>x[0]==='Contenido');
@@ -148,11 +146,11 @@ function localizePR(){
 }
 const hd=n=>`<div class="hd"><img src="assets/isotipo-rojo.png" alt=""><span>${n}</span></div>`;
 const rows=r=>r.map(x=>`<div><dt>${x[0]}</dt><dd>${x[1]}</dd></div>`).join('');
-const shot=p=>studioCover(p.id)||(p.img?.startsWith('assets/revista-productos/')?p.img.split('?')[0]+'?v=4':p.img||A('p-'+p.id+'.jpg'));
+const shot=p=>studioCover(p.id)||p.img;
 const askHref=p=>WA+'?text='+encodeURIComponent(tt('mag.waAsk',{name:p.cap,ref:p.ref}));
 const magQty={};
 const imgP=j=>{const p=PR[j],studio=p.studio?' studio':'',price=priceOnRequest(p)?'':`<b class="px">${cop(p.price)}</b>`;
-  return `<div class="pg img${p.bleed?' bleed':''}${studio}" data-p="${j}"><img data-revista-src="${esc(shot(p))}" alt="${esc(p.cap)}" decoding="async"><div class="capline"><span>${p.cap}</span>${price}</div><b class="zm">+</b></div>`};
+  return `<div class="pg img${studio}" data-p="${j}"><img data-revista-src="${esc(shot(p))}" alt="${esc(p.cap)}" decoding="async"><div class="capline"><span>${p.cap}</span>${price}</div><b class="zm">+</b></div>`};
 const infoP=(j,n)=>{const p=PR[j],cls=p.v==='color'?'pg col':p.v==='dark'?'pg dark':'pg',st=`--ac:${p.c}`+(p.v==='color'?`;--bg:${p.c};--fg:${p.tx}`:'');
  const action=priceOnRequest(p)
    ? `<a class="cta" href="${askHref(p)}" target="_blank" rel="noopener">${tt('mag.wa')}</a>`
@@ -333,7 +331,7 @@ contentsShortcut.onclick=()=>go(2);
 // ---- detalle de producto
 const Z=document.getElementById('zoom'),$=id=>document.getElementById(id);let zi=0;
 function openZ(j){const p=PR[j];zi=j;$('zimg').src=shot(p);$('zimg').alt=p.cap;$('zref').textContent=tt('mag.ref',{ref:p.ref});$('zname').textContent=p.cap;$('zsub').textContent=p.sub;$('zdesc').textContent=p.d;$('zrows').innerHTML=rows(p.r);
- $('zrows').hidden=!p.r.length;$('zwa').href=askHref(p);zi_.classList.remove('z2');zi_.classList.toggle('studio',!!p.studio&&!p.bleed);Z.style.setProperty('--ac',p.c);Z.hidden=false;document.body.style.overflow='hidden';
+ $('zrows').hidden=!p.r.length;$('zwa').href=askHref(p);zi_.classList.remove('z2');zi_.classList.toggle('studio',!!p.studio);Z.style.setProperty('--ac',p.c);Z.hidden=false;document.body.style.overflow='hidden';
  $('zx').focus()}
 const closeZ=()=>{Z.hidden=true;document.body.style.overflow=''};
 $('zx').onclick=closeZ;Z.addEventListener('click',e=>{if(e.target===Z)closeZ()});
