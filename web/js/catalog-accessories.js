@@ -51,7 +51,7 @@ const CATALOG_ACCESSORIES = accessoryGroups.flatMap((group) => group.models.map(
     category: "accesorios",
     accent: group.c,
     magazineFill: accessoryPageColors[id],
-    image: "assets/revista-productos/" + id + ".webp",
+    image: `assets/revista-productos/${id}.webp${id === "dermaroller" ? "?v=2" : ""}`,
     consultationOnly: true,
   };
 }));

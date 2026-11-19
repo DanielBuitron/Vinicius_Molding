@@ -13,7 +13,7 @@ const PACKS = {
   "cera-brillo": { kind: "tin", accent: "#E10600", body: "#121214", ink: "#f6f3ec", title: "CERA", lidLines: ["MOLDEADORA", "BRILLO MEDIO"], size: "150 g", hold: 3, wax: ["#f8f3e4", "#ead9b0", "#d2bc88"] },
   "pasta": { kind: "tin", accent: "#2FBE9B", body: "#121214", ink: "#f6f3ec", title: "PASTA", lidLines: ["MOLDEADORA", "BRILLANTE"], size: "150 g", hold: 4, wax: ["#d8f6ff", "#67d4ee", "#1aa8cc"] },
   "pomada": { kind: "tin", accent: "#C6DE14", body: "#121214", ink: "#f6f3ec", title: "POMADA", lidLines: ["MOLDEADORA", "MATE"], size: "150 g", hold: 3, wax: ["#fff1a8", "#f0c52a", "#d9a40c"] },
-  "gel-cubre-canas": { kind: "tin", accent: "#f4f4f4", body: "#121214", ink: "#f6f3ec", title: "GEL", lidLines: ["CUBRE CANAS"], size: "150 g", hold: 3, wax: ["#3a3a3a", "#161616", "#070707"] },
+  "gel-cubre-canas": { kind: "tin", accent: "#f4f4f4", body: "#121214", ink: "#f6f3ec", title: "GEL", lidLines: ["CUBRE CANAS"], size: "150 g", hold: 3, wax: ["#131313", "#0e0e0e", "#070707"] },
   "pasta-minoxidil": { kind: "tin", accent: "#141414", body: "#2EE6D0", ink: "#141414", title: "PASTA", lidLines: ["MINOXIDIL"], size: "150 g", hold: 3, sideLines: ["MINOXIDIL", "PANTENOL", "ROMERO"] },
   "cera-kids": { kind: "tin", accent: "#FFD300", body: "#e10600", ink: "#ffffff", title: "CERA DE FIBRA", lidSub: "KIDS", size: "150 g", hold: 3, kids: true },
   "shampoo-proteccion": { kind: "pump", accent: "#E10600", body: "#f4f2ee", ink: "#171717", title: "SHAMPOO", lidSub: "PROTECCIÓN CAPILAR", size: "500 g", face: "white" },
@@ -42,7 +42,7 @@ const MOLDING_STAGE_ART = {
   "cera-fibra": { box: "frente.jpg", edge: "canto-nombre.jpg", ingredients: "canto-ingredientes.jpg", tone: "#d1cbb4" },
   pasta: { box: "frente.jpg", tone: "#5c9da9" },
   pomada: { box: "frente.jpg", tone: "#b6a23d" },
-  "gel-cubre-canas": { edge: "canto-3d.webp", tone: "#131314", creamTint: "#ababab", creamRoughness: 0.5, creamRelief: 0.006 },
+  "gel-cubre-canas": { edge: "canto-3d.webp", tone: "#131314", creamTint: "#303030", creamRoughness: 0.68, creamRelief: 0.003 },
   "cera-kids": { edge: "banda-3d.webp", band: "banda-3d.webp", tone: "#85628f", boxColor: "#be1b29", flipTopV: true },
 };
 
@@ -51,7 +51,7 @@ const FORM = {
   "shampoo-carbon": { top: "pump", body: "#121214", face: "carbon", box: "#222120", boxBack: true, wrapFront: 0.5, labelRange: [0.09, 0.76] },
   "ducha-intima": { top: "tube", body: "#221f1f", face: "tube", labelBack: true, labelRange: [0.1, 0.91] },
   tonico: { top: "spray", body: "#151619", face: "tonico", box: "#094b53", boxBack: true, wrapFront: 0.25, labelRange: [0.075, 0.79] },
-  "tonico-minoxidil": { top: "spray", body: "#160d0e", face: "minox", box: "#a52224", labelBase: "#a52224", labelRange: [0.075, 0.79] },
+  "tonico-minoxidil": { top: "spray", body: "#160d0e", face: "minox", box: "#a52224", boxDepth: 0.53, boxSide: "left", boxBack: true, labelBase: "#a52224", labelBack: true, labelRange: [0.075, 0.79] },
   "tonico-23": { top: "spray", box: "#1b1b1c", boxDepth: 0.55, boxSide: true, boxBack: true, labelRange: [0.075, 0.8] },
   "serum-barba": { top: "dropper", body: "#121214", face: "serum", box: "#222220", boxSide: true, wrapFront: 0.25, labelRange: [0.09, 0.77] },
   splash: { top: "spray", body: "#174e69", face: "splash", wrapFront: 0.25, labelRange: [0.10, 0.83] },
@@ -310,8 +310,8 @@ function loadLocalVolumeTextures() {
     localVolumeTextures = new Promise((resolve, reject) => {
       const script = document.createElement("script");
       script.src = volumeScriptUrl
-        ? new URL("volume-textures.local.js?v=3", volumeScriptUrl).href
-        : "js/volume-textures.local.js?v=3";
+        ? new URL("volume-textures.local.js?v=4", volumeScriptUrl).href
+        : "js/volume-textures.local.js?v=4";
       script.onload = () => {
         script.remove();
         if (window.VOLUME_LOCAL_TEXTURES) resolve(window.VOLUME_LOCAL_TEXTURES);
@@ -1715,7 +1715,8 @@ function makePackBox(pack, art) {
   const board = new THREE.MeshStandardMaterial({ color: pack.box || pack.body || "#f4f1ea", roughness: 0.74, metalness: 0.03 });
   const side = art.boxSide ? photoMat(art.boxSide, 0.66, 0.02) : board;
   const back = art.boxBack ? photoMat(art.boxBack, 0.62, 0.02) : board;
-  return new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), [side, board, board, board, print, back]);
+  const sides = pack.boxSide === "left" ? [board, side] : [side, board];
+  return new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), [...sides, board, board, print, back]);
 }
 
 async function makeForm(id) {

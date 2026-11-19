@@ -129,7 +129,6 @@ const CATALOG_KIT_PHOTOS = {
 
 // Small corrections for the measured axes of the original catalog cutouts.
 const CATALOG_PHOTO_ALIGNMENT = {
-  dermaroller: "rotate(1.2deg)",
   "ducha-intima-y-cera-fibra": "skewX(-1.9deg)",
   "ducha-intima-y-cera-moldeadora": "skewX(-0.9deg)",
   "ducha-intima-y-pasta-en-caja": "skewX(-2.2deg)",
