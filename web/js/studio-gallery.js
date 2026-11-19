@@ -48,8 +48,8 @@ const STUDIO_PRODUCT_COVERS = {
   tonico: "detalles/tonico-organico-caja.webp?v=2",
   "tonico-minoxidil": "detalles/minoxidil-12-5-caja.webp?v=2",
   "tonico-23": "detalles/minoxidil-23-caja.webp?v=2",
-  splash: "revista/body-splash-for-men.webp",
-  "shaving-gel": "revista/shaving-gel-for-men.webp",
+  splash: "revista/body-splash-for-men-estudio.webp",
+  "shaving-gel": "revista/shaving-gel-for-men-estudio.webp",
 };
 
 function studioCover(id) {
