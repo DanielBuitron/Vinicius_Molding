@@ -34,20 +34,38 @@ const STUDIO_GALLERY_VIEWS = {
   "shampoo-y-minoxidil-12-5": [["shampoo-y-minoxidil-12-5-original", "original"], ["shampoo-proteccion-caja", "pack"], ["minoxidil-12-5-caja", "detail"]],
 };
 
+const STUDIO_PRODUCT_COVERS = {
+  "cera-brillo": "detalles/cera-moldeadora-envase.webp?v=2",
+  "cera-fibra": "detalles/cera-fibra-envase.webp?v=2",
+  pasta: "detalles/pasta-moldeadora-caja.webp?v=2",
+  pomada: "detalles/pomada-envase.webp?v=2",
+  "gel-cubre-canas": "revista/gel-cubre-canas.webp",
+  "cera-kids": "revista/cera-y-fibra-kids.webp",
+  "shampoo-proteccion": "detalles/shampoo-proteccion-caja.webp?v=2",
+  "shampoo-carbon": "revista/shampoo-carbon-activo.webp",
+  "ducha-intima": "revista/ducha-intima-for-men.webp",
+  "serum-barba": "revista/serum-barba-y-bigote.webp",
+  tonico: "detalles/tonico-organico-caja.webp?v=2",
+  "tonico-minoxidil": "detalles/minoxidil-12-5-caja.webp?v=2",
+  "tonico-23": "detalles/minoxidil-23-caja.webp?v=2",
+  splash: "revista/body-splash-for-men.webp",
+  "shaving-gel": "revista/shaving-gel-for-men.webp",
+};
+
 function studioCover(id) {
-  return Object.hasOwn(STUDIO_GALLERY_VIEWS, id) ? `assets/estudio/principales/${id}.webp` : "";
+  if (Object.hasOwn(STUDIO_GALLERY_VIEWS, id)) return `assets/estudio/principales/${id}.webp`;
+  return Object.hasOwn(STUDIO_PRODUCT_COVERS, id) ? `assets/estudio/${STUDIO_PRODUCT_COVERS[id]}` : "";
 }
 
 function studioPhotoChoices(id) {
-  const cover = studioCover(id);
-  if (!cover) return [];
+  if (!Object.hasOwn(STUDIO_GALLERY_VIEWS, id)) return [];
   const slide = (src, label, version = "") => ({
     src: src + version,
     small: src.replace(/\.webp$/, "-480.webp") + version,
     label: t("gallery." + label),
   });
   return [
-    slide(cover, "front"),
+    slide(studioCover(id), "front"),
     ...STUDIO_GALLERY_VIEWS[id].map(([file, label]) => slide(`assets/estudio/detalles/${file}.webp`, label, "?v=2")),
   ];
 }

@@ -184,28 +184,10 @@ function catalogMedia(product, alt, linked) {
     : catalogPhoto(product, alt, linked);
 }
 
-const CATALOG_VOLUME_PREVIEWS = {
-  "cera-brillo": "cera",
-  "cera-fibra": "cera-fibra",
-  pasta: "pasta",
-  pomada: "pomada",
-  "gel-cubre-canas": "cubre-canas",
-  "pasta-minoxidil": "pasta-minoxidil",
-  "cera-kids": "kids",
-  "shampoo-proteccion": "anticaida",
-  "shampoo-carbon": "carbon",
-  "ducha-intima": "ducha",
-  "serum-barba": "serum",
-  tonico: "tonico",
-  "tonico-minoxidil": "tonico-minoxidil",
-  "tonico-23": "tonico-23",
-  splash: "splash",
-  "shaving-gel": "shaving",
-};
-
 function catalogOrbit(src, alt, id) {
-  const studio = CATALOG_VOLUME_PREVIEWS[id];
-  const preview = studio ? `assets/revista-productos/${studio}.webp?v=4` : cutoutSrc(src);
+  const preview = studioCover(id) || (id === "pasta-minoxidil"
+    ? "assets/revista-productos/pasta-minoxidil.webp?v=4"
+    : cutoutSrc(src));
   const img = `<img src="${esc(preview)}" alt="${esc(alt)}" loading="lazy" decoding="async" draggable="false">`;
   const parts = Object.hasOwn(MOLDING_STAGE_ART, id) ? `
       <button type="button" data-orbit-act="cerrado">Cerrado</button>

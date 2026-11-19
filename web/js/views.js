@@ -408,8 +408,8 @@ function viewLinea() {
 function productCard(item) {
   const name = productField(item, "name") || item.name;
   const summary = productField(item, "summary") || item.summary;
-  return `<article class="pick">
-    ${CATALOG_VOLUME_LINES.has(item.category) ? orbit(item.image, name, item.id) : catalogPhoto(item, name, true)}
+  return `<article class="pick" style="--accent:${esc(item.accent)}">
+    ${catalogMedia(item, name, true)}
     <h3><a href="#/producto/${esc(item.id)}">${esc(name)}</a></h3>
     ${summary ? `<p>${esc(summary)}</p>` : ""}
     <div class="pick-row">${catalogBuyRow(item, name)}</div>

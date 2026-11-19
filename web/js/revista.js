@@ -146,7 +146,7 @@ function localizePR(){
 }
 const hd=n=>`<div class="hd"><img src="assets/isotipo-rojo.png" alt=""><span>${n}</span></div>`;
 const rows=r=>r.map(x=>`<div><dt>${x[0]}</dt><dd>${x[1]}</dd></div>`).join('');
-const shot=p=>studioCover(p.id)||p.img;
+const shot=p=>studioCover(LINK[p.id]||p.id)||p.img;
 const askHref=p=>WA+'?text='+encodeURIComponent(tt('mag.waAsk',{name:p.cap,ref:p.ref}));
 const magQty={};
 const imgP=j=>{const p=PR[j],studio=p.studio?' studio':'',price=priceOnRequest(p)?'':`<b class="px">${cop(p.price)}</b>`;

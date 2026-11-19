@@ -2748,7 +2748,7 @@ function makeTube(pack, art) {
 function attachVolume(el, model) {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
-  const catalogCard = Boolean(el.closest(".sku-shot"));
+  const catalogCard = Boolean(el.closest(".sku-shot, .pick"));
   const recording = Boolean(window.VM_RECORD);
   const renderer = new THREE.WebGLRenderer({
     alpha: true,
