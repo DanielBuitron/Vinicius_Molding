@@ -92,6 +92,16 @@ function orbit(src, alt, id) {
 
 const CATALOG_VOLUME_LINES = new Set(["molding", "limpieza", "tratamiento", "kids", "cuerpo"]);
 const CATALOG_ADDITIONS = CATALOG_ACCESSORIES.concat(CATALOG_COMBOS);
+const CATALOG_ADDITIONS_BY_ID = new Map(CATALOG_ADDITIONS.map((item) => [item.id, item]));
+const LEGACY_ACCESSORIES = new Map(Object.entries({
+  cuadros: "cuadro-redondo-closed",
+  demarroller: "dermaroller",
+  "lapiz-barba": "lapiz-para-barba",
+  patillera: "patillera-plateada",
+  soplador: "soplador-200w",
+  "tapete-iman": "tapete-con-iman-tijeras",
+  "tapete-sin-iman": "tapete-sin-iman-barbershop",
+}));
 const CATALOG_KIT_PHOTOS = {
   "kit-capilar": "assets/revista-productos/kit-capilar.webp",
   "kit-capilar-avanzado": "assets/revista-productos/kit-capilar-avanzado.webp",
@@ -124,14 +134,31 @@ const CATALOG_PHOTO_ALIGNMENT = {
   "soplador-200w": "skewX(1.5deg)",
 };
 
+function catalogEntry(product) {
+  const approved = CATALOG_ADDITIONS_BY_ID.get(product.id);
+  const image = String(product.image || "").split("?")[0].replace(/^\//, "");
+  if (approved?.category !== "accesorios" || (image && !image.startsWith("assets/products/" + product.id + "."))) {
+    return product;
+  }
+  return { ...product, ...approved, consultationOnly: !(Number(product.price) > 0) };
+}
+
 function catalogProducts() {
-  const products = VM.products || [];
-  const registeredIds = new Set(products.map((product) => product.id));
-  return products.concat(CATALOG_ADDITIONS.filter((product) => !registeredIds.has(product.id)));
+  const products = new Map();
+  for (const product of VM.products || []) {
+    if (LEGACY_ACCESSORIES.has(product.id) || products.has(product.id)) continue;
+    products.set(product.id, catalogEntry(product));
+  }
+  for (const product of CATALOG_ADDITIONS) {
+    if (!products.has(product.id)) products.set(product.id, product);
+  }
+  return [...products.values()];
 }
 
 function catalogProductById(id) {
-  return productById(id) || CATALOG_ADDITIONS.find((product) => product.id === id);
+  const canonicalId = LEGACY_ACCESSORIES.get(id) || id;
+  const product = productById(canonicalId);
+  return product ? catalogEntry(product) : CATALOG_ADDITIONS_BY_ID.get(canonicalId);
 }
 
 function catalogPhoto(product, alt, linked) {
@@ -159,7 +186,7 @@ function catalogMedia(product, alt, linked) {
 
 function catalogOrbit(src, alt, id) {
   const preview = id === "cera-kids" ? "assets/revista-productos/kids.webp?v=2" : cutoutSrc(src);
-  const img = `<img src="${esc(preview)}" alt="${esc(alt)}" decoding="async" draggable="false">`;
+  const img = `<img src="${esc(preview)}" alt="${esc(alt)}" loading="lazy" decoding="async" draggable="false">`;
   const parts = Object.hasOwn(MOLDING_STAGE_ART, id) ? `
       <button type="button" data-orbit-act="cerrado">Cerrado</button>
       <button type="button" data-orbit-act="abierto">Abierto</button>
@@ -178,7 +205,7 @@ function catalogOrbit(src, alt, id) {
 }
 
 function recommendedFor(product) {
-  const products = product.consultationOnly ? catalogProducts() : VM.products;
+  const products = catalogProducts();
   const rest = products.filter((item) => item.id !== product.id);
   const same = rest.filter((item) => item.category === product.category);
   const other = rest.filter((item) => item.category !== product.category);

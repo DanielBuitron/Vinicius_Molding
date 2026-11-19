@@ -66,7 +66,6 @@ background-image:repeating-linear-gradient(118deg,#0000 0 2.4cqw,#00000009 2.4cq
 #revista .ctl button{width:36px;height:36px;border-radius:50%;border:1px solid #fff5;background:#0008;color:#fff;font-size:20px;cursor:pointer}
 #revista .ctl button:hover{background:var(--red);border-color:var(--red)}
 #revista .ctl .accessory-shortcut{display:none}
-html.phone #revista .ctl .accessory-shortcut{display:block;position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);width:auto;height:auto;min-height:36px;padding:7px 15px;border-radius:99px;font:500 12px Poppins}
 #revista #cap{min-width:14ch;text-align:center}
 #revista .bar{position:absolute;left:0;bottom:0;height:3px;width:100%;background:#fff1}#revista .bar b{display:block;height:100%;width:0;background:var(--red)}
 @media (max-aspect-ratio:1/1){#revista .zoom .zc{grid-template-columns:1fr}#revista .hero{top:12vh}#revista .prop{width:20vw}}
@@ -222,6 +221,7 @@ html.phone #revista .idx span{font-size:14px}
 html.phone #revista .cta{font-size:13px;padding:8px 12px}
 html.phone #revista .big{font-size:20px}
 #revista .short{display:none}
+#revista [hidden]{display:none!important}
 body.mode-home{overflow-x:hidden}
 #revista .sticky{height:100vh;height:100dvh}
 html.port #revista .top{padding:max(12px,env(safe-area-inset-top)) 14px 8px;gap:8px}
@@ -240,4 +240,63 @@ html.phone #revista .zc{width:100%;max-height:100%;border-radius:14px}
 html.phone #revista .zi.studio img{height:min(42dvh,340px)}
 html.phone #revista .zrow{flex-direction:column}
 html.phone #revista .zrow .cta,html.phone #revista .zrow button{width:100%;text-align:center}
+
+@media (max-width: 699px) {
+  body.mode-home { margin: 0; }
+  #revista .top { position: sticky; top: 0; grid-template-columns: minmax(0, 1fr) auto auto auto auto; column-gap: 5px; }
+  #revista .top > a:first-child { min-width: 0; }
+  html.phone #revista .top .brand { max-width: 100%; object-fit: contain; }
+  #revista #stage { touch-action: pan-y; }
+  #revista .sticky { position: static; height: auto; min-height: 0; overflow: visible; }
+  #revista #gl, #revista .scene, #revista .vig, #revista .grain { display: none; }
+  #revista #mobile-reader { padding: 12px 12px calc(122px + env(safe-area-inset-bottom)); }
+  #revista #mobile-reader .pg {
+    position: relative; inset: auto; min-height: 0; padding: 20px; overflow: visible;
+    line-height: 1.5; font-size: 14px; border-radius: 12px;
+  }
+  #revista #mobile-reader .pg + .pg { margin-top: 12px; }
+  #revista #mobile-reader .hd { font-size: 12px; }
+  #revista #mobile-reader .hd img { height: 16px; }
+  #revista #mobile-reader h2 { margin-top: 8px; font-size: clamp(21px, 6vw, 28px); line-height: 1.15; }
+  #revista #mobile-reader h2 em { font-size: 14px; padding-bottom: 6px; }
+  #revista #mobile-reader p { font-size: 14px; line-height: 1.45; }
+  #revista #mobile-reader dl { display: grid; gap: 2px; }
+  #revista #mobile-reader dt, #revista #mobile-reader dd { font-size: 13px; }
+  #revista #mobile-reader .cta { display: inline-flex; align-items: center; min-height: 44px; }
+  #revista #mobile-reader .buy button { min-height: 44px; min-width: 44px; }
+  #revista .mobile-cover, #revista .mobile-product-photo {
+    display: block; width: 100%; border: 0; border-radius: 12px; overflow: hidden;
+    cursor: pointer; color: #fff; background: #111; padding: 0;
+  }
+  #revista .mobile-cover img { display: block; width: 100%; max-height: 67dvh; object-fit: contain; }
+  #revista .mobile-cover span { display: block; padding: 14px; background: var(--red); font: 600 14px Poppins, sans-serif; }
+  #revista .mobile-product-photo { margin-bottom: 12px; background: #0b0b0d; }
+  #revista .mobile-product-photo.studio { background: radial-gradient(ellipse, #fff, #dfd9d0); }
+  #revista .mobile-product-photo img { display: block; width: 100%; height: clamp(235px, 46dvh, 440px); object-fit: contain; }
+  #revista .mobile-index ol { list-style: none; padding: 0; margin-top: 10px; }
+  #revista .mobile-index li { border-bottom: 1px solid #0003; }
+  #revista .mobile-index li button {
+    width: 100%; display: grid; gap: 3px; min-height: 48px; text-align: left;
+    padding: 10px 0; background: transparent; color: inherit; border: 0; font: inherit; cursor: pointer;
+  }
+  #revista .mobile-index li span { font-size: 12px; color: #494953; }
+  #revista .ctl {
+    position: fixed; inset: auto 0 0; transform: none; width: 100%;
+    display: grid; grid-template: "prev caption next" auto "index index accessories" auto / 44px 1fr 44px;
+    gap: 6px 8px; background: #101014; border-top: 1px solid #fff3;
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); z-index: 19;
+  }
+  #revista .ctl #prev { grid-area: prev; }
+  #revista .ctl #next { grid-area: next; justify-self: end; }
+  #revista .ctl #cap { grid-area: caption; text-align: center; overflow-wrap: anywhere; line-height: 1.2; }
+  #revista .ctl button { min-height: 44px; width: 44px; }
+  #revista .ctl button:disabled { cursor: default; opacity: .35; }
+  #revista .ctl .contents-shortcut, #revista .ctl .accessory-shortcut {
+    position: static; transform: none; grid-area: index; width: max-content; border-radius: 999px;
+    min-height: 36px; height: auto; padding: 6px 13px; font: 500 12px Poppins, sans-serif;
+  }
+  #revista .ctl .accessory-shortcut { display: block; grid-area: accessories; justify-self: end; }
+  #revista .bar { position: fixed; z-index: 19; pointer-events: none; }
+  body.mode-home > .wa-fab { bottom: calc(116px + env(safe-area-inset-bottom)); }
+}
 html.tab #revista .brand{height:34px}

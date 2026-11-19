@@ -3,8 +3,8 @@ const WA='https://wa.me/573235835137',IG='https://instagram.com/viniciusmolding'
 const A=f=>(window.IMGS&&IMGS[f])||'assets/'+f;
 const PHONE=()=>innerWidth<700;
 const PORTF=()=>!PHONE()&&(innerWidth<980||innerWidth<innerHeight*1.05);window.PORT=PORTF();
-const PW=()=>{const w=innerWidth,h=innerHeight;if(PHONE()){const byW=w*.47,byH=(h-118)/1.28;return Math.max(132,Math.min(byW,byH))}if(window.PORT&&h<560){const byH=(h-108)/1.28,byW=w*.52;return Math.max(160,Math.min(byW,byH))}if(window.PORT){const byH=(h-140)/1.28,byW=w*.82;return Math.max(220,Math.min(byW,byH,680))}const byW=w*.4,byH=(h-96)/1.28*.9;return Math.max(220,Math.min(byW,byH,540))};
-const sp=()=>{window.PORT=PORTF();const w=innerWidth,r=document.documentElement;r.classList.toggle('port',window.PORT);r.classList.toggle('phone',w<700);r.classList.toggle('tab',w>=700&&w<1100);const pw=PW();r.style.setProperty('--pwpx',pw);r.style.setProperty('--pw',pw+'px');r.style.setProperty('--ph','calc(var(--pw) * 1.28)');const st=document.getElementById('stage');if(st)st.style.height=w<700?'260dvh':window.PORT?'480dvh':'380dvh'};sp();addEventListener('resize',sp);
+const PW=()=>{const w=innerWidth,h=innerHeight;if(window.PORT&&h<560){const byH=(h-108)/1.28,byW=w*.52;return Math.max(160,Math.min(byW,byH))}if(window.PORT){const byH=(h-140)/1.28,byW=w*.82;return Math.max(220,Math.min(byW,byH,680))}const byW=w*.4,byH=(h-96)/1.28*.9;return Math.max(220,Math.min(byW,byH,540))};
+const sp=()=>{window.PORT=PORTF();const w=innerWidth,r=document.documentElement;r.classList.toggle('port',window.PORT);r.classList.toggle('phone',PHONE());r.classList.toggle('tab',w>=700&&w<1100);const pw=PW();r.style.setProperty('--pwpx',pw);r.style.setProperty('--pw',pw+'px');r.style.setProperty('--ph','calc(var(--pw) * 1.28)');const st=document.getElementById('stage');if(st)st.style.height=PHONE()?'auto':window.PORT?'480dvh':'380dvh'};sp();addEventListener('resize',sp);
 const TIN='Keratina · Romero · Aloe vera',EXT='Romero · Keratina · Cebolla · Aloe vera · Zanahoria · Ácido hialurónico';
 const TIN_EN='Keratin · Rosemary · Aloe vera',EXT_EN='Rosemary · Keratin · Onion · Aloe vera · Carrot · Hyaluronic acid';
 const PR=[
@@ -121,7 +121,7 @@ const shot=p=>p.img||A('p-'+p.id+'.jpg');
 const askHref=p=>WA+'?text='+encodeURIComponent(tt('mag.waAsk',{name:p.cap,ref:p.ref}));
 const magQty={};
 const imgP=j=>{const p=PR[j],studio=p.studio?' studio':'',price=p.accessory?'':`<b class="px">${cop(p.price)}</b>`;
-  return `<div class="pg img${p.bleed?' bleed':''}${studio}" data-p="${j}"><img src="${shot(p)}" alt="${p.cap}"><div class="capline"><span>${p.cap}</span>${price}</div><b class="zm">+</b></div>`};
+  return `<div class="pg img${p.bleed?' bleed':''}${studio}" data-p="${j}"><img data-revista-src="${esc(shot(p))}" alt="${esc(p.cap)}" decoding="async"><div class="capline"><span>${p.cap}</span>${price}</div><b class="zm">+</b></div>`};
 const infoP=(j,n)=>{const p=PR[j],cls=p.v==='color'?'pg col':p.v==='dark'?'pg dark':'pg',st=`--ac:${p.c}`+(p.v==='color'?`;--bg:${p.c};--fg:${p.tx}`:'');
  const action=p.accessory
    ? `<a class="cta" href="${askHref(p)}" target="_blank" rel="noopener">${tt('mag.wa')}</a>`
@@ -144,18 +144,76 @@ function buildFaces(){
   return {fr,bk};
 }
 let CAP=['Cubierta','Quiénes somos','Colección · Contenido',...PR.map(p=>p.cap),'Contacto'];
-let faces=buildFaces();
-let fr=faces.fr,bk=faces.bk;
+let faces;
 // ---- hojas articuladas en tramos (se doblan de verdad)
-const SG=innerWidth<700?3:4,book=document.getElementById('book');book.innerHTML='<i class="bsh"></i><i class="edge el"></i><i class="edge er"></i>';
-const leaves=fr.map((f,i)=>{const l=document.createElement('div');l.className='leaf';let par=l;const segs=[];
+const SG=4,book=document.getElementById('book');
+let leaves=[];
+function mountDesktop(){
+ if(leaves.length)return;
+ const {fr,bk}=faces;
+ book.innerHTML='<i class="bsh"></i><i class="edge el"></i><i class="edge er"></i>';
+ leaves=fr.map((f,i)=>{const l=document.createElement('div');l.className='leaf';let par=l;const segs=[];
  for(let k=0;k<SG;k++){const s=document.createElement('div');s.className='seg';s.style.cssText=`left:${k?`calc(var(--pw)/${SG})`:0};width:calc(var(--pw)/${SG})`;
   s.innerHTML=`<div class="sf${k?'':' g'}"><div class="cl" style="left:calc(var(--pw)/-${SG}*${k})">${f}</div></div><div class="sb${k?'':' g'}"><div class="cl" style="left:calc(var(--pw)/-${SG}*${SG-1-k})">${bk[i]}</div></div>`;
   par.appendChild(s);par=s;segs.push(s)}
  book.appendChild(l);return{l,segs,key:''}});
 const glow=document.createElement('i');glow.className='book-light';glow.setAttribute('aria-hidden','true');book.appendChild(glow);
-const N=leaves.length,stage=document.getElementById('stage'),tilt=document.getElementById('tilt'),hero=document.getElementById('hero'),desk=document.getElementById('desk');
+}
+const N=PR.length+4,stage=document.getElementById('stage'),tilt=document.getElementById('tilt'),hero=document.getElementById('hero');
 const vig=document.querySelector('.vig'),cap=document.getElementById('cap'),bar=document.getElementById('bar');
+const reader=document.getElementById('mobile-reader');
+const magazine=document.getElementById('revista');
+const prevButton=document.getElementById('prev'),nextButton=document.getElementById('next');
+const contentsButton=document.getElementById('mag-contents');
+let mobileState=0;
+
+function onMagazine(){
+  return !magazine.hidden && (!location.hash || /^#\/?inicio(?:[/?]|$)/.test(location.hash));
+}
+
+function loadSpreadPhotos(page){
+  for(let i=Math.max(0,page-2);i<=Math.min(N-1,page+1);i++){
+    leaves[i]?.l.querySelectorAll('img[data-revista-src]').forEach(img=>{
+      img.src=img.dataset.revistaSrc;
+      delete img.dataset.revistaSrc;
+    });
+  }
+}
+
+function openMobilePage(page, resetScroll){
+  mobileState=Math.max(0,Math.min(N-1,page));
+  if(mobileState===0){
+    reader.innerHTML=`<button type="button" class="mobile-cover" data-go="2"><img src="assets/portada.jpg?v=290" alt="Vinicius Molding" fetchpriority="high"><span>${tt('mag.contents')}</span></button>`;
+  }else if(mobileState===2){
+    reader.innerHTML=`<div class="pg mobile-index"><h2>${tt('mag.contents')}</h2><ol>${PR.map((p,j)=>`<li><button type="button" data-go="${j+3}"><b>${esc(p.cap)}</b><span>${esc(p.sub)}</span></button></li>`).join('')}</ol></div>`;
+  }else if(mobileState===1||mobileState===N-1){
+    reader.innerHTML=faces.bk[mobileState-1]+faces.fr[mobileState];
+  }else{
+    const j=mobileState-3,p=PR[j];
+    reader.innerHTML=`<button type="button" class="mobile-product-photo${p.studio?' studio':''}" data-open="${j}" aria-label="${esc(p.cap)}"><img src="${esc(shot(p))}" alt="${esc(p.cap)}" decoding="async"></button>${infoP(j,6+2*j)}`;
+  }
+  cap.textContent=CAP[mobileState];
+  bar.style.width=mobileState/(N-1)*100+'%';
+  prevButton.disabled=mobileState===0;
+  nextButton.disabled=mobileState===N-1;
+  if(resetScroll)scrollTo(0,0);
+}
+
+let deskLoading;
+function startDesktopLighting(){
+  if(window.resumeRevistaDesk){window.resumeRevistaDesk();return}
+  if(deskLoading)return;
+  const load=src=>new Promise((resolve,reject)=>{
+    const script=document.createElement('script');
+    script.src=src;
+    script.onload=resolve;
+    script.onerror=()=>{script.remove();reject(new Error(src))};
+    document.head.appendChild(script);
+  });
+  deskLoading=load('js/textures.js?v=274')
+    .then(()=>load('js/revista-gl.js?v=283'))
+    .catch(()=>{deskLoading=null});
+}
 const cl=x=>Math.max(0,Math.min(1,x)),ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
 const STEP=.80/(N-2),DUR=Math.max(.008,STEP*.2),KP=.80/(N-2),PDUR=Math.max(.008,KP*.2);
 const win=i=>window.PORT?[.02+i*KP,.02+i*KP+PDUR]:(i===0?[.03,.08]:[.1+(i-1)*STEP,.1+(i-1)*STEP+DUR]);
@@ -176,6 +234,7 @@ function setLeaf(i,p){const [a,b]=win(i),t=cl((p-a)/(b-a)),e=ease(t),L=leaves[i]
   sf.style.pointerEvents=c>0.05?'auto':'none';sb.style.pointerEvents=c<-0.05?'auto':'none'});
  return e>=.5}
 function draw(p){
+ if(!onMagazine()||PHONE()||!leaves.length)return;
  const c=ease(cl(p/.2)),w0=win(0),o=ease(cl((p-w0[0])/(w0[1]-w0[0])));
  const phone=innerWidth<700,cP=window.PORT?ease(cl(p/.06)):c,sc=phone?1.78-.74*o:window.PORT?.96:.8+.36*c,pn=pan(p),px=-pn*PW()/2*sc/innerWidth*100;
  const deskRx=innerHeight<780?44:56,deskDrop=innerHeight<780?14:22;
@@ -185,18 +244,19 @@ function draw(p){
  vig.style.opacity=1-.85*ease(cl((p-.04)/.2));hero.style.opacity=1-cl((p-.02)/.08);hero.style.transform=`translateY(${-cl(p/.12)*30}px)`;
  let fl=0;leaves.forEach((_,i)=>{if(setLeaf(i,p))fl++});
  book.style.setProperty('--tl',(2+fl*1.1)+'px');book.style.setProperty('--tr',(2+(N-1-fl)*1.1)+'px');
- bar.style.width=p*100+'%';if(fl!==state){state=fl;cap.textContent=CAP[fl]}}
+ bar.style.width=p*100+'%';if(fl!==state){state=fl;cap.textContent=CAP[fl];loadSpreadPhotos(fl)}}
 let flipJob=0,lock=0;
 function loop(){if(lock)return;cur+=(target-cur)*.46;if(Math.abs(target-cur)<.0008)cur=target;draw(cur);if(cur!==target)requestAnimationFrame(loop)}
 function playTo(p){const job=++flipJob,from=cur,t0=performance.now(),dur=400;lock=1;const step=now=>{if(job!==flipJob)return;const t=Math.min(1,(now-t0)/dur);cur=from+(p-from)*ease(t);draw(cur);if(t<1)requestAnimationFrame(step);else{cur=p;draw(p);lock=0}};requestAnimationFrame(step)}
 let idle=0;
-const read=()=>{if(lock)return;flipJob++;target=cl(scrollY/sy());loop();clearTimeout(idle);idle=setTimeout(()=>{if(lock)return;const p=nearestFlat();if(Math.abs(p-cur)<.003)return;lock=1;scrollTo({top:p*sy(),behavior:'auto'});playTo(p)},120)};
-const go=s=>{s=Math.max(0,Math.min(N-1,s));const p=window.PORT?steps()[s?2*s-1:0]:endP(s);if(Math.abs(p-cur)<.001)return;lock=1;scrollTo({top:p*sy(),behavior:'auto'});playTo(p)};
-const nav=d=>{if(!window.PORT){go(state+d);return}const a=steps();let k=0;a.forEach((v,i)=>{if(Math.abs(v-cur)<Math.abs(a[k]-cur))k=i});k=Math.max(0,Math.min(a.length-1,k+d));const p=a[k];lock=1;scrollTo({top:p*sy(),behavior:'auto'});playTo(p)};
+const read=()=>{if(lock||PHONE()||!onMagazine()||!leaves.length)return;flipJob++;target=cl(scrollY/sy());loop();clearTimeout(idle);idle=setTimeout(()=>{if(lock||!onMagazine()||PHONE())return;const p=nearestFlat();if(Math.abs(p-cur)<.003)return;lock=1;scrollTo({top:p*sy(),behavior:'auto'});playTo(p)},120)};
+const go=s=>{if(!onMagazine())return;if(PHONE()){openMobilePage(s,true);return}s=Math.max(0,Math.min(N-1,s));loadSpreadPhotos(s);const p=window.PORT?steps()[s?2*s-1:0]:endP(s);if(Math.abs(p-cur)<.001)return;lock=1;scrollTo({top:p*sy(),behavior:'auto'});playTo(p)};
+const nav=d=>{if(PHONE()){go(mobileState+d);return}if(!window.PORT){go(state+d);return}const a=steps();let k=0;a.forEach((v,i)=>{if(Math.abs(v-cur)<Math.abs(a[k]-cur))k=i});k=Math.max(0,Math.min(a.length-1,k+d));const p=a[k];lock=1;scrollTo({top:p*sy(),behavior:'auto'});playTo(p)};
 addEventListener('wheel',()=>{if(!lock)return;flipJob++;lock=0},{passive:true});
-document.getElementById('next').onclick=()=>nav(1);document.getElementById('prev').onclick=()=>nav(-1);
+nextButton.onclick=()=>nav(1);prevButton.onclick=()=>nav(-1);
 const accessoryShortcut=document.getElementById('mag-accessories');
 accessoryShortcut.onclick=()=>go(3+accessoryStart);
+contentsButton.onclick=()=>go(2);
 // ---- detalle de producto
 const Z=document.getElementById('zoom'),$=id=>document.getElementById(id);let zi=0;
 function openZ(j){const p=PR[j];zi=j;$('zimg').src=shot(p);$('zimg').alt=p.cap;$('zref').textContent=tt('mag.ref',{ref:p.ref});$('zname').textContent=p.cap;$('zsub').textContent=p.sub;$('zdesc').textContent=p.d;$('zrows').innerHTML=rows(p.r);
@@ -206,13 +266,56 @@ $('zx').onclick=closeZ;Z.addEventListener('click',e=>{if(e.target===Z)closeZ()})
 $('zp').onclick=()=>openZ((zi+PR.length-1)%PR.length);$('zn').onclick=()=>openZ((zi+1)%PR.length);
 const zi_=Z.querySelector('.zi');zi_.onclick=()=>zi_.classList.toggle('z2');
 zi_.addEventListener('pointermove',e=>{const r=zi_.getBoundingClientRect();$('zimg').style.transformOrigin=`${(e.clientX-r.left)/r.width*100}% ${(e.clientY-r.top)/r.height*100}%`});
-addEventListener('keydown',e=>{if(!Z.hidden){if(e.key==='Escape')closeZ();if(e.key==='ArrowRight')$('zn').click();if(e.key==='ArrowLeft')$('zp').click();return}
+addEventListener('keydown',e=>{if(!onMagazine())return;if(!Z.hidden){if(e.key==='Escape')closeZ();if(e.key==='ArrowRight')$('zn').click();if(e.key==='ArrowLeft')$('zp').click();return}
  if(e.key==='ArrowRight'||e.key==='ArrowDown')nav(1);if(e.key==='ArrowLeft'||e.key==='ArrowUp')nav(-1)});
 // ---- clic en el libro: abrir, pasar página, ampliar producto
 function setMagQty(j,dir){magQty[j]=Math.max(1,Math.min(20,(magQty[j]||1)+dir));document.querySelectorAll('[data-mag-qty="'+j+'"]').forEach(el=>{el.textContent=magQty[j]})}
-function paintRevistaFaces(){
+function runMagazineAction(button){
+  const j=+button.dataset.p;
+  if(button.dataset.mag==='q')setMagQty(j,+button.dataset.dir);
+  else if(window.addToCart)window.addToCart(LINK[PR[j].id]||PR[j].id,magQty[j]||1);
+}
+reader.addEventListener('click',event=>{
+  const target=event.target.closest('[data-go],[data-open],[data-mag]');
+  if(!target)return;
+  if(target.hasAttribute('data-go'))go(+target.dataset.go);
+  else if(target.hasAttribute('data-mag'))runMagazineAction(target);
+  else openZ(+target.dataset.open);
+});
+function activateRevista(){
+  if(!onMagazine())return;
+  if(!faces)faces=buildFaces();
+  const phone=PHONE(),wasMobile=!reader.hidden;
+  reader.hidden=!phone;
+  contentsButton.hidden=!phone;
+  contentsButton.textContent=tt('mag.contents');
   accessoryShortcut.textContent=tt('cat.accesorios');
-  faces=buildFaces();fr=faces.fr;bk=faces.bk;
+  if(phone){
+    if(!wasMobile||!reader.firstChild)openMobilePage(state<0?mobileState:state,false);
+    return;
+  }
+  prevButton.disabled=nextButton.disabled=false;
+  mountDesktop();
+  if(wasMobile){
+    flipJob++;lock=0;
+    cur=target=flatAt(mobileState);
+    scrollTo(0,cur*sy());
+  }
+  draw(cur);
+  startDesktopLighting();
+}
+window.activateRevista=activateRevista;
+function paintRevistaFaces(){
+  if(!onMagazine()||(reader.hidden&&!leaves.length))return;
+  accessoryShortcut.textContent=tt('cat.accesorios');
+  contentsButton.textContent=tt('mag.contents');
+  faces=buildFaces();
+  if(PHONE()){
+    if(!reader.hidden)openMobilePage(mobileState,false);
+    if(!Z.hidden)openZ(zi);
+    return;
+  }
+  const {fr,bk}=faces;
   leaves.forEach((L,i)=>{
     L.segs.forEach((s)=>{
       const sf=s.children[0]&&s.children[0].querySelector('.cl');
@@ -223,6 +326,7 @@ function paintRevistaFaces(){
     L.key='';
   });
   if(cap)cap.textContent=CAP[Math.max(0,state)]||CAP[0];
+  loadSpreadPhotos(Math.max(0,state));
   if(!Z.hidden)openZ(zi);
   draw(cur);
 }
@@ -236,7 +340,7 @@ function linkAt(x,y){const stack=document.elementsFromPoint?document.elementsFro
 function goAt(x,y){const stack=document.elementsFromPoint?document.elementsFromPoint(x,y):[];for(const el of stack){const g=el.closest&&el.closest('[data-go]');if(g)return g}let found=null;document.querySelectorAll('#book [data-go]').forEach(el=>{const r=el.getBoundingClientRect();if(r.width<8||r.height<8||x<r.left||x>r.right||y<r.top||y>r.bottom)return;const face=el.closest('.sf,.sb');if(face){const fr=face.getBoundingClientRect();if(x<fr.left||x>fr.right||y<fr.top||y>fr.bottom)return}found=el});return found}
 book.addEventListener('click',e=>{const g=(e.target.closest&&e.target.closest('[data-go]'))||goAt(e.clientX,e.clientY);if(g&&(!e.detail||(Math.abs(e.clientX-sx)<18&&Math.abs(e.clientY-sy0)<18))){e.preventDefault();e.stopPropagation();go(+g.dataset.go);return}
  const link=(e.target.closest&&e.target.closest('a[href]'))||linkAt(e.clientX,e.clientY);if(link&&/^https?:/i.test(link.href)){e.preventDefault();e.stopPropagation();openExternal(link.href);return}
- const mag=(e.target.closest&&e.target.closest('[data-mag]'))||magAt(e.clientX,e.clientY);if(mag){const j=+mag.dataset.p;if(mag.dataset.mag==='q')setMagQty(j,+mag.dataset.dir);else if(window.addToCart)window.addToCart(LINK[PR[j].id]||PR[j].id,magQty[j]||1);return}
+ const mag=(e.target.closest&&e.target.closest('[data-mag]'))||magAt(e.clientX,e.clientY);if(mag){runMagazineAction(mag);return}
  if(e.target.closest('a'))return;if(state===0){nav(1);return}
  const z=e.target.closest('[data-p]');if(z&&z.matches('h2')){openZ(+z.dataset.p);return}
  const r=book.getBoundingClientRect(),x=(e.clientX-r.left)/r.width;
@@ -244,8 +348,7 @@ book.addEventListener('click',e=>{const g=(e.target.closest&&e.target.closest('[
  if(z)openZ(+z.dataset.p)});
 book.style.cursor='pointer';
 let sx=0,sy0=0;stage.addEventListener('pointerdown',e=>{sx=e.clientX;sy0=e.clientY});
-stage.addEventListener('pointerup',e=>{if((e.target.closest&&e.target.closest('a,button,[data-mag],[data-go]'))||goAt(e.clientX,e.clientY))return;const dx=e.clientX-sx,dy=e.clientY-sy0;if(Math.abs(dx)>70&&Math.abs(dy)<40)nav(dx<0?1:-1)});
-addEventListener('scroll',read,{passive:true});addEventListener('resize',read);
-read();draw(cur);
-try{paintRevistaFaces()}catch(e){}
+stage.addEventListener('pointerup',e=>{if((e.target.closest&&e.target.closest('a,button,[data-mag],[data-go]'))||(!PHONE()&&goAt(e.clientX,e.clientY)))return;const dx=e.clientX-sx,dy=e.clientY-sy0;if(Math.abs(dx)>70&&Math.abs(dy)<40)nav(dx<0?1:-1)});
+addEventListener('scroll',read,{passive:true});
+addEventListener('resize',activateRevista);
 })();

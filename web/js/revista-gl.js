@@ -139,7 +139,11 @@ function dr(m,o){gl.uniformMatrix4fv(pr.u('uModel'),false,model(o.p,o.a||0,o.t||
  gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,o.tex||T.blob);gl.uniform1i(pr.u('uTex'),0);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,o.nrm||T.blob);gl.uniform1i(pr.u('uNrm'),1);gl.bindVertexArray(M[m].vao);gl.drawElements(gl.TRIANGLES,M[m].n,gl.UNSIGNED_SHORT,0)}
 const ptr={x:0,y:0,tx:0,ty:0,on:0};addEventListener('pointermove',e=>{if(innerWidth<700)return;ptr.on=1;ptr.tx=e.clientX/innerWidth*2-1;ptr.ty=e.clientY/innerHeight*2-1});
 const tilt=document.getElementById('tilt');
+const magazine=document.getElementById('revista');
+let frameRequest=0;
 function frame(t){
+ frameRequest=0;
+ if(document.hidden||magazine.hidden||innerWidth<700)return;
  const sec=t/1000,k=window.CAMT||{rx:54,s:.86,tx:4,ty:-3,rz:-3},PORT=!!window.PORT;
  ptr.x+=(ptr.tx-ptr.x)*.45;ptr.y+=(ptr.ty-ptr.y)*.45;const pm=PORT?.35:1;
  const rxF=k.rx+Math.sin(sec*.35)*.1,rzF=k.rz,txF=k.tx,tyF=k.ty;
@@ -177,6 +181,11 @@ function frame(t){
  gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,fw,fh);gl.disable(gl.DEPTH_TEST);gl.disable(gl.BLEND);gl.useProgram(pp);
  gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tR);gl.uniform1i(pp.u('uScn'),0);gl.uniform2f(pp.u('uRes'),fw,fh);gl.uniform1f(pp.u('uFy'),1-(.54+tyF/100));gl.uniform1f(pp.u('uAmt'),(PORT?1.1:1.6)*fw/innerWidth);gl.uniform1f(pp.u('uT'),sec%10);
  gl.bindVertexArray(emptyVao);gl.drawArrays(gl.TRIANGLES,0,3);
- requestAnimationFrame(frame)}
-requestAnimationFrame(frame);
+ frameRequest=requestAnimationFrame(frame)}
+function resume(){
+ if(!frameRequest&&!document.hidden&&!magazine.hidden&&innerWidth>=700)frameRequest=requestAnimationFrame(frame);
+}
+window.resumeRevistaDesk=resume;
+document.addEventListener('visibilitychange',resume);
+resume();
 })();

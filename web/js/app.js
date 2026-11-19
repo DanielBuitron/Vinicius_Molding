@@ -1,4 +1,5 @@
 let renderSeq = 0;
+let bootCatalog, bootConfig, bootSession, bootComments;
 let advisorDone = false;
 let checkoutOrder = null;
 
@@ -103,7 +104,7 @@ function syncMagazine(home) {
     badge.textContent = String(count);
     badge.hidden = count < 1;
   }
-  if (home && window.GLon) document.body.classList.add("gl");
+  if (home && typeof window.activateRevista === "function") window.activateRevista();
   if (home) offerWelcome();
   const login = document.getElementById("login-link");
   if (login) {
@@ -439,10 +440,23 @@ function bindOrbits() {
 async function render() {
   const seq = ++renderSeq;
   const route = parseRoute();
+  const page = route.parts[0];
+  const required = {
+    catalogo: bootCatalog,
+    linea: bootCatalog,
+    producto: bootCatalog,
+    carrito: bootCatalog,
+    pago: Promise.all([bootCatalog, bootConfig]),
+    login: bootSession,
+    panel: bootSession,
+    vincular: bootSession,
+    testimonios: bootComments,
+  }[page];
+  if (required) await required;
+  if (seq !== renderSeq) return;
   VM.parts = route.parts;
   VM.qs = route.qs;
   titles();
-  const page = VM.parts[0];
   syncMagazine(page === "inicio");
 
   if (page === "login") {
@@ -1603,55 +1617,54 @@ window.onSiteLangChange = function () {
   render();
 };
 
-async function boot() {
+function boot() {
   if ("scrollRestoration" in history) history.scrollRestoration = "manual";
   if (typeof ensureLangDock === "function") ensureLangDock();
   if (typeof applyStaticLang === "function") applyStaticLang();
   bind();
-  try {
-    const [catalog, config, me] = await Promise.all([
-      api("/api/products"),
-      api("/api/config"),
-      api("/api/me"),
-    ]);
-    VM.products = mergeCatalog(catalog.products);
-    VM.config = Object.assign({ whatsapp: SITE.whatsapp, city: SITE.city }, config);
-    if (!VM.config.whatsapp) VM.config.whatsapp = SITE.whatsapp;
-    if (config.usdRate) {
-      VM.trm = saveCachedTrm({
-        usdRate: config.usdRate,
-        date: config.trmDate || "",
-        source: config.trmSource || "TRM",
-      }) || { usdRate: config.usdRate, date: config.trmDate || "", source: config.trmSource || "TRM" };
+  VM.products = mergeCatalog(SITE.products);
+  applyLocalSettings();
+  VM.trm = readCachedTrm() || null;
+
+  const read = (path) => api(path, { signal: AbortSignal.timeout(4500) }).catch(() => null);
+  bootCatalog = read("/api/products").then((data) => {
+    if (Array.isArray(data?.products)) VM.products = mergeCatalog(data.products);
+    if (typeof getLang === "function" && getLang() !== "es" && typeof warmProductTranslations === "function") {
+      warmProductTranslations(VM.products);
     }
-    VM.user = me.user || null;
+  });
+  bootConfig = read("/api/config").then((config) => {
+    if (config) {
+      VM.config = Object.assign({ whatsapp: SITE.whatsapp, city: SITE.city }, config);
+      if (!VM.config.whatsapp) VM.config.whatsapp = SITE.whatsapp;
+      applyLocalSettings();
+      if (config.whatsapp) VM.config.whatsapp = config.whatsapp;
+      if (config.usdRate) {
+        const rate = { usdRate: config.usdRate, date: config.trmDate || "", source: config.trmSource || "TRM" };
+        VM.trm = saveCachedTrm(rate) || rate;
+      }
+    }
+    if (!config?.usdRate && typeof getCurrency === "function" && getCurrency() === "USD") {
+      loadTrm().then(() => render()).catch(() => {});
+    }
+  });
+  bootSession = read("/api/me").then((data) => {
+    VM.user = data?.user || null;
     VM.token = VM.user ? "cookie" : "";
     localStorage.removeItem("vm_token");
     localStorage.removeItem("vm_user");
-    applyLocalSettings();
-    if (config.whatsapp) VM.config.whatsapp = config.whatsapp;
-    await loadTrm();
+    if (parseRoute().parts[0] === "inicio") syncMagazine(true);
+  });
+  bootComments = read("/api/comments").then((data) => {
     try {
-      const notes = await api("/api/comments");
-      VM.comments = notes.comments || [];
+      const comments = data?.comments || JSON.parse(localStorage.getItem("vm_comments") || "[]");
+      VM.comments = Array.isArray(comments) ? comments : [];
     } catch (error) {
-      VM.comments = JSON.parse(localStorage.getItem("vm_comments") || "[]");
+      VM.comments = [];
     }
-  } catch (err) {
-    VM.products = mergeCatalog(SITE.products);
-    VM.config = { wompiReady: false, city: SITE.city, whatsapp: SITE.whatsapp, email: "" };
-    applyLocalSettings();
-    try { await loadTrm(); } catch (trmErr) { /* usa tasa local */ }
-    try { VM.comments = JSON.parse(localStorage.getItem("vm_comments") || "[]"); } catch (error) { VM.comments = []; }
-    VM.user = null;
-    VM.token = "";
-    localStorage.removeItem("vm_token");
-    localStorage.removeItem("vm_user");
-  }
-  if (!location.hash) location.hash = "#/inicio";
-  if (typeof getLang === "function" && (getLang() === "en" || getLang() === "zh") && typeof warmProductTranslations === "function") {
-    warmProductTranslations(VM.products || []);
-  }
+  });
+
+  if (!location.hash) history.replaceState(null, "", "#/inicio");
   render();
 }
 
