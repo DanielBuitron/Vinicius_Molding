@@ -22,7 +22,7 @@ function titles() {
     return;
   }
   if (page === "producto") {
-    const product = productById(VM.parts[1]);
+    const product = catalogProductById(VM.parts[1]);
     const name = product ? (productField(product, "name") || product.name) : t("title.product");
     document.title = name + " · Vinicius Molding";
     return;
@@ -104,6 +104,7 @@ function syncMagazine(home) {
     badge.hidden = count < 1;
   }
   if (home && window.GLon) document.body.classList.add("gl");
+  if (home) offerWelcome();
   const login = document.getElementById("login-link");
   if (login) {
     if (VM.user) {
@@ -329,8 +330,6 @@ function paint(html, bodyClass) {
   if (header) header.classList.toggle("scrolled", window.scrollY > 8);
   if (page !== "tienda") {
     bindOrbits();
-    if (typeof releaseVolumes === "function") releaseVolumes();
-    // Sin 3D: solo foto real del empaque.
     bindShowcases();
     bindReel();
   }
@@ -379,8 +378,62 @@ function bindReel() {
   video.play().catch(() => {});
 }
 
+function offerWelcome() {
+  if (sessionStorage.getItem("vm_intro_v3") || document.getElementById("intro-video")) return;
+  const wrap = document.createElement("div");
+  wrap.id = "intro-video";
+  wrap.className = "intro-video";
+  wrap.innerHTML = '<button type="button" class="intro-close" data-act="intro-close" aria-label="Cerrar">×</button><div class="intro-stage"><video playsinline src="assets/videos/bienvenida.mp4?v=298"></video><div class="intro-controls"><button type="button" data-act="intro-pause">Pausa</button><button type="button" data-act="intro-mute">Silencio</button><button type="button" data-act="intro-vol-down" aria-label="Bajar volumen">−</button><span class="intro-vol">Vol 100</span><button type="button" data-act="intro-vol-up" aria-label="Subir volumen">+</button></div></div>';
+  document.body.appendChild(wrap);
+  const video = wrap.querySelector("video");
+  video.volume = 1;
+  const close = () => {
+    sessionStorage.setItem("vm_intro_v3", "1");
+    video.pause();
+    wrap.remove();
+  };
+  const sync = () => {
+    const pause = wrap.querySelector("[data-act=intro-pause]");
+    const mute = wrap.querySelector("[data-act=intro-mute]");
+    const label = wrap.querySelector(".intro-vol");
+    if (pause) pause.textContent = video.paused ? "Reanudar" : "Pausa";
+    if (mute) mute.textContent = video.muted || video.volume === 0 ? "Activar sonido" : "Silencio";
+    if (label) label.textContent = "Vol " + (video.muted ? 0 : Math.round(video.volume * 100));
+  };
+  const start = () => {
+    video.play().then(sync).catch(() => {
+      video.muted = true;
+      sync();
+      video.play().then(sync).catch(() => {});
+    });
+  };
+  video.addEventListener("loadeddata", start);
+  video.addEventListener("play", sync);
+  video.addEventListener("pause", sync);
+  video.addEventListener("volumechange", sync);
+  video.addEventListener("timeupdate", () => {
+    if (video.currentTime >= 30) close();
+  });
+  video.addEventListener("ended", close);
+  video.addEventListener("error", () => wrap.remove());
+  wrap.syncIntro = sync;
+}
+
 function bindOrbits() {
-  /* Las fotos ya no giran en 3D; el enlace del product-shot abre el detalle. */
+  if (typeof mountVolumes === "function") mountVolumes();
+  const video = document.querySelector(".quote-video");
+  if (!video) return;
+  video.addEventListener("loadeddata", () => {
+    video.hidden = false;
+    const copy = document.querySelector(".quote-benefits");
+    if (copy) copy.hidden = true;
+    video.play().catch(() => {});
+  });
+  video.addEventListener("timeupdate", () => {
+    if (video.currentTime >= 15) {
+      video.pause();
+    }
+  });
 }
 
 async function render() {
@@ -409,8 +462,8 @@ async function render() {
         sessionReady: false,
         sessionStatus: "offline",
         hasQr: false,
-        qrUrl: "/api/whatsapp/qr?mode=session&t=" + Date.now(),
-        bridgeError: err.message || "Sin conexión al bridge",
+        qrUrl: "",
+        bridgeError: err.status === 401 ? "Inicia sesión para ver el código" : (err.message || "Sin conexión al bridge"),
       };
     }
     paint(viewVincularWhatsapp(VM.waPublic), "admin-body");
@@ -494,6 +547,8 @@ async function render() {
     inicio: viewHome,
     catalogo: viewCatalog,
     linea: viewCatalog,
+    testimonios: viewTestimonials,
+    cotizacion: viewQuoteReady,
     producto: viewProduct,
     marca: viewMarca,
     asesor: () => viewAsesor(advisorDone),
@@ -501,11 +556,6 @@ async function render() {
     pago: viewCheckout,
   }[page];
   paint(shellPublic(content ? content() : viewHome()), "site");
-  const focus = VM.parts[1];
-  if (focus && (page === "catalogo" || page === "linea") && !VM.catalogQuery) {
-    const block = document.querySelector(`[data-cat="${focus}"]`);
-    if (block) block.scrollIntoView({ block: "start" });
-  }
   if (page === "catalogo" || page === "linea") {
     const qInput = document.querySelector("[data-catalog-q]");
     if (qInput && document.activeElement && document.activeElement.hasAttribute && document.activeElement.hasAttribute("data-catalog-q")) {
@@ -827,6 +877,10 @@ function addToCart(id, qty) {
     toast("Ese producto está agotado");
     return;
   }
+  if (!(Number(product.price) > 0)) {
+    toast("Este producto se consulta con el asesor");
+    return;
+  }
   const amount = Math.max(1, Number(qty) || VM.qty[id] || 1);
   const row = VM.cart.find((item) => item.id === id);
   const next = (row ? row.qty : 0) + amount;
@@ -905,6 +959,26 @@ async function sendOrderWhatsapp(data) {
     toast("El carrito está vacío");
     return;
   }
+  VM.pendingQuote = {
+    name,
+    phone,
+    city: String(data.city || "").trim(),
+    address: String(data.address || "").trim(),
+    note: String(data.note || "").trim(),
+  };
+  location.hash = "#/cotizacion";
+}
+
+async function deliverPendingQuote() {
+  const quote = VM.pendingQuote;
+  const items = cartDetailed();
+  if (!quote || !items.length) {
+    toast("Vuelve a llenar tus datos");
+    location.hash = "#/pago";
+    return;
+  }
+  const name = quote.name;
+  const phone = quote.phone;
   const ref = "VM-" + Date.now().toString(36).toUpperCase();
   const lines = [
     "VINICIUS MOLDING",
@@ -913,9 +987,9 @@ async function sendOrderWhatsapp(data) {
     "",
     "Cliente: " + name,
     "Celular: " + phone,
-    "Ciudad: " + (String(data.city || "").trim() || "-"),
-    "Direccion: " + (String(data.address || "").trim() || "-"),
-    String(data.note || "").trim() ? "Nota: " + String(data.note).trim() : "",
+    "Ciudad: " + (quote.city || "-"),
+    "Direccion: " + (quote.address || "-"),
+    quote.note ? "Nota: " + quote.note : "",
     "",
     "Productos",
   ];
@@ -938,8 +1012,9 @@ async function sendOrderWhatsapp(data) {
       await navigator.share({ files: [named], title: "Pedido " + ref, text: caption });
       VM.cart = [];
       saveCart();
+      VM.pendingQuote = null;
       toast("Envía el PDF al chat del asesor");
-      location.hash = "#/inicio";
+      location.hash = "#/testimonios";
       return;
     } catch (err) {
       if (err && err.name === "AbortError") {
@@ -953,8 +1028,9 @@ async function sendOrderWhatsapp(data) {
   if (!chat) location.href = waHref(message);
   VM.cart = [];
   saveCart();
+  VM.pendingQuote = null;
   toast("Se abrió el WhatsApp del asesor. Adjunta el PDF del pedido");
-  location.hash = "#/inicio";
+  location.hash = "#/testimonios";
 }
 
 function bind() {
@@ -971,6 +1047,45 @@ function bind() {
     const node = event.target.closest("[data-act]");
     if (!node) return;
     const act = node.dataset.act;
+    if (act === "star") {
+      const form = node.closest("form");
+      const value = Number(node.dataset.value || 5);
+      const field = form && form.querySelector("[name=stars]");
+      if (field) field.value = String(value);
+      if (form) form.querySelectorAll("[data-act=star]").forEach((btn) => btn.classList.toggle("on", Number(btn.dataset.value) <= value));
+      return;
+    }
+    if (act === "quote-send") {
+      await deliverPendingQuote();
+      return;
+    }
+    if (act === "intro-pause" || act === "intro-mute" || act === "intro-vol-down" || act === "intro-vol-up") {
+      const video = document.querySelector("#intro-video video");
+      if (!video) return;
+      if (act === "intro-pause") {
+        if (video.paused) video.play().catch(() => {});
+        else video.pause();
+      } else if (act === "intro-mute") {
+        video.muted = !video.muted;
+        if (!video.muted && video.volume === 0) video.volume = 0.8;
+      } else {
+        video.muted = false;
+        const step = act === "intro-vol-up" ? 0.2 : -0.2;
+        video.volume = Math.max(0, Math.min(1, Math.round((video.volume + step) * 10) / 10));
+        if (video.volume === 0) video.muted = true;
+      }
+      const layer = document.getElementById("intro-video");
+      if (layer && layer.syncIntro) layer.syncIntro();
+      return;
+    }
+    if (act === "intro-close") {
+      sessionStorage.setItem("vm_intro_v3", "1");
+      const layer = document.getElementById("intro-video");
+      const video = layer && layer.querySelector("video");
+      if (video) video.pause();
+      if (layer) layer.remove();
+      return;
+    }
     if (act === "menu") {
       VM.menu = !VM.menu;
       render();
@@ -1029,7 +1144,7 @@ function bind() {
       event.stopPropagation();
       const id = node.dataset.id;
       const product = (VM.shopData && VM.shopData.products || []).find((item) => item.id === id) || productById(id);
-      if (!product) return;
+      if (!product || !(Number(product.price) > 0)) return;
       let cart = Array.isArray(VM.shopCart) ? VM.shopCart.slice() : [];
       let row = cart.find((item) => item.id === id);
       if (act === "shop-add") {
@@ -1365,37 +1480,24 @@ function bind() {
         return;
       }
       if (kind === "login") {
-        const username = String(data.username || "").trim().toLowerCase();
-        const password = String(data.password || "");
-        const openLocal = () => {
-          VM.token = "local-admin";
-          VM.user = { name: "Administración", username: "admin" };
-          localStorage.setItem("vm_token", VM.token);
-          localStorage.setItem("vm_user", JSON.stringify(VM.user));
-          location.hash = "#/panel/resumen";
-        };
-        try {
-          const result = await api("/api/auth/login", { method: "POST", body: data });
-          if (!result.token) throw Object.assign(new Error("No se pudo completar la acción."), { status: 0 });
-          VM.token = result.token;
-          VM.user = result.user;
-          localStorage.setItem("vm_token", result.token);
-          localStorage.removeItem("vm_user");
-          location.hash = "#/panel/resumen";
-        } catch (err) {
-          if (username === "admin" && password === "admin123") openLocal();
-          else throw err;
-        }
+        const result = await api("/api/auth/login", { method: "POST", body: data });
+        if (!result.user) throw new Error("No se pudo iniciar sesión.");
+        VM.token = "cookie";
+        VM.user = result.user;
+        localStorage.removeItem("vm_token");
+        localStorage.removeItem("vm_user");
+        location.hash = "#/panel/resumen";
         return;
       }
       if (kind === "comment") {
         const name = String(data.name || "").trim().slice(0, 40);
         const text = String(data.text || "").trim().slice(0, 280);
-        if (name.length < 2 || text.length < 8) {
-          toast("Escribí tu nombre y el comentario");
+        if (name.length < 2) {
+          toast("Escribe tu nombre");
           return;
         }
-        const note = { id: "c_" + Date.now(), name, text, at: new Date().toISOString() };
+        const stars = Math.max(1, Math.min(5, Number(data.stars || 5)));
+        const note = { id: "c_" + Date.now(), name, text, stars, at: new Date().toISOString() };
         try {
           const result = await api("/api/comments", { method: "POST", body: { name, text } });
           if (result.comment) Object.assign(note, result.comment);
@@ -1522,7 +1624,10 @@ async function boot() {
         source: config.trmSource || "TRM",
       }) || { usdRate: config.usdRate, date: config.trmDate || "", source: config.trmSource || "TRM" };
     }
-    VM.user = me.user;
+    VM.user = me.user || null;
+    VM.token = VM.user ? "cookie" : "";
+    localStorage.removeItem("vm_token");
+    localStorage.removeItem("vm_user");
     applyLocalSettings();
     if (config.whatsapp) VM.config.whatsapp = config.whatsapp;
     await loadTrm();
@@ -1538,11 +1643,10 @@ async function boot() {
     applyLocalSettings();
     try { await loadTrm(); } catch (trmErr) { /* usa tasa local */ }
     try { VM.comments = JSON.parse(localStorage.getItem("vm_comments") || "[]"); } catch (error) { VM.comments = []; }
-    if (VM.token === "local-admin") {
-      try { VM.user = JSON.parse(localStorage.getItem("vm_user") || "null"); } catch (error) { VM.user = null; }
-    } else {
-      VM.user = null;
-    }
+    VM.user = null;
+    VM.token = "";
+    localStorage.removeItem("vm_token");
+    localStorage.removeItem("vm_user");
   }
   if (!location.hash) location.hash = "#/inicio";
   if (typeof getLang === "function" && (getLang() === "en" || getLang() === "zh") && typeof warmProductTranslations === "function") {

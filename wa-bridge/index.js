@@ -81,7 +81,7 @@ function postJson(url, body, timeoutMs) {
         headers: {
           "Content-Type": "application/json",
           "Content-Length": Buffer.byteLength(raw),
-          "X-VM-Bridge": "1",
+          "X-VM-Bridge-Secret": process.env.VM_BRIDGE_SECRET || "",
         },
         timeout: timeoutMs || 60000,
       },

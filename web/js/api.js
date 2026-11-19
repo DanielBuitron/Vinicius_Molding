@@ -205,10 +205,11 @@ function apiUrl(path) {
 
 async function api(path, options = {}) {
   const headers = Object.assign({ "Content-Type": "application/json" }, options.headers || {});
-  if (VM.token) headers.Authorization = "Bearer " + VM.token;
+  if (VM.token && VM.token !== "cookie") headers.Authorization = "Bearer " + VM.token;
   const response = await fetch(apiUrl(path), {
     method: options.method || "GET",
     headers,
+    credentials: "include",
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
   let data = {};

@@ -23,6 +23,7 @@ const CATALOG = [
   { id: "tratamiento", name: "Tratamiento", blurb: "Tónico para el cuero cabelludo y serum de barba." },
   { id: "kids", name: "Kids", blurb: "La cera de fibra, en una edición para los más jóvenes." },
   { id: "cuerpo", name: "Cuerpo", blurb: "Splash y gel de afeitado para la rutina de cada día." },
+  { id: "accesorios", name: "Accesorios", blurb: "Herramientas y tapetes para la barbería." },
 ];
 
 const SITE = {
@@ -37,7 +38,6 @@ const SITE = {
     { id: "pasta", sku: "VM-PA-150", name: "Pasta moldeadora", line: "Línea Molding", finish: "Brillante", category: "molding", size: "150 g", price: 36000, stock: 34, accent: "#00C8C2", image: "assets/products/pasta.jpg", summary: "Brillo elegante y fijación para un aspecto profesional.", description: "Pasta moldeadora brillante. Keratina, romero, aloe vera y cera de abeja.", ingredients: ["Keratina", "Romero", "Aloe vera", "Cera de abeja"], hold: 4, featured: true },
     { id: "pomada", sku: "VM-PM-150", name: "Pomada", line: "Línea Molding", finish: "Acabado mate", category: "molding", size: "150 g", price: 36000, stock: 40, accent: "#FFD300", image: "assets/products/pomada.jpg", summary: "Control para el cabello rebelde, con acabado mate.", description: "Pomada moldeadora mate. Keratina, romero, aloe vera y cera de abeja para un peinado natural.", ingredients: ["Keratina", "Romero", "Aloe vera", "Cera de abeja"], hold: 5, featured: false },
     { id: "gel-cubre-canas", sku: "VM-GC-150", name: "Cubre canas", line: "Línea Molding", finish: "Acabado húmedo brillante", category: "molding", size: "150 g", price: 36000, stock: 28, accent: "#C5CAD1", image: "assets/products/gel-cubre-canas.jpg", summary: "Cubre las canas con un acabado húmedo brillante.", description: "Gel cubre canas. Acabado húmedo brillante. Keratina, romero, aloe vera y cera de abeja.", ingredients: ["Keratina", "Romero", "Aloe vera", "Cera de abeja"], hold: 3, featured: true },
-    { id: "pasta-minoxidil", sku: "VM-PX-150", name: "Pasta minoxidil", line: "Línea Molding", finish: "A base de cera de abeja", category: "molding", size: "150 g", price: 36000, stock: 22, accent: "#2EE6D0", image: "assets/products/pasta-minoxidil.jpg", summary: "Pasta con minoxidil, pantenol y romero.", description: "Pasta minoxidil. Minoxidil, pantenol y romero, a base de cera de abeja. Usar en pelo seco o semi seco.", ingredients: ["Minoxidil", "Pantenol", "Romero", "Cera de abeja"], hold: 3, featured: true },
     { id: "cera-kids", sku: "VM-KD-150", name: "Cera niños", line: "Línea Molding", finish: "Fijación suave", category: "kids", size: "150 g", price: 36000, stock: 8, accent: "#E52C3B", image: "assets/products/cera-kids.jpg", summary: "Fórmula suave para el cabello de los más jóvenes.", description: "Cera de fibra Kids. Fijación pensada para cabello infantil, con keratina, romero, aloe vera y cera de abeja.", ingredients: ["Keratina", "Romero", "Aloe vera", "Cera de abeja"], hold: 3, featured: false },
     { id: "shampoo-proteccion", sku: "VM-SH-500", name: "Shampoo protección capilar", line: "Línea Cuidado personal", finish: "Sin sal", category: "limpieza", size: "500 g", price: 49000, stock: 62, accent: "#E52C3B", image: "assets/products/shampoo-proteccion.jpg", summary: "Fortalece el cabello y ayuda a reducir la caída por quiebre. Sin sal.", description: "Shampoo de protección capilar con romero, keratina, cebolla, aloe vera, zanahoria y ácido hialurónico. Fórmula sin sal.", ingredients: ["Romero", "Keratina", "Cebolla", "Aloe vera", "Zanahoria", "Ácido hialurónico"], hold: null, featured: true },
     { id: "shampoo-carbon", sku: "VM-SC-500", name: "Shampoo anticaspa carbón activo", line: "Línea Cuidado personal", finish: "Sin sal", category: "limpieza", size: "500 ml", price: 49000, stock: 44, accent: "#FFD300", image: "assets/products/shampoo-carbon.jpg", summary: "Ayuda a eliminar la caspa y controla el exceso de grasa. Sin sal.", description: "Shampoo de carbón activo. Adiós caspa y picazón. Romero, keratina, cebolla, aloe vera y ácido hialurónico. Sin sal.", ingredients: ["Carbón activo", "Romero", "Keratina", "Cebolla", "Aloe vera", "Ácido hialurónico"], hold: null, featured: true },
@@ -71,7 +71,9 @@ function iconWhatsapp() {
 }
 
 function cutoutSrc(src) {
-  return String(src || "").replace(/\.jpe?g(\?.*)?$/i, ".png$1");
+  const next = String(src || "").replace(/\.jpe?g(\?.*)?$/i, ".png$1");
+  if (!next || next.indexOf("v=328") >= 0) return next;
+  return next + (next.indexOf("?") >= 0 ? "&" : "?") + "v=328";
 }
 
 function productShot(src, alt, id) {
@@ -88,8 +90,96 @@ function orbit(src, alt, id) {
   return productShot(src, alt, id);
 }
 
+const CATALOG_VOLUME_LINES = new Set(["molding", "limpieza", "tratamiento", "kids", "cuerpo"]);
+const CATALOG_ADDITIONS = CATALOG_ACCESSORIES.concat(CATALOG_COMBOS);
+const CATALOG_KIT_PHOTOS = {
+  "kit-capilar": "assets/revista-productos/kit-capilar.webp",
+  "kit-capilar-avanzado": "assets/revista-productos/kit-capilar-avanzado.webp",
+  "kit-capilar-avanzado-plus": "assets/products/kit-capilar-avanzado-plus.webp",
+  "kit-capilar-completo": "assets/revista-productos/kit-capilar-completo.webp",
+  "kit-12-5": "assets/revista-productos/kit-12-5.webp",
+  "kit-crecimiento-23": "assets/revista-productos/kit-crecimiento-23.webp",
+  "kit-organico": "assets/revista-productos/kit-organico.webp",
+  "kit-organico-avanzado": "assets/revista-productos/kit-organico-avanzado.webp",
+  "kit-restaurador": "assets/revista-productos/kit-restaurador.webp",
+};
+
+// Small corrections for the measured axes of the original catalog cutouts.
+const CATALOG_PHOTO_ALIGNMENT = {
+  dermaroller: "rotate(1.2deg)",
+  "ducha-intima-y-cera-fibra": "skewX(-1.9deg)",
+  "ducha-intima-y-cera-moldeadora": "skewX(-0.9deg)",
+  "ducha-intima-y-pasta-en-caja": "skewX(-2.2deg)",
+  "ducha-intima-y-patillera-amarilla": "skewX(-3deg)",
+  "ducha-intima-y-patillera-plateada": "skewX(-2.5deg)",
+  "ducha-intima-y-pomada-en-caja": "skewX(-0.7deg)",
+  "ducha-intima-y-shampoo-carbon": "skewX(-0.7deg)",
+  "ducha-intima-y-shampoo-proteccion": "skewX(1.2deg)",
+  "kit-crecimiento-23": "skewX(-2.25deg)",
+  "kit-restaurador": "skewX(-2.7deg)",
+  "lapiz-para-barba": "rotate(2.5deg) skewX(5.9deg)",
+  "patillera-amarilla": "rotate(1deg)",
+  "patillera-azul": "rotate(0.85deg)",
+  "shampoo-y-minoxidil-12-5": "skewX(-0.7deg)",
+  "soplador-200w": "skewX(1.5deg)",
+};
+
+function catalogProducts() {
+  const products = VM.products || [];
+  const registeredIds = new Set(products.map((product) => product.id));
+  return products.concat(CATALOG_ADDITIONS.filter((product) => !registeredIds.has(product.id)));
+}
+
+function catalogProductById(id) {
+  return productById(id) || CATALOG_ADDITIONS.find((product) => product.id === id);
+}
+
+function catalogPhoto(product, alt, linked) {
+  const original = String(product.image || "").split("?")[0].replace(/^\//, "");
+  const defaultPath = "assets/products/" + product.id + ".";
+  const useKitPhoto = !original || ["jpg", "jpeg", "png"].some((ext) => original === defaultPath + ext);
+  const src = (useKitPhoto && CATALOG_KIT_PHOTOS[product.id]) || product.image || "";
+  const cutout = src.startsWith("assets/revista-productos/") ||
+    src.startsWith("assets/catalogo-combos/") || src === CATALOG_KIT_PHOTOS[product.id];
+  const style = cutout ? "catalog-photo cutout" : "catalog-photo";
+  const file = src.split("/").pop().split(/[.?]/, 1)[0];
+  const alignment = cutout && CATALOG_PHOTO_ALIGNMENT[file];
+  const inlineStyle = alignment ? ` style="--catalog-photo-alignment: ${alignment}"` : "";
+  const image = `<img src="${esc(src)}" alt="${esc(alt)}" loading="lazy" decoding="async" draggable="false">`;
+  return linked
+    ? `<a class="${style}" href="#/producto/${esc(product.id)}"${inlineStyle}>${image}</a>`
+    : `<div class="${style}"${inlineStyle}>${image}</div>`;
+}
+
+function catalogMedia(product, alt, linked) {
+  return CATALOG_VOLUME_LINES.has(product.category)
+    ? catalogOrbit(product.image, alt, product.id)
+    : catalogPhoto(product, alt, linked);
+}
+
+function catalogOrbit(src, alt, id) {
+  const preview = id === "cera-kids" ? "assets/revista-productos/kids.webp?v=2" : cutoutSrc(src);
+  const img = `<img src="${esc(preview)}" alt="${esc(alt)}" decoding="async" draggable="false">`;
+  const parts = Object.hasOwn(MOLDING_STAGE_ART, id) ? `
+      <button type="button" data-orbit-act="cerrado">Cerrado</button>
+      <button type="button" data-orbit-act="abierto">Abierto</button>
+      <button type="button" data-orbit-act="completo">Completo</button>` : "";
+  const tools = `<span class="orbit-tools">
+      <button type="button" data-orbit-act="down">Abajo</button>
+      <button type="button" data-orbit-act="spin">360</button>
+      <button type="button" data-orbit-act="up">Arriba</button>${parts}
+    </span>`;
+  return `<div class="orbit" data-orbit${id ? ` data-id="${esc(id)}"` : ""} tabindex="0" aria-label="${esc(alt)}">
+    <span class="orbit-shadow"></span>
+    <span class="orbit-scene"></span>
+    <span class="orbit-card">${img}</span>
+    ${tools}
+  </div>`;
+}
+
 function recommendedFor(product) {
-  const rest = VM.products.filter((item) => item.id !== product.id);
+  const products = product.consultationOnly ? catalogProducts() : VM.products;
+  const rest = products.filter((item) => item.id !== product.id);
   const same = rest.filter((item) => item.category === product.category);
   const other = rest.filter((item) => item.category !== product.category);
   return same.concat(other).slice(0, 8);

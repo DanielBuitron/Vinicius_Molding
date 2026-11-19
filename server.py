@@ -172,32 +172,6 @@ SEED_PRODUCTS = [
         "active": True
     },
     {
-        "id": "pasta-minoxidil",
-        "sku": "VM-PX-150",
-        "name": "Pasta minoxidil",
-        "line": "Línea Molding",
-        "finish": "A base de cera de abeja",
-        "category": "molding",
-        "size": "150 g",
-        "price": 36000,
-        "stock": 22,
-        "accent": "#2EE6D0",
-        "image": "assets/products/pasta-minoxidil.jpg",
-        "summary": "Pasta con minoxidil, pantenol y romero.",
-        "description": "Pasta minoxidil. Minoxidil, pantenol y romero, a base de cera de abeja. Usar en pelo seco o semi seco.",
-        "ingredients": [
-            "Minoxidil",
-            "Pantenol",
-            "Romero",
-            "Cera de abeja"
-        ],
-        "hold": 3,
-        "featured": True,
-        "minStock": 6,
-        "views": 0,
-        "active": True
-    },
-    {
         "id": "cera-kids",
         "sku": "VM-KD-150",
         "name": "Cera niños",
@@ -442,7 +416,7 @@ SEED_PRODUCTS = [
         "price": 156000,
         "stock": 18,
         "accent": "#E52C3B",
-        "image": "assets/products/kit-capilar.jpg",
+        "image": "assets/products/kit-capilar.jpg?v=354",
         "summary": "Fortalece el cabello y ayuda a reducir la caída.",
         "description": "Kit Capilar pensado para fortalecer el cabello y ayudar a reducir la caída con una rutina completa.",
         "ingredients": [
@@ -467,7 +441,7 @@ SEED_PRODUCTS = [
         "price": 189000,
         "stock": 14,
         "accent": "#00C8C2",
-        "image": "assets/products/kit-capilar-avanzado.jpg",
+        "image": "assets/products/kit-capilar-avanzado.jpg?v=354",
         "summary": "Cabello, barba y cejas con dermaroller de microagujas.",
         "description": "Kit Capilar Avanzado para cabello, barba y cejas. Incluye dermaroller para complementar la rutina mediante microagujas.",
         "ingredients": [
@@ -492,7 +466,7 @@ SEED_PRODUCTS = [
         "price": 119000,
         "stock": 16,
         "accent": "#6D4AFF",
-        "image": "assets/products/kit-capilar-avanzado-plus.jpg",
+        "image": "assets/products/kit-capilar-avanzado-plus.jpg?v=354",
         "summary": "Rutina avanzada para cabello, barba y cejas.",
         "description": "Kit Capilar Avanzado con enfoque en cabello, barba y cejas. Complementa la rutina con dermaroller.",
         "ingredients": [
@@ -516,7 +490,7 @@ SEED_PRODUCTS = [
         "price": 101000,
         "stock": 20,
         "accent": "#FFD300",
-        "image": "assets/products/kit-capilar-completo.jpg",
+        "image": "assets/products/kit-capilar-completo.jpg?v=354",
         "summary": "Rutina completa con dermaroller de microagujas.",
         "description": "Kit capilar completo. El dermaroller complementa la rutina capilar mediante microagujas.",
         "ingredients": [
@@ -540,7 +514,7 @@ SEED_PRODUCTS = [
         "price": 67000,
         "stock": 22,
         "accent": "#A4D800",
-        "image": "assets/products/kit-12-5.jpg",
+        "image": "assets/products/kit-12-5.jpg?v=354",
         "summary": "Tónico 12.5% + rodillo para cabello, barba y cejas.",
         "description": "Kit Capilar, Barba y Cejas 12.5%. Incluye tónico y rodillo de microagujas.",
         "ingredients": [
@@ -564,7 +538,7 @@ SEED_PRODUCTS = [
         "price": 205000,
         "stock": 12,
         "accent": "#E52C3B",
-        "image": "assets/products/kit-crecimiento-23.jpg",
+        "image": "assets/products/kit-crecimiento-23.jpg?v=354",
         "summary": "Fortalece y ayuda a combatir la caída capilar.",
         "description": "Kit de crecimiento capilar 23% para fortalecer y ayudar a combatir la caída.",
         "ingredients": [
@@ -588,7 +562,7 @@ SEED_PRODUCTS = [
         "price": 119000,
         "stock": 15,
         "accent": "#00C8C2",
-        "image": "assets/products/kit-organico.jpg",
+        "image": "assets/products/kit-organico.jpg?v=354",
         "summary": "Cabello, barba y cejas con dermaroller.",
         "description": "Kit Orgánico para cabello, barba y cejas. Complementa la rutina con dermaroller de microagujas.",
         "ingredients": [
@@ -612,7 +586,7 @@ SEED_PRODUCTS = [
         "price": 189000,
         "stock": 11,
         "accent": "#FFD300",
-        "image": "assets/products/kit-organico-avanzado.jpg",
+        "image": "assets/products/kit-organico-avanzado.jpg?v=354",
         "summary": "Tratamiento de crecimiento para cabello, barba y cejas + rodillo.",
         "description": "Kit Orgánico Avanzado: tratamiento de crecimiento para cabello, barba y cejas con rodillo de microagujas.",
         "ingredients": [
@@ -637,7 +611,7 @@ SEED_PRODUCTS = [
         "price": 205000,
         "stock": 10,
         "accent": "#585E65",
-        "image": "assets/products/kit-restaurador.jpg",
+        "image": "assets/products/kit-restaurador.jpg?v=354",
         "summary": "Shampoo + tónico orgánico para combatir la caída.",
         "description": "Kit Restaurador Capilar con shampoo y tónico orgánico. Fortalece y ayuda a combatir la caída capilar.",
         "ingredients": [
@@ -2004,8 +1978,39 @@ def fetch_transaction(transaction_id, public_key):
     return (payload.get("data") or payload)
 
 
+class PayloadTooLarge(Exception):
+    pass
+
+
+_LOGIN_FAILS = {}
+_PUBLIC_HITS = {}
+_LIMIT_LOCK = threading.Lock()
+
+
+def _client_ip(handler):
+    peer = handler.client_address[0] if handler.client_address else ""
+    if peer in ("127.0.0.1", "::1"):
+        forwarded = (handler.headers.get("X-Forwarded-For") or "").split(",")[0].strip()
+        if forwarded:
+            return forwarded[:64]
+    return peer or "unknown"
+
+
+def rate_limited(bucket, key, limit, window, record=True):
+    now = time.time()
+    with _LIMIT_LOCK:
+        hits = [stamp for stamp in bucket.get(key, []) if now - stamp < window]
+        blocked = len(hits) >= limit
+        if record and not blocked:
+            hits.append(now)
+        bucket[key] = hits[-40:]
+        return blocked
+
+
 class Handler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
+    server_version = "Vinicius"
+    sys_version = ""
 
     def do_GET(self):
         self.route("GET")
@@ -2021,9 +2026,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_OPTIONS(self):
         self.send_response(204)
-        self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, OPTIONS")
+        self.apply_security_headers()
         self.end_headers()
 
     def log_message(self, fmt, *args):
@@ -2043,25 +2048,74 @@ class Handler(BaseHTTPRequestHandler):
                 self.handle_api(method, path, query)
                 return
             self.serve_static(path)
+        except PayloadTooLarge:
+            self.send_json(413, {"error": "La solicitud es demasiado grande."})
         except Exception as exc:
-            self.send_json(500, {"error": "Error interno", "detail": str(exc)})
+            sys.stdout.write("error %s\n" % exc)
+            self.send_json(500, {"error": "Error interno"})
 
     def read_json(self):
         length = int(self.headers.get("Content-Length") or 0)
         if length <= 0:
             return {}
+        if length > 1_000_000:
+            raise PayloadTooLarge()
         raw = self.rfile.read(length)
         if not raw:
             return {}
         return json.loads(raw.decode("utf-8"))
 
-    def send_json(self, code, payload):
+    def is_https(self):
+        forwarded = (self.headers.get("X-Forwarded-Proto") or "").split(",")[0].strip().lower()
+        return forwarded == "https"
+
+    def allowed_origin(self):
+        origin = (self.headers.get("Origin") or "").rstrip("/")
+        if not origin:
+            return ""
+        host = (self.headers.get("Host") or "").split(",")[0].strip()
+        allowed = {"http://%s" % host, "https://%s" % host, "https://danielbuitron.github.io"}
+        cfg = read_config()
+        for key in ("publicBaseUrl", "publicSiteUrl"):
+            base = str(cfg.get(key) or "").rstrip("/")
+            if base:
+                allowed.add(base)
+        if origin in allowed or origin.startswith("https://danielbuitron.github.io"):
+            return origin
+        return ""
+
+    def apply_security_headers(self):
+        origin = self.allowed_origin()
+        if origin:
+            self.send_header("Access-Control-Allow-Origin", origin)
+            self.send_header("Access-Control-Allow-Credentials", "true")
+            self.send_header("Vary", "Origin")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "SAMEORIGIN")
+        self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
+        self.send_header("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+        self.send_header("Content-Security-Policy", "frame-ancestors 'self'; base-uri 'self'; object-src 'none'; form-action 'self'")
+        if self.is_https():
+            self.send_header("Strict-Transport-Security", "max-age=15552000")
+
+    def session_cookie(self, token="", clear=False):
+        if clear:
+            cookie = "vm_session=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax"
+        else:
+            cookie = "vm_session=%s; HttpOnly; Path=/; Max-Age=50400; SameSite=Lax" % urllib.parse.quote(token, safe="")
+        if self.is_https():
+            cookie += "; Secure"
+        return cookie
+
+    def send_json(self, code, payload, extra_headers=None):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self.send_response(code)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
-        self.send_header("Access-Control-Allow-Origin", "*")
+        self.apply_security_headers()
+        for key, value in (extra_headers or {}).items():
+            self.send_header(key, value)
         self.end_headers()
         self.wfile.write(body)
 
@@ -2069,7 +2123,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Access-Control-Allow-Origin", "*")
+        self.apply_security_headers()
         for key, value in (extra_headers or {}).items():
             self.send_header(key, value)
         self.end_headers()
@@ -2090,9 +2144,21 @@ class Handler(BaseHTTPRequestHandler):
             proto = "http"
         return proto + "://" + host
 
-    def current_user(self, store):
+    def request_token(self):
         header = self.headers.get("Authorization") or ""
-        token = header[7:].strip() if header.startswith("Bearer ") else ""
+        if header.startswith("Bearer "):
+            token = header[7:].strip()
+            if token and token != "cookie":
+                return token
+        raw = self.headers.get("Cookie") or ""
+        for part in raw.split(";"):
+            name, _, value = part.strip().partition("=")
+            if name == "vm_session" and value:
+                return urllib.parse.unquote(value)
+        return ""
+
+    def current_user(self, store):
+        token = self.request_token()
         if not token:
             return None, None
         session = (store.get("sessions") or {}).get(token)
@@ -2186,6 +2252,9 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/leads" and method == "POST":
+            if rate_limited(_PUBLIC_HITS, "lead:" + _client_ip(self), 20, 3600):
+                self.send_json(429, {"error": "Demasiados envíos. Espera un momento."})
+                return
             body = self.read_json()
             phone = "".join(ch for ch in str(body.get("phone") or "") if ch.isdigit())
             name = str(body.get("name") or "Cliente").strip()[:80] or "Cliente"
@@ -2219,6 +2288,9 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/comments" and method == "POST":
+            if rate_limited(_PUBLIC_HITS, "comment:" + _client_ip(self), 12, 3600):
+                self.send_json(429, {"error": "Demasiados comentarios. Espera un momento."})
+                return
             body = self.read_json()
             name = str(body.get("name") or "").strip()[:40]
             text = str(body.get("text") or "").strip()[:280]
@@ -2269,10 +2341,18 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/whatsapp/qr" and method == "GET":
+            with LOCK:
+                store = load_store()
+                if not self.require_user(store):
+                    return
             self.whatsapp_qr(query)
             return
 
         if path == "/api/whatsapp/session" and method == "GET":
+            with LOCK:
+                store = load_store()
+                if not self.require_user(store):
+                    return
             ensure_wa_bridge()
             session = bridge_status()
             self.send_json(200, {
@@ -2345,7 +2425,7 @@ class Handler(BaseHTTPRequestHandler):
                 if token:
                     store["sessions"].pop(token, None)
                     save_store(store)
-            self.send_json(200, {"ok": True})
+            self.send_json(200, {"ok": True}, {"Set-Cookie": self.session_cookie(clear=True)})
             return
 
         if path == "/api/auth/password" and method == "POST":
@@ -2453,16 +2533,21 @@ class Handler(BaseHTTPRequestHandler):
         self.send_json(404, {"error": "Ruta no encontrada."})
 
     def login(self):
+        ip = _client_ip(self)
+        if rate_limited(_LOGIN_FAILS, ip, 8, 900, record=False):
+            self.send_json(429, {"error": "Demasiados intentos. Espera unos minutos."})
+            return
         body = self.read_json()
         username = str(body.get("username") or "").strip()
         password = str(body.get("password") or "")
         with LOCK:
             store = load_store()
             user = next((item for item in store["users"] if item["username"] == username), None)
-            valid = False
-            if user:
-                valid = hmac_compare(hash_pw(password, user["salt"]), user["passwordHash"])
+            dummy_salt = "00" * 16
+            digest = hash_pw(password or " ", user["salt"] if user else dummy_salt)
+            valid = bool(user) and hmac_compare(digest, user["passwordHash"])
             if not valid:
+                rate_limited(_LOGIN_FAILS, ip, 8, 900, record=True)
                 self.send_json(401, {"error": "Usuario o clave incorrectos."})
                 return
             token = secrets.token_urlsafe(32)
@@ -2470,7 +2555,6 @@ class Handler(BaseHTTPRequestHandler):
                 "userId": user["id"],
                 "exp": (datetime.now() + timedelta(hours=14)).replace(microsecond=0).isoformat(),
             }
-            # Limpia sesiones vencidas.
             alive = {}
             current = now_iso()
             for key, session in store["sessions"].items():
@@ -2478,7 +2562,10 @@ class Handler(BaseHTTPRequestHandler):
                     alive[key] = session
             store["sessions"] = alive
             save_store(store)
-        self.send_json(200, {"token": token, "user": {"name": user["name"], "username": user["username"]}})
+            user_out = {"name": user["name"], "username": user["username"]}
+        with _LIMIT_LOCK:
+            _LOGIN_FAILS.pop(ip, None)
+        self.send_json(200, {"ok": True, "user": user_out}, {"Set-Cookie": self.session_cookie(token)})
 
     def change_password(self):
         body = self.read_json()
@@ -2751,7 +2838,14 @@ class Handler(BaseHTTPRequestHandler):
         })
 
     def whatsapp_bridge_inbound(self):
-        if self.client_address and self.client_address[0] not in ("127.0.0.1", "::1"):
+        expected = os.environ.get("VM_BRIDGE_SECRET") or ""
+        given = self.headers.get("X-VM-Bridge-Secret") or ""
+        peer = self.client_address[0] if self.client_address else ""
+        if expected:
+            if not given or not hmac_compare(given, expected):
+                self.send_json(403, {"error": "No autorizado."})
+                return
+        elif peer not in ("127.0.0.1", "::1"):
             self.send_json(403, {"error": "Solo local."})
             return
         body = self.read_json()
@@ -3684,26 +3778,30 @@ def main():
     global SERVER_PORT, _bridge_proc
     load_store()
     server = None
-    port = 8080
-    for candidate in range(8080, 8090):
+    host = os.environ.get("VM_BIND", "127.0.0.1")
+    if os.environ.get("VM_PORT"):
+        ports = [int(os.environ["VM_PORT"])]
+    else:
+        ports = list(range(8080, 8090))
+    port = ports[0]
+    for candidate in ports:
         try:
-            server = ThreadingHTTPServer(("127.0.0.1", candidate), Handler)
+            server = ThreadingHTTPServer((host, candidate), Handler)
             port = candidate
             break
         except OSError:
+            server = None
             continue
     if server is None:
-        print("No hay un puerto libre entre 8080 y 8089.")
+        print("No hay un puerto libre para Vinicius Molding.")
         return
     SERVER_PORT = port
     ensure_wa_bridge()
     print("")
     print("  Vinicius Molding")
-    print(f"  Tienda    http://127.0.0.1:{port}")
-    print(f"  Panel     http://127.0.0.1:{port}/#/login")
-    print("  Usuario   admin")
-    print("  Clave     admin123")
-    print("  WhatsApp  vinculación local (QR dispositivos vinculados)")
+    print("  Tienda    http://%s:%s" % (host, port))
+    print("  Panel     http://%s:%s/#/login" % (host, port))
+    print("  WhatsApp  vinculación con sesión iniciada")
     print("")
     print("  Detener: Ctrl+C")
     print("", flush=True)

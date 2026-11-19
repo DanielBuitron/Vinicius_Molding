@@ -21,6 +21,8 @@
       "cur.trm": "TRM BanRep: {rate}",
       "nav.home": "Inicio",
       "nav.catalog": "Catálogo",
+      "nav.voices": "Testimonios",
+      "nav.voicesShort": "Voces",
       "nav.panel": "Panel",
       "nav.login": "Iniciar sesión",
       "nav.loginShort": "Entrar",
@@ -44,9 +46,8 @@
       "home.text": "Desliza la rueda. La tapa se abre y las páginas giran sobre la mesa.",
       "home.hint": "Desliza para abrir",
       "home.cta": "Ver catálogo",
-      "catalog.kicker": "Lookbook · Vinicius",
       "catalog.title": "Catálogo",
-      "catalog.lede": "Ceras, shampoos, tratamientos y kits. Filtra por línea y elige tu pieza.",
+      "catalog.empty": "No encontramos productos con esa búsqueda.",
       "catalog.all": "Todos",
       "catalog.add": "Agregar",
       "catalog.view": "Ver",
@@ -131,10 +132,10 @@
       "mag.solution": "Somos la solución, no el problema",
       "mag.solutionP": "Productos capilares que funcionan, sin rodeos ni falsas promesas.",
       "mag.collectionTitle": "Colección",
-      "mag.collectionP": "{n} productos para moldear, limpiar y cuidar el cabello, la barba y el cuerpo.",
+      "mag.collectionP": "{n} productos de cuidado personal y accesorios de barbería.",
       "mag.contents": "Contenido",
       "mag.fullLine": "La línea completa",
-      "mag.fullLineP": "{n} piezas en la revista: molding, limpieza, tratamiento y cuerpo.",
+      "mag.fullLineP": "{n} piezas en la revista: molding, limpieza, tratamiento, cuerpo y accesorios.",
       "mag.orderYours": "Pide el tuyo",
       "mag.orderP": "Fabricado por Cosmypro Lab, Cali-Valle. Comercializado por Vinicius Molding.",
       "mag.price": "Precio",
@@ -162,6 +163,8 @@
       "cat.tratamiento.blurb": "Tónico para el cuero cabelludo y serum de barba.",
       "cat.cuerpo": "Cuerpo",
       "cat.cuerpo.blurb": "Splash y gel de afeitado para la rutina de cada día.",
+      "cat.accesorios": "Accesorios",
+      "cat.accesorios.blurb": "Herramientas y tapetes para la barbería.",
       "cat.kits": "Kits y combos",
       "cat.kits.blurb": "Rutinas completas de crecimiento, restauración y cuidado capilar.",
       "piece.0": "Cero",
@@ -203,6 +206,8 @@
       "cur.trm": "BanRep TRM: {rate}",
       "nav.home": "Home",
       "nav.catalog": "Catalog",
+      "nav.voices": "Testimonials",
+      "nav.voicesShort": "Voices",
       "nav.panel": "Dashboard",
       "nav.login": "Sign in",
       "nav.loginShort": "Sign in",
@@ -226,9 +231,8 @@
       "home.text": "Scroll the wheel. The cover opens and the pages turn on the desk.",
       "home.hint": "Scroll to open",
       "home.cta": "View catalog",
-      "catalog.kicker": "Lookbook · Vinicius",
       "catalog.title": "Catalog",
-      "catalog.lede": "Waxes, shampoos, treatments and kits. Filter by line and pick your piece.",
+      "catalog.empty": "No products match your search.",
       "catalog.all": "All",
       "catalog.add": "Add",
       "catalog.view": "View",
@@ -313,10 +317,10 @@
       "mag.solution": "We are the solution, not the problem",
       "mag.solutionP": "Hair products that work, with no fluff or empty promises.",
       "mag.collectionTitle": "Collection",
-      "mag.collectionP": "{n} products to style, cleanse and care for hair, beard and body.",
+      "mag.collectionP": "{n} personal care products and barbershop accessories.",
       "mag.contents": "Contents",
       "mag.fullLine": "The full line",
-      "mag.fullLineP": "{n} pieces in the magazine: molding, cleansing, treatment and body.",
+      "mag.fullLineP": "{n} pieces in the magazine: styling, cleansing, treatment, body care and accessories.",
       "mag.orderYours": "Get yours",
       "mag.orderP": "Made by Cosmypro Lab, Cali-Valle. Marketed by Vinicius Molding.",
       "mag.price": "Price",
@@ -344,6 +348,8 @@
       "cat.tratamiento.blurb": "Scalp tonic and beard serum.",
       "cat.cuerpo": "Body",
       "cat.cuerpo.blurb": "Splash and shaving gel for the daily routine.",
+      "cat.accesorios": "Accessories",
+      "cat.accesorios.blurb": "Tools and mats for the barbershop.",
       "cat.kits": "Kits & combos",
       "cat.kits.blurb": "Complete routines for growth, restoration and hair care.",
       "piece.0": "Zero",
@@ -385,6 +391,8 @@
       "cur.trm": "BanRep TRM：{rate}",
       "nav.home": "首页",
       "nav.catalog": "目录",
+      "nav.voices": "评价",
+      "nav.voicesShort": "评价",
       "nav.panel": "后台",
       "nav.login": "登录",
       "nav.loginShort": "登录",
@@ -408,9 +416,8 @@
       "home.text": "滑动滚轮。封面打开，书页在桌面上翻动。",
       "home.hint": "滑动打开",
       "home.cta": "查看目录",
-      "catalog.kicker": "Lookbook · Vinicius",
       "catalog.title": "目录",
-      "catalog.lede": "发蜡、洗发水、护理与套装。按系列筛选并选择产品。",
+      "catalog.empty": "未找到符合搜索条件的产品。",
       "catalog.all": "全部",
       "catalog.add": "加入",
       "catalog.view": "查看",
@@ -495,10 +502,10 @@
       "mag.solution": "我们是解决方案，不是问题",
       "mag.solutionP": "真正有效的护发产品，不绕弯，不做虚假承诺。",
       "mag.collectionTitle": "系列",
-      "mag.collectionP": "{n} 款产品，用于造型、清洁与护理头发、胡须和身体。",
+      "mag.collectionP": "{n} 款个人护理产品和理发配件。",
       "mag.contents": "目录",
       "mag.fullLine": "完整产品线",
-      "mag.fullLineP": "杂志中共有 {n} 件产品：造型、清洁、护理与身体。",
+      "mag.fullLineP": "杂志中共有 {n} 件产品，涵盖造型、清洁、护理、身体护理和理发配件。",
       "mag.orderYours": "立即选购",
       "mag.orderP": "由 Cosmypro Lab（卡利-山谷）制造，Vinicius Molding 销售。",
       "mag.price": "价格",
@@ -526,6 +533,8 @@
       "cat.tratamiento.blurb": "头皮精华与胡须精华。",
       "cat.cuerpo": "身体",
       "cat.cuerpo.blurb": "身体喷雾与剃须啫喱，适合日常护理。",
+      "cat.accesorios": "配件",
+      "cat.accesorios.blurb": "理发工具与垫子。",
       "cat.kits": "套装与组合",
       "cat.kits.blurb": "完整的生发、修护与护发护理方案。",
       "piece.0": "零",
@@ -806,6 +815,7 @@
       { id: "tratamiento", name: t("cat.tratamiento"), blurb: t("cat.tratamiento.blurb") },
       { id: "kids", name: t("cat.kids"), blurb: t("cat.kids.blurb") },
       { id: "cuerpo", name: t("cat.cuerpo"), blurb: t("cat.cuerpo.blurb") },
+      { id: "accesorios", name: t("cat.accesorios"), blurb: t("cat.accesorios.blurb") },
     ];
   }
 
@@ -934,7 +944,7 @@
         login.textContent = isPanel ? t("nav.panel") : t("nav.login");
       }
     }
-    const ask = document.querySelector("#revista .top-actions a.btn:not(.login)");
+    const ask = document.getElementById("catalog-link");
     if (ask) {
       const long = ask.querySelector(".long");
       const short = ask.querySelector(".short");
@@ -943,6 +953,14 @@
       ask.setAttribute("href", "#/catalogo");
       ask.removeAttribute("target");
       ask.removeAttribute("rel");
+    }
+    const voices = document.getElementById("voices-link");
+    if (voices) {
+      const long = voices.querySelector(".long");
+      const short = voices.querySelector(".short");
+      if (long) long.textContent = t("nav.voices");
+      if (short) short.textContent = t("nav.voicesShort");
+      voices.setAttribute("href", "#/testimonios");
     }
     const cart = document.getElementById("mag-cart");
     if (cart) cart.setAttribute("aria-label", t("nav.cart"));

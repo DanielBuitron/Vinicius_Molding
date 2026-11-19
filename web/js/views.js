@@ -1,7 +1,7 @@
 function shellPublic(content) {
   const count = cartCount();
   const page = VM.parts[0] || "inicio";
-  const links = [["inicio", t("nav.home")], ["catalogo", t("nav.catalog")]];
+  const links = [["inicio", t("nav.home")], ["catalogo", t("nav.catalog")], ["testimonios", t("nav.voices")]];
   const home = page === "inicio";
   return `
     ${home ? "" : `<a class="wa-side" href="${waHref()}" target="_blank" rel="noopener" aria-label="${t("nav.advisor")}">${iconWhatsapp()}<span>${t("nav.advisor")}</span></a>`}
@@ -9,11 +9,12 @@ function shellPublic(content) {
       <a class="brand" href="#/inicio"><img src="assets/logo-white.png" alt="Vinicius Molding"></a>
       ${home ? "" : `
       <nav class="nav ${VM.menu ? "open" : ""}">
+        ${localeControlsHtml("nav-locale")}
         ${links.map(([id, label]) => `<a href="#/${id}" class="${page === id || (id === "catalogo" && page === "linea") ? "active" : ""}">${label}</a>`).join("")}
         <a href="#/login">${t("nav.panel")}</a>
       </nav>`}
       <div class="header-actions">
-        ${localeControlsHtml("lang-inline")}
+        ${localeControlsHtml("bar-locale")}
         <a class="btn touch" href="${waHref()}" target="_blank" rel="noopener">${t("nav.talk")}</a>
         ${home ? "" : `
         <a class="icon-btn" href="#/carrito" aria-label="${t("nav.cart")}">${iconBag()}<span class="cart-count ${count ? "show" : ""}" data-cart-count>${count}</span></a>
@@ -37,6 +38,7 @@ function shellPublic(content) {
         <a href="#/catalogo/tratamiento">${t("footer.treatment")}</a>
         <a href="#/catalogo/kids">${t("footer.kids")}</a>
         <a href="#/catalogo/cuerpo">${t("footer.body")}</a>
+        <a href="#/testimonios">${t("nav.voices")}</a>
       </div>
       <div>
         <strong>${t("footer.advisor")}</strong>
@@ -116,7 +118,7 @@ function lookSpreads() {
       right: lookFace({ item: by("pasta"), kicker: "Pasta", title: "Mate<br>definido.", text: "Acabado seco para peinados diarios.", tone: "light", accent: "#00C8C2" }),
     },
     {
-      left: lookFace({ item: by("pasta-minoxidil"), kicker: "Ingeniería", title: "Una pieza<br>de oficio.", text: "Minoxidil, pantenol y romero a base de cera de abeja.", accent: "#00C8C2" }),
+      left: lookFace({ item: by("pomada"), kicker: "Pomada", title: "Acabado<br>mate.", text: "Control para el cabello rebelde, con el mate de la foto.", accent: "#A4D800" }),
       right: lookFace({ item: by("gel-cubre-canas"), kicker: "Acabado", title: "Canas bajo<br>control.", text: "Acabado húmedo brillante.", tone: "light", accent: "#E52C3B" }),
     },
     {
@@ -182,7 +184,28 @@ function viewTestimonials() {
             </div>
           </article>`).join("")}
       </div>
+      ${(VM.comments || []).length ? `<div class="voices-grid">${VM.comments.map((item) => `
+        <article class="voice-card">
+          <p class="stars">${"★".repeat(Number(item.stars) || 5)}</p>
+          <p>${item.text ? `“${esc(item.text)}”` : "Calificación publicada."}</p>
+          <div class="voice-who"><b>${esc(String(item.name || "").slice(0, 2).toUpperCase())}</b><div><strong>${esc(item.name)}</strong></div></div>
+        </article>`).join("")}</div>` : ""}
+      ${ratingForm()}
     </section>`;
+}
+
+function ratingForm() {
+  const stars = [1, 2, 3, 4, 5].map((n) => `<button type="button" data-act="star" data-value="${n}" class="${n <= 5 ? "on" : ""}" aria-label="${n}">★</button>`).join("");
+  return `
+    <form class="form panel-card rate-card" data-form="comment">
+      <h3>Califica tu experiencia</h3>
+      <p class="fine">Cuéntanos cómo te fue con Vinicius. La calificación queda junto a los testimonios.</p>
+      <div class="star-pick" role="group" aria-label="Calificación">${stars}</div>
+      <input type="hidden" name="stars" value="5">
+      <label>Nombre<input name="name" required maxlength="40" autocomplete="name"></label>
+      <label>Comentario<textarea name="text" maxlength="280" rows="3" placeholder="Opcional"></textarea></label>
+      <button class="btn" type="submit">Publicar calificación</button>
+    </form>`;
 }
 
 function viewComments() {
@@ -203,6 +226,7 @@ function viewComments() {
           ${notes.length ? notes.map((item) => `
             <article class="comment-card">
               <strong>${esc(item.name)}</strong>
+              ${item.stars ? `<span class="stars">${"★".repeat(Number(item.stars) || 0)}</span>` : ""}
               <span>${esc((item.at || "").replace("T", " ").slice(0, 16))}</span>
               <p>${esc(item.text)}</p>
             </article>`).join("") : `<p class="empty">Todavía no hay comentarios. El primero puede ser el tuyo.</p>`}
@@ -231,6 +255,10 @@ function phoneBlock(done) {
     </section>`;
 }
 
+function priceLabel(value) {
+  return Number(value) > 0 ? money(value) : "Consultar";
+}
+
 function homeSlide(item, active) {
   const name = productField(item, "name") || item.name;
   const finish = productField(item, "finish") || item.finish;
@@ -242,10 +270,10 @@ function homeSlide(item, active) {
         <p class="kicker">${esc(finish)} · ${esc(item.size)}</p>
         <h3><a href="#/producto/${esc(item.id)}">${esc(name)}</a></h3>
         <p>${esc(summary)}</p>
-        <strong class="price">${money(item.price)}</strong>
+        <strong class="price">${priceLabel(item.price)}</strong>
         <div class="hero-actions">
           <a class="btn" href="#/producto/${esc(item.id)}">${t("product.view")}</a>
-          <button class="btn ghost" type="button" data-act="add" data-id="${esc(item.id)}" ${item.stock ? "" : "disabled"}>${t("catalog.add")}</button>
+          <button class="btn ghost" type="button" data-act="add" data-id="${esc(item.id)}" ${item.stock && Number(item.price) > 0 ? "" : "disabled"}>${t("catalog.add")}</button>
         </div>
       </div>
     </article>`;
@@ -269,38 +297,47 @@ function homeGroup(group) {
     </section>`;
 }
 
-function catalogGroups() {
+function catalogGroups(products = catalogProducts()) {
   return localizedCatalog().map((group) => ({
     ...group,
-    items: VM.products.filter((item) => item.category === group.id),
+    items: products.filter((item) => item.category === group.id),
   })).filter((group) => group.items.length);
+}
+
+function catalogBuyRow(item, name) {
+  if (item.consultationOnly) {
+    return `<a class="btn small ghost" href="${waHref(t("wa.product", { name }))}" target="_blank" rel="noopener">${t("product.ask")}</a>`;
+  }
+  return `<span class="price">${priceLabel(item.price)}</span>
+    <button class="btn small" data-act="add" data-id="${esc(item.id)}" ${item.stock && Number(item.price) > 0 ? "" : "disabled"}>${t("catalog.add")}</button>`;
 }
 
 function catalogCard(item) {
   const name = productField(item, "name") || item.name;
+  const title = productField(item, "title") || name;
+  const finish = productField(item, "finish") || item.size;
   const summary = productField(item, "summary") || item.summary || "";
   return `
     <article class="sku folio-sku" style="--accent:${esc(item.accent)}">
-      <a class="sku-shot" href="#/producto/${esc(item.id)}">
-        <img src="${esc(cutoutSrc(item.image))}" alt="${esc(name)}" decoding="async" draggable="false">
-      </a>
+      <div class="sku-shot">${catalogMedia(item, name, true)}</div>
       <div class="sku-body">
-        <p class="kicker">${esc(item.finish || item.size)}</p>
-        <h3><a href="#/producto/${esc(item.id)}">${esc(name)}</a></h3>
-        <p class="sku-sum">${esc(summary)}</p>
-        <div class="sku-row">
-          <span class="price">${money(item.price)}</span>
-          <button class="btn small" data-act="add" data-id="${esc(item.id)}" ${item.stock ? "" : "disabled"}>${t("catalog.add")}</button>
-        </div>
+        ${finish ? `<p class="kicker">${esc(finish)}</p>` : ""}
+        <h3><a href="#/producto/${esc(item.id)}">${esc(title)}</a></h3>
+        ${summary ? `<p class="sku-sum">${esc(summary)}</p>` : ""}
+        <div class="sku-row">${catalogBuyRow(item, name)}</div>
       </div>
     </article>`;
 }
 
 function sortCatalogItems(items, mode) {
   const list = items.slice();
-  if (mode === "price-asc") list.sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
-  else if (mode === "price-desc") list.sort((a, b) => Number(b.price || 0) - Number(a.price || 0));
-  else list.sort((a, b) => String(productField(a, "name") || a.name || "").localeCompare(String(productField(b, "name") || b.name || ""), "es"));
+  if (mode === "price-asc" || mode === "price-desc") {
+    const direction = mode === "price-asc" ? 1 : -1;
+    list.sort((a, b) => (Number(!!a.consultationOnly) - Number(!!b.consultationOnly)) ||
+      direction * (Number(a.price || 0) - Number(b.price || 0)));
+  } else {
+    list.sort((a, b) => String(productField(a, "name") || a.name || "").localeCompare(String(productField(b, "name") || b.name || ""), "es"));
+  }
   return list;
 }
 
@@ -308,11 +345,14 @@ function viewCatalog() {
   const focus = VM.parts[1] || "";
   const q = String((VM.catalogQuery || "")).trim().toLowerCase();
   const sort = VM.catalogSort || "name";
-  const all = catalogGroups().map((group) => ({
+  const products = catalogProducts();
+  const categories = catalogGroups(products);
+  const all = categories.map((group) => ({
     ...group,
     items: sortCatalogItems(group.items.filter((item) => {
       if (!q) return true;
-      const blob = [item.name, item.summary, item.description, item.finish, item.line, item.sku]
+      const blob = [item.id, item.name, item.summary, item.description, item.finish, item.line, item.sku,
+        productField(item, "name"), productField(item, "finish")]
         .concat(item.ingredients || [])
         .join(" ")
         .toLowerCase();
@@ -320,16 +360,11 @@ function viewCatalog() {
     }), sort),
   })).filter((group) => group.items.length);
   const groups = focus ? all.filter((group) => group.id === focus) : all;
-  const total = (VM.products || []).length;
+  const total = products.length;
   const visible = groups.reduce((count, group) => count + group.items.length, 0);
   return `
-    <section class="section catalog desk-page">
+    <section class="section catalog desk-page" aria-label="${esc(t("catalog.title"))}">
       <div class="catalog-intro">
-        <div>
-          <div class="kicker">${t("catalog.kicker")}</div>
-          <h2>${t("catalog.title")}</h2>
-          <p class="catalog-lede">${t("catalog.lede")}</p>
-        </div>
         <div class="catalog-tools">
           <label class="catalog-search">
             <span class="sr-only">${t("catalog.search")}</span>
@@ -346,7 +381,7 @@ function viewCatalog() {
         </div>
         <div class="filters" role="tablist" aria-label="${t("catalog.title")}">
           <a class="chip ${focus ? "" : "on"}" href="#/catalogo">${t("catalog.all")} <span>${total}</span></a>
-          ${catalogGroups().map((group) => `<a class="chip ${focus === group.id ? "on" : ""}" href="#/catalogo/${esc(group.id)}">${esc(group.name)} <span>${group.items.length}</span></a>`).join("")}
+          ${categories.map((group) => `<a class="chip ${focus === group.id ? "on" : ""}" href="#/catalogo/${esc(group.id)}">${esc(group.name)} <span>${group.items.length}</span></a>`).join("")}
         </div>
         <p class="catalog-count">${t("catalog.count", { n: visible })}</p>
       </div>
@@ -362,7 +397,7 @@ function viewCatalog() {
           <div class="sku-grid">
             ${group.items.map((item) => catalogCard(item)).join("")}
           </div>
-        </section>`).join("") : `<p class="catalog-empty">${t("catalog.lede")}</p>`}
+        </section>`).join("") : `<p class="catalog-empty">${t("catalog.empty")}</p>`}
     </section>`;
 }
 
@@ -374,13 +409,10 @@ function productCard(item) {
   const name = productField(item, "name") || item.name;
   const summary = productField(item, "summary") || item.summary;
   return `<article class="pick">
-    ${orbit(item.image, name, item.id)}
+    ${CATALOG_VOLUME_LINES.has(item.category) ? orbit(item.image, name, item.id) : catalogPhoto(item, name, true)}
     <h3><a href="#/producto/${esc(item.id)}">${esc(name)}</a></h3>
-    <p>${esc(summary)}</p>
-    <div class="pick-row">
-      <span class="price">${money(item.price)}</span>
-      <button class="btn small" data-act="add" data-id="${esc(item.id)}" ${item.stock ? "" : "disabled"}>${t("catalog.add")}</button>
-    </div>
+    ${summary ? `<p>${esc(summary)}</p>` : ""}
+    <div class="pick-row">${catalogBuyRow(item, name)}</div>
   </article>`;
 }
 
@@ -400,43 +432,47 @@ function carousel(title, items) {
 }
 
 function viewProduct() {
-  const product = productById(VM.parts[1]);
+  const product = catalogProductById(VM.parts[1]);
   if (!product) return `<section class="page"><h2 class="block-title">${t("product.missing")}</h2><a class="btn" href="#/catalogo">${t("product.back")}</a></section>`;
   const qty = VM.qty[product.id] || 1;
   const name = productField(product, "name") || product.name;
   const finish = productField(product, "finish") || product.finish;
   const description = productField(product, "description") || product.description;
   const hold = product.hold ? `<div class="hold" aria-label="${t("product.hold", { n: product.hold })}">${[1, 2, 3, 4, 5].map((n) => `<i class="${n <= product.hold ? "on" : ""}"></i>`).join("")}</div>` : "";
-  const facts = [
+  const facts = product.consultationOnly ? [] : [
     [t("product.line"), product.line],
     [t("product.size"), product.size],
     [t("product.finish"), finish],
     [t("product.sku"), product.sku],
   ];
-  const family = VM.products.filter((item) => item.category === product.category);
+  const family = catalogProducts().filter((item) => item.category === product.category);
+  const priceDetails = product.consultationOnly ? "" : `
+    <div class="price" style="font-size:34px">${priceLabel(product.price)}</div>
+    <p class="fine">${Number(product.price) > 0 ? moneyAlt(product.price) : ""}</p>
+    ${stockLabel(product)}`;
+  const purchase = product.consultationOnly ? "" : `
+    <div class="qty">
+      <button type="button" data-act="qty" data-id="${esc(product.id)}" data-dir="-1">−</button>
+      <span>${qty}</span>
+      <button type="button" data-act="qty" data-id="${esc(product.id)}" data-dir="1">+</button>
+    </div>
+    <button class="btn" data-act="add" data-id="${esc(product.id)}" data-qty="${qty}" ${product.stock && Number(product.price) > 0 ? "" : "disabled"}>${t("product.add")}</button>`;
   return `
     <article class="product-stage" style="--accent:${esc(product.accent)}">
       <div class="product-copy">
         <a class="kicker" href="#/catalogo/${esc(product.category)}">${esc(categoryName(product.category))}</a>
         <h1>${esc(name)}</h1>
-        <p class="lede">${esc(description)}</p>
-        <div class="price" style="font-size:34px">${money(product.price)}</div>
-        <p class="fine">${moneyAlt(product.price)}</p>
-        ${stockLabel(product)}
+        ${description ? `<p class="lede">${esc(description)}</p>` : ""}
+        ${priceDetails}
         ${hold}
-        <dl class="facts">${facts.map(([label, value]) => `<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join("")}</dl>
+        ${facts.length ? `<dl class="facts">${facts.map(([label, value]) => `<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join("")}</dl>` : ""}
         <div class="meta">${(product.ingredients || []).map((item) => `<span class="tag">${esc(item)}</span>`).join("")}</div>
         <div class="buy-row">
-          <div class="qty">
-            <button type="button" data-act="qty" data-id="${esc(product.id)}" data-dir="-1">−</button>
-            <span>${qty}</span>
-            <button type="button" data-act="qty" data-id="${esc(product.id)}" data-dir="1">+</button>
-          </div>
-          <button class="btn" data-act="add" data-id="${esc(product.id)}" data-qty="${qty}" ${product.stock ? "" : "disabled"}>${t("product.add")}</button>
+          ${purchase}
           <a class="btn ghost" href="${waHref(t("wa.product", { name }))}" target="_blank" rel="noopener">${t("product.ask")}</a>
         </div>
       </div>
-      <div class="product-shot-lg">${productShot(product.image, name)}</div>
+      <div class="product-shot-lg">${catalogMedia(product, name, false)}</div>
       <nav class="product-dots" aria-label="${t("product.more")}">
         ${family.map((item) => `<a href="#/producto/${esc(item.id)}" class="${item.id === product.id ? "on" : ""}" aria-label="${esc(productField(item, "name") || item.name)}" style="--accent:${esc(item.accent)}"></a>`).join("")}
       </nav>
@@ -531,8 +567,8 @@ function viewShopDetail(product) {
           <p class="kicker">${esc(categoryName(product.category) || product.line || "")}</p>
           <h1>${esc(name)}</h1>
           <p class="lede">${esc(description)}</p>
-          <div class="price">${money(product.price)}</div>
-          <p class="fine">${moneyAlt(product.price)}</p>
+          <div class="price">${priceLabel(product.price)}</div>
+          <p class="fine">${Number(product.price) > 0 ? moneyAlt(product.price) : ""}</p>
           <dl class="facts">${facts.map(([label, value]) => `<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join("")}</dl>
           <div class="meta">${(product.ingredients || []).map((item) => `<span class="tag">${esc(item)}</span>`).join("")}</div>
           <div class="buy-row">
@@ -541,7 +577,7 @@ function viewShopDetail(product) {
               <b>${qty}</b>
               <button type="button" data-act="shop-qty" data-id="${esc(product.id)}" data-dir="1">+</button>
             </div>
-            <button type="button" class="shop-add" data-act="shop-add" data-id="${esc(product.id)}">${t("shop.add")}</button>
+            <button type="button" class="shop-add" data-act="shop-add" data-id="${esc(product.id)}" ${Number(product.price) > 0 ? "" : "disabled"}>${t("shop.add")}</button>
           </div>
         </div>
       </article>
@@ -616,14 +652,14 @@ function viewShop() {
                     <em>${esc(item.size || "")} · ${esc(item.sku || "")}</em>
                     <p>${esc(summary)}</p>
                     <div class="shop-card-row">
-                      <span>${money(item.price)}</span>
+                      <span>${priceLabel(item.price)}</span>
                       ${qty ? `
                         <div class="shop-qty" data-stop="1">
                           <button type="button" data-act="shop-qty" data-id="${esc(item.id)}" data-dir="-1">−</button>
                           <b>${qty}</b>
                           <button type="button" data-act="shop-qty" data-id="${esc(item.id)}" data-dir="1">+</button>
                         </div>` : `
-                        <button type="button" class="shop-add" data-act="shop-add" data-id="${esc(item.id)}" data-stop="1">${t("shop.add")}</button>`}
+                        <button type="button" class="shop-add" data-act="shop-add" data-id="${esc(item.id)}" data-stop="1" ${Number(item.price) > 0 ? "" : "disabled"}>${t("shop.add")}</button>`}
                     </div>
                   </div>
                 </article>`;
@@ -695,6 +731,23 @@ function viewCheckout() {
         ${items.map((item) => `<div class="sum-row"><span>${item.qty} × ${esc(productField(item, "name") || item.name)}</span><span>${money(item.price * item.qty)}</span></div>`).join("")}
         <p class="fine">${t("checkout.aside")}</p>
       </aside>
+    </section>`;
+}
+
+function viewQuoteReady() {
+  const quote = VM.pendingQuote;
+  if (!quote) return viewCheckout();
+  return `
+    <section class="section quote-ready">
+      <div class="kicker">Cotización de ${esc(quote.name)}</div>
+      <h2>Comprar con Vinicius</h2>
+      <video class="quote-video" src="assets/videos/cotizacion.mp4" playsinline hidden></video>
+      <div class="quote-benefits">
+        <p>Al comprar, el dinero de tu pedido queda en seguimiento. Si aparece un problema, se revisa según las políticas de la compra.</p>
+        <p class="fine">Este es el mensaje corto de 15 segundos. El guion se puede ajustar cuando lo definas.</p>
+      </div>
+      ${ratingForm()}
+      <button class="btn full" type="button" data-act="quote-send">Enviar cotización por WhatsApp</button>
     </section>`;
 }
 
