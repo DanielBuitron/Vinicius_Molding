@@ -1,10 +1,9 @@
 (()=>{
 const WA='https://wa.me/573235835137',IG='https://instagram.com/viniciusmolding';
 const A=f=>(window.IMGS&&IMGS[f])||'assets/'+f;
-const PHONE=()=>innerWidth<700;
-const PORTF=()=>!PHONE()&&(innerWidth<980||innerWidth<innerHeight*1.05);window.PORT=PORTF();
-const PW=()=>{const w=innerWidth,h=innerHeight;if(PHONE()){const byW=(w-16)/2.09,byH=(h-118)/1.28;return Math.max(132,Math.min(byW,byH))}if(window.PORT&&h<560){const byH=(h-108)/1.28,byW=w*.52;return Math.max(160,Math.min(byW,byH))}if(window.PORT){const byH=(h-140)/1.28,byW=w*.82;return Math.max(220,Math.min(byW,byH,680))}const byW=w*.4,byH=(h-96)/1.28*.9;return Math.max(220,Math.min(byW,byH,540))};
-const sp=()=>{window.PORT=PORTF();const w=innerWidth,r=document.documentElement;r.classList.toggle('port',window.PORT);r.classList.toggle('phone',PHONE());r.classList.toggle('tab',w>=700&&w<1100);const pw=PW();r.style.setProperty('--pwpx',pw);r.style.setProperty('--pw',pw+'px');r.style.setProperty('--ph','calc(var(--pw) * 1.28)');const st=document.getElementById('stage');if(st)st.style.height=PHONE()?'260dvh':window.PORT?'480dvh':'380dvh'};sp();addEventListener('resize',sp);
+window.PORT=false;
+const pageRatio=1.28;
+let layout;
 const TIN='Keratina · Romero · Aloe vera',EXT='Romero · Keratina · Cebolla · Aloe vera · Zanahoria · Ácido hialurónico';
 const TIN_EN='Keratin · Rosemary · Aloe vera',EXT_EN='Rosemary · Keratin · Onion · Aloe vera · Carrot · Hyaluronic acid';
 const PR=[
@@ -149,7 +148,7 @@ let faces;
 const book=document.getElementById('book');
 let leaves=[],segmentCount=0;
 function mountBook(){
- const SG=PHONE()?3:4;
+ const SG=layout.decorations?4:3;
  if(segmentCount===SG)return;
  segmentCount=SG;
  const {fr,bk}=faces;
@@ -166,6 +165,33 @@ const N=PR.length+4,stage=document.getElementById('stage'),tilt=document.getElem
 const vig=document.querySelector('.vig'),cap=document.getElementById('cap'),bar=document.getElementById('bar');
 const magazine=document.getElementById('revista');
 const prevButton=document.getElementById('prev'),nextButton=document.getElementById('next');
+const contentsShortcut=document.getElementById('mag-contents');
+const frame=stage.querySelector('.sticky');
+const topBar=magazine.querySelector('.top');
+const controls=magazine.querySelector('.ctl');
+
+function measureBook(){
+ const width=frame.clientWidth,height=frame.clientHeight;
+ const single=width<570||width<height*1.12;
+ const compact=width<700||height<540;
+ const decorations=!single&&width>=980&&!compact&&!matchMedia('(pointer: coarse)').matches;
+ const root=document.documentElement;
+ root.classList.toggle('phone',width<700);
+ root.classList.toggle('port',single);
+ const gap=compact?12:20;
+ const top=topBar.getBoundingClientRect().bottom+gap;
+ const bottom=height-controls.offsetHeight-parseFloat(getComputedStyle(controls).bottom)-gap;
+ const available=Math.max(96,bottom-top);
+ const pageWidth=Math.floor(Math.min((width-2*gap)/(single?1.04:2.12),available/(pageRatio*1.03),650));
+ const center=top+available/2;
+ window.PORT=single;
+ window.MAG_LAYOUT=layout={width,height,center,pageWidth,single,compact,decorations};
+ root.style.setProperty('--pw',pageWidth+'px');
+ root.style.setProperty('--ph',pageWidth*pageRatio+'px');
+ root.style.setProperty('--mag-book-top',center+'px');
+ root.style.setProperty('--mag-controls-height',controls.offsetHeight+'px');
+ stage.style.height=height+(N-1)*(single?166:95)+'px';
+}
 
 function onMagazine(){
   return !magazine.hidden && (!location.hash || /^#\/?inicio(?:[/?]|$)/.test(location.hash));
@@ -191,12 +217,12 @@ function loadMagazineScript(src){
   });
 }
 function startMagazineLighting(){
-  if(!PHONE()&&!decorationLoading){
+  if(layout.decorations&&!decorationLoading){
     decorationLoading=loadMagazineScript('js/textures.js?v=274')
       .catch(()=>{decorationLoading=null});
   }
   if(!deskLoading){
-    deskLoading=loadMagazineScript('js/revista-gl.js?v=284')
+    deskLoading=loadMagazineScript('js/revista-gl.js?v=285')
       .catch(()=>{deskLoading=null});
   }
   if(window.resumeRevistaDesk)window.resumeRevistaDesk();
@@ -209,9 +235,15 @@ function pan(p){if(!window.PORT)return 0;if(p<win(0)[0])return 0;
   const nx=i<N-2?win(i+1)[0]:1;if(p>b&&p<nx){const u=(p-b)/(nx-b);return u<.28?-1:u<.58?-1+2*ease((u-.28)/.3):1}}return 1}
 const steps=()=>{const a=[0];for(let s=1;s<N;s++){const b=win(s-1)[1],nx=s<N-1?win(s)[0]:1,pl=nx-b;a.push(b+pl*.14,b+pl*.8)}return a};
 const flatAt=s=>{if(s<=0)return 0;if(window.PORT){const a=steps();return a[Math.min(a.length-1,s*2-1)]}const done=win(s-1)[1],next=s<N-1?win(s)[0]:1;return done+Math.max(0,next-done)*.55};
-const endP=s=>flatAt(s);
-const nearestFlat=()=>{let best=0,bd=99;for(let s=0;s<N;s++){const p=flatAt(s),d=Math.abs(p-target);if(d<bd){bd=d;best=p}}return best};
-let target=0,cur=0,state=-1;const sy=()=>stage.offsetHeight-innerHeight;
+function nearestIndex(list,value){
+ let best=0;
+ for(let i=1;i<list.length;i++)if(Math.abs(list[i]-value)<Math.abs(list[best]-value))best=i;
+ return best;
+}
+const places=()=>window.PORT?steps():Array.from({length:N},(_,i)=>flatAt(i));
+const preferredSide=s=>s===2||(s>=3&&s<3+PR.length&&(s-3)%2===0);
+const positionFor=(s,right=false)=>window.PORT?steps()[s?2*s-(right?0:1):0]:flatAt(s);
+let target=0,cur=0,state=-1;const sy=()=>stage.offsetHeight-frame.clientHeight;
 const D=Math.PI/180;
 function setLeaf(i,p){const [a,b]=win(i),t=i===N-1?0:cl((p-a)/(b-a)),e=ease(t),L=leaves[i],key=t.toFixed(4);if(L.key===key)return e>=.5;L.key=key;
  const sn=Math.sin(Math.PI*t),th=-180*e,bb=18*Math.pow(sn,.72);
@@ -222,22 +254,25 @@ function setLeaf(i,p){const [a,b]=win(i),t=i===N-1?0:cl((p-a)/(b-a)),e=ease(t),L
  return e>=.5}
 function draw(p){
  if(!onMagazine()||!leaves.length)return;
- const c=ease(cl(p/.2)),w0=win(0),o=ease(cl((p-w0[0])/(w0[1]-w0[0])));
- const phone=innerWidth<700,cP=window.PORT?ease(cl(p/.06)):c,sc=phone?1.78-.74*o:window.PORT?.96:.8+.36*c,pn=pan(p),px=-pn*PW()/2*sc/innerWidth*100;
- const deskRx=innerHeight<780?44:56,deskDrop=innerHeight<780?14:22;
- window.CAMT=phone?{rx:8,s:sc,tx:0,ty:-1,rz:0}:window.PORT?{rx:24-4*cP,s:sc,tx:px,ty:-2*cP,rz:-.6+.6*cP}:{rx:deskRx-deskDrop*c,s:sc,tx:3*(1-c),ty:-3*(1-c)-2.5*c,rz:-3+2.4*c};
+ const w0=win(0),o=ease(cl((p-w0[0])/(w0[1]-w0[0]))),pn=pan(p);
+ const rx=layout.single?3:layout.compact?9:28-8*o;
+ const tx=-pn*layout.pageWidth/2/layout.width*100;
+ window.CAMT={rx,s:1,tx,ty:0,rz:0};
  if(!window.GLon)tilt.style.transform=`translate3d(${CAMT.tx}vw,${CAMT.ty}vh,0) rotateX(${CAMT.rx}deg) rotateZ(${CAMT.rz}deg) scale(${CAMT.s})`;
  book.style.setProperty('--o',o);window.BOOKO=o;book.style.transform=`translateX(calc(var(--pw)*${-.5*(1-o)}))`;
- if(PHONE()&&window.resumeRevistaDesk)window.resumeRevistaDesk();
+ if(!layout.decorations&&window.resumeRevistaDesk)window.resumeRevistaDesk();
  vig.style.opacity=1-.85*ease(cl((p-.04)/.2));hero.style.opacity=1-cl((p-.02)/.08);hero.style.transform=`translateY(${-cl(p/.12)*30}px)`;
  let fl=0;leaves.forEach((_,i)=>{if(setLeaf(i,p))fl++});
- if(phone){
-  // Keep the open spread and the sheet actually turning above the paper edges.
-  const behind=fl>0&&p<win(fl-1)[1];
-  const ahead=fl<N-1&&p>win(fl)[0];
-  const first=Math.max(0,fl-(behind?2:1)),last=Math.min(N-1,fl+(ahead?1:0));
-  leaves.forEach(({l},i)=>{const hidden=i<first||i>last;if(l.hidden!==hidden)l.hidden=hidden});
+ const behind=fl>0&&p<win(fl-1)[1];
+ const ahead=fl<N-1&&p>win(fl)[0];
+ let first=Math.max(0,fl-(behind?2:1)),last=Math.min(N-1,fl+(ahead?1:0));
+ let side='spread';
+ if(layout.single&&fl>0&&!behind&&!ahead){
+  if(pn<=-.99){last=first;side='left'}
+  if(pn>=.99){first=last;side='right'}
  }
+ if(book.dataset.side!==side)book.dataset.side=side;
+ leaves.forEach(({l},i)=>{const hidden=i<first||i>last;if(l.hidden!==hidden)l.hidden=hidden});
  book.style.setProperty('--tl',(2+fl*1.1)+'px');book.style.setProperty('--tr',(2+(N-1-fl)*1.1)+'px');
  bar.style.width=p*100+'%';if(fl!==state){state=fl;cap.textContent=CAP[fl];if(!lock)loadSpreadPhotos(fl)}}
 let flipJob=0,lock=0,scrollFrame=0;
@@ -249,15 +284,34 @@ function loop(){
  draw(cur);
  if(cur!==target)scrollFrame=requestAnimationFrame(loop);
 }
-function playTo(p){const job=++flipJob,from=cur,t0=performance.now(),dur=400;lock=1;const step=now=>{if(job!==flipJob)return;const t=Math.min(1,(now-t0)/dur);cur=from+(p-from)*ease(t);draw(cur);if(t<1)requestAnimationFrame(step);else{cur=p;lock=0;loadSpreadPhotos(state)}};requestAnimationFrame(step)}
+function playTo(p){const job=++flipJob,from=cur,t0=performance.now(),dur=400;lock=1;target=p;const step=now=>{if(job!==flipJob)return;const t=Math.min(1,(now-t0)/dur);cur=from+(p-from)*ease(t);draw(cur);if(t<1)requestAnimationFrame(step);else{cur=p;lock=0;loadSpreadPhotos(state)}};requestAnimationFrame(step)}
 let idle=0;
-const read=()=>{if(lock||!onMagazine()||!leaves.length)return;flipJob++;target=cl(scrollY/sy());if(!scrollFrame)scrollFrame=requestAnimationFrame(loop);clearTimeout(idle);idle=setTimeout(()=>{if(lock||!onMagazine())return;const p=nearestFlat();if(Math.abs(p-cur)<.003)return;lock=1;scrollTo({top:p*sy(),behavior:'auto'});playTo(p)},120)};
-const go=s=>{if(!onMagazine())return;s=Math.max(0,Math.min(N-1,s));loadSpreadPhotos(s);const p=window.PORT?steps()[s?2*s-1:0]:endP(s);if(Math.abs(p-cur)<.001)return;lock=1;scrollTo({top:p*sy(),behavior:'auto'});playTo(p)};
-const nav=d=>{if(!window.PORT){go(state+d);return}const a=steps();let k=0;a.forEach((v,i)=>{if(Math.abs(v-cur)<Math.abs(a[k]-cur))k=i});k=Math.max(0,Math.min(a.length-1,k+d));const p=a[k];lock=1;scrollTo({top:p*sy(),behavior:'auto'});playTo(p)};
+function turnTo(p){
+ if(Math.abs(p-cur)<.001)return;
+ lock=1;
+ scrollTo({top:p*sy(),behavior:'auto'});
+ playTo(p);
+}
+const read=()=>{if(lock||!onMagazine()||!leaves.length)return;flipJob++;target=cl(scrollY/sy());if(!scrollFrame)scrollFrame=requestAnimationFrame(loop);clearTimeout(idle);idle=setTimeout(()=>{if(lock||!onMagazine())return;const pages=places();turnTo(pages[nearestIndex(pages,target)])},120)};
+function go(s,right){
+ if(!onMagazine())return;
+ s=Math.max(0,Math.min(N-1,s));
+ loadSpreadPhotos(s);
+ turnTo(positionFor(s,right));
+}
+function nav(direction){
+ if(!onMagazine())return;
+ const pages=places(),index=nearestIndex(pages,lock?target:cur);
+ const next=Math.max(0,Math.min(pages.length-1,index+direction));
+ const spread=window.PORT?Math.ceil(next/2):next;
+ loadSpreadPhotos(spread);
+ turnTo(pages[next]);
+}
 addEventListener('wheel',()=>{if(!lock)return;flipJob++;lock=0},{passive:true});
 nextButton.onclick=()=>nav(1);prevButton.onclick=()=>nav(-1);
 const accessoryShortcut=document.getElementById('mag-accessories');
-accessoryShortcut.onclick=()=>go(3+accessoryStart);
+accessoryShortcut.onclick=()=>go(3+accessoryStart,preferredSide(3+accessoryStart));
+contentsShortcut.onclick=()=>go(2,true);
 // ---- detalle de producto
 const Z=document.getElementById('zoom'),$=id=>document.getElementById(id);let zi=0;
 function openZ(j){const p=PR[j];zi=j;$('zimg').src=shot(p);$('zimg').alt=p.cap;$('zref').textContent=tt('mag.ref',{ref:p.ref});$('zname').textContent=p.cap;$('zsub').textContent=p.sub;$('zdesc').textContent=p.d;$('zrows').innerHTML=rows(p.r);
@@ -268,7 +322,7 @@ $('zp').onclick=()=>openZ((zi+PR.length-1)%PR.length);$('zn').onclick=()=>openZ(
 const zi_=Z.querySelector('.zi');zi_.onclick=()=>zi_.classList.toggle('z2');
 zi_.addEventListener('pointermove',e=>{const r=zi_.getBoundingClientRect();$('zimg').style.transformOrigin=`${(e.clientX-r.left)/r.width*100}% ${(e.clientY-r.top)/r.height*100}%`});
 addEventListener('keydown',e=>{if(!onMagazine())return;if(!Z.hidden){if(e.key==='Escape')closeZ();if(e.key==='ArrowRight')$('zn').click();if(e.key==='ArrowLeft')$('zp').click();return}
- if(e.key==='ArrowRight'||e.key==='ArrowDown')nav(1);if(e.key==='ArrowLeft'||e.key==='ArrowUp')nav(-1)});
+ if(e.key==='ArrowRight'||e.key==='ArrowDown'){e.preventDefault();nav(1)}if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();nav(-1)}});
 // ---- clic en el libro: abrir, pasar página, ampliar producto
 function setMagQty(j,dir){magQty[j]=Math.max(1,Math.min(20,(magQty[j]||1)+dir));document.querySelectorAll('[data-mag-qty="'+j+'"]').forEach(el=>{el.textContent=magQty[j]})}
 function runMagazineAction(button){
@@ -277,9 +331,18 @@ function runMagazineAction(button){
   else if(window.addToCart)window.addToCart(LINK[PR[j].id]||PR[j].id,magQty[j]||1);
 }
 function activateRevista(){
-  if(!onMagazine())return;
+  if(!onMagazine()||typeof esc!=='function')return;
   if(!faces)faces=buildFaces();
   accessoryShortcut.textContent=tt('cat.accesorios');
+  contentsShortcut.textContent=tt('mag.contents');
+  const old=layout,spread=Math.max(0,state);
+  const right=old?.single?nearestIndex(steps(),cur)%2===0:preferredSide(spread);
+  measureBook();
+  if(old&&(old.width!==layout.width||old.height!==layout.height||old.single!==layout.single)){
+    flipJob++;lock=0;clearTimeout(idle);
+    cur=target=positionFor(spread,right);
+    scrollTo(0,cur*sy());
+  }
   mountBook();
   draw(cur);
   startMagazineLighting();
@@ -288,6 +351,7 @@ window.activateRevista=activateRevista;
 function paintRevistaFaces(){
   if(!onMagazine()||!leaves.length)return;
   accessoryShortcut.textContent=tt('cat.accesorios');
+  contentsShortcut.textContent=tt('mag.contents');
   faces=buildFaces();
   const {fr,bk}=faces;
   leaves.forEach((L,i)=>{
@@ -312,7 +376,17 @@ function magAt(x,y){let best=null,bestI=null;document.querySelectorAll('#book>.l
 function openExternal(href){if(!href)return;const tab=window.open(href,'_blank','noopener');if(!tab)location.href=href}
 function linkAt(x,y){const stack=document.elementsFromPoint?document.elementsFromPoint(x,y):[];for(const el of stack){const a=el.closest&&el.closest('a[href]');if(a&&/^https?:/i.test(a.href))return a}let found=null;document.querySelectorAll('#book a[href]').forEach(a=>{const r=a.getBoundingClientRect();if(r.width<8||r.height<8)return;if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom)found=a});return found}
 function goAt(x,y){const stack=document.elementsFromPoint?document.elementsFromPoint(x,y):[];for(const el of stack){const g=el.closest&&el.closest('[data-go]');if(g)return g}let found=null;document.querySelectorAll('#book [data-go]').forEach(el=>{const r=el.getBoundingClientRect();if(r.width<8||r.height<8||x<r.left||x>r.right||y<r.top||y>r.bottom)return;const face=el.closest('.sf,.sb');if(face){const fr=face.getBoundingClientRect();if(x<fr.left||x>fr.right||y<fr.top||y>fr.bottom)return}found=el});return found}
-book.addEventListener('click',e=>{const g=(e.target.closest&&e.target.closest('[data-go]'))||goAt(e.clientX,e.clientY);if(g&&(!e.detail||(Math.abs(e.clientX-sx)<18&&Math.abs(e.clientY-sy0)<18))){e.preventDefault();e.stopPropagation();go(+g.dataset.go);return}
+book.addEventListener('scroll',event=>{
+ const pane=event.target;
+ if(!pane.matches('.pg,.idx'))return;
+ const face=pane.closest('.sf,.sb');
+ const side=face.classList.contains('sf')?'.sf':'.sb';
+ const content=pane.classList.contains('idx')?'.idx':'.pg';
+ face.closest('.leaf').querySelectorAll(side+' '+content).forEach(peer=>{
+  if(peer!==pane&&peer.scrollTop!==pane.scrollTop)peer.scrollTop=pane.scrollTop;
+ });
+},true);
+book.addEventListener('click',e=>{const g=(e.target.closest&&e.target.closest('[data-go]'))||goAt(e.clientX,e.clientY);if(g&&(!e.detail||(Math.abs(e.clientX-sx)<18&&Math.abs(e.clientY-sy0)<18))){e.preventDefault();e.stopPropagation();const s=+g.dataset.go;go(s,preferredSide(s));return}
  const link=(e.target.closest&&e.target.closest('a[href]'))||linkAt(e.clientX,e.clientY);if(link&&/^https?:/i.test(link.href)){e.preventDefault();e.stopPropagation();openExternal(link.href);return}
  const mag=(e.target.closest&&e.target.closest('[data-mag]'))||magAt(e.clientX,e.clientY);if(mag){runMagazineAction(mag);return}
  if(e.target.closest('a'))return;if(state===0){nav(1);return}
@@ -325,4 +399,8 @@ let sx=0,sy0=0;stage.addEventListener('pointerdown',e=>{sx=e.clientX;sy0=e.clien
 stage.addEventListener('pointerup',e=>{if((e.target.closest&&e.target.closest('a,button,[data-mag],[data-go]'))||goAt(e.clientX,e.clientY))return;const dx=e.clientX-sx,dy=e.clientY-sy0;if(Math.abs(dx)>70&&Math.abs(dy)<40)nav(dx<0?1:-1)});
 addEventListener('scroll',read,{passive:true});
 addEventListener('resize',activateRevista);
+const bookResize=new ResizeObserver(activateRevista);
+bookResize.observe(topBar);
+bookResize.observe(controls);
+bookResize.observe(frame);
 })();

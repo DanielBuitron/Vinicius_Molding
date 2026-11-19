@@ -102,7 +102,7 @@ function cream(base,seed,sw){let s=seed;const rnd=()=>(s=(s*16807)%2147483647)/2
  ng.putImageData(ni,0,0);ag.putImageData(ai,0,0);return{alb:cvTex(ac),nrm:cvTex(nc)}}
 const[bc,bg]=mk(128);{const r=bg.createRadialGradient(64,64,0,64,64,64);r.addColorStop(0,'rgba(0,0,0,1)');r.addColorStop(.4,'rgba(0,0,0,.6)');r.addColorStop(1,'rgba(0,0,0,0)');bg.fillStyle=r;bg.fillRect(0,0,128,128)}
 function deskSurface(){
- const N=innerWidth<700?1024:2048,c=document.createElement('canvas');c.width=c.height=N;const g=c.getContext('2d');
+ const N=window.MAG_LAYOUT?.decorations?2048:1024,c=document.createElement('canvas');c.width=c.height=N;const g=c.getContext('2d');
  g.fillStyle='#5c6070';g.fillRect(0,0,N,N);
  const img=g.getImageData(0,0,N,N),d=img.data;
  for(let i=0;i<d.length;i+=4){const n=(Math.random()-.5)*5;d[i]+=n;d[i+1]+=n;d[i+2]+=n+0.4}
@@ -129,44 +129,49 @@ function prepareDecorations(){
  return true;
 }
 // ---- framebuffer MSAA + resolve
-let fbM,fbR,tR,rC,rD,fw=0,fh=0;
-function resize(){const phone=innerWidth<760,d=phone?1:Math.min(Math.max(devicePixelRatio||1,1.5),2);cv.width=Math.round(innerWidth*d);cv.height=Math.round(innerHeight*d);cv.style.width='100%';cv.style.height='100%';
+let fbM,fbR,tR,rC,rD,fw=0,fh=0,multisample=false;
+function resize(layout){
+ const useMSAA=layout.decorations,d=useMSAA?Math.min(Math.max(devicePixelRatio||1,1.5),2):1;
+ const width=Math.round(layout.width*d),height=Math.round(layout.height*d);
+ if(width===fw&&height===fh&&useMSAA===multisample)return;
+ multisample=useMSAA;cv.width=width;cv.height=height;
  if(fbM){gl.deleteFramebuffer(fbM);gl.deleteFramebuffer(fbR);gl.deleteTexture(tR);gl.deleteRenderbuffer(rC);gl.deleteRenderbuffer(rD)}
  fw=cv.width;fh=cv.height;rC=gl.createRenderbuffer();gl.bindRenderbuffer(gl.RENDERBUFFER,rC);
- if(phone)gl.renderbufferStorage(gl.RENDERBUFFER,gl.RGBA8,fw,fh);else gl.renderbufferStorageMultisample(gl.RENDERBUFFER,4,gl.RGBA8,fw,fh);
+ if(!useMSAA)gl.renderbufferStorage(gl.RENDERBUFFER,gl.RGBA8,fw,fh);else gl.renderbufferStorageMultisample(gl.RENDERBUFFER,4,gl.RGBA8,fw,fh);
  rD=gl.createRenderbuffer();gl.bindRenderbuffer(gl.RENDERBUFFER,rD);
- if(phone)gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT24,fw,fh);else gl.renderbufferStorageMultisample(gl.RENDERBUFFER,4,gl.DEPTH_COMPONENT24,fw,fh);
+ if(!useMSAA)gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT24,fw,fh);else gl.renderbufferStorageMultisample(gl.RENDERBUFFER,4,gl.DEPTH_COMPONENT24,fw,fh);
  fbM=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,fbM);gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.RENDERBUFFER,rC);gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,rD);
  tR=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tR);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,fw,fh,0,gl.RGBA,gl.UNSIGNED_BYTE,null);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
  fbR=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,fbR);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tR,0)}
-resize();addEventListener('resize',resize);
 const emptyVao=gl.createVertexArray();
 const model=(p,a,t,s)=>{t=t||0;s=s||[1,1,1];const ca=Math.cos(a),sa=Math.sin(a),c=Math.cos(t),n=Math.sin(t);return new Float32Array([ca*s[0],sa*s[0],0,0,-sa*c*s[1],ca*c*s[1],n*s[1],0,sa*n*s[2],-ca*n*s[2],c*s[2],0,p[0],p[1],p[2],1])};
 function dr(m,o){gl.uniformMatrix4fv(pr.u('uModel'),false,model(o.p,o.a||0,o.t||0,o.s));gl.uniform1i(pr.u('uMode'),o.mode);gl.uniform3fv(pr.u('uCol'),o.col||[.06,.06,.065]);gl.uniform2fv(pr.u('uRep'),o.rep||[1,1]);gl.uniform1f(pr.u('uG'),o.g||1);gl.uniform1f(pr.u('uA'),o.a||0);
  gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,o.tex||T.blob);gl.uniform1i(pr.u('uTex'),0);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,o.nrm||T.blob);gl.uniform1i(pr.u('uNrm'),1);gl.bindVertexArray(M[m].vao);gl.drawElements(gl.TRIANGLES,M[m].n,gl.UNSIGNED_SHORT,0)}
-const ptr={x:0,y:0,tx:0,ty:0,on:0};addEventListener('pointermove',e=>{if(innerWidth<700)return;ptr.on=1;ptr.tx=e.clientX/innerWidth*2-1;ptr.ty=e.clientY/innerHeight*2-1});
+const ptr={x:0,y:0,tx:0,ty:0,on:0};addEventListener('pointermove',e=>{if(!window.MAG_LAYOUT?.decorations)return;ptr.on=1;ptr.tx=e.clientX/innerWidth*2-1;ptr.ty=e.clientY/innerHeight*2-1});
 const tilt=document.getElementById('tilt');
 const magazine=document.getElementById('revista');
 let frameRequest=0;
 function frame(t){
  frameRequest=0;
- if(document.hidden||magazine.hidden)return;
- const phone=innerWidth<700,decorated=!phone&&prepareDecorations();
+ const layout=window.MAG_LAYOUT;
+ if(document.hidden||magazine.hidden||!layout)return;
+ resize(layout);
+ const light=!layout.decorations,decorated=!light&&prepareDecorations();
  const sec=t/1000,k=window.CAMT||{rx:54,s:.86,tx:4,ty:-3,rz:-3},PORT=!!window.PORT;
- ptr.x+=(ptr.tx-ptr.x)*.45;ptr.y+=(ptr.ty-ptr.y)*.45;const pm=PORT?.35:1;
- const rxF=k.rx+(phone?0:Math.sin(sec*.35)*.1),rzF=k.rz,txF=k.tx,tyF=k.ty;
+ ptr.x+=(ptr.tx-ptr.x)*.45;ptr.y+=(ptr.ty-ptr.y)*.45;
+ const rxF=k.rx+(light?0:Math.sin(sec*.35)*.1),rzF=k.rz,txF=k.tx,tyF=k.ty;
  tilt.style.transform=`translate3d(${txF}vw,${tyF}vh,0) rotateX(${rxF}deg) rotateZ(${rzF}deg) scale(${k.s})`;
- const P=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pwpx'))||480,W=innerWidth,H=innerHeight,rx=rxF*Math.PI/180,rz=rzF*Math.PI/180,c=Math.cos(rx),sn=Math.sin(rx);
+ const {pageWidth:P,width:W,height:H,center}=layout,rx=rxF*Math.PI/180,rz=rzF*Math.PI/180,c=Math.cos(rx),sn=Math.sin(rx);
  if(decorated)build(P);
  gl.bindFramebuffer(gl.FRAMEBUFFER,fbM);gl.viewport(0,0,fw,fh);gl.clearColor(.003,.003,.004,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.useProgram(pr);
- const u=pr.u;gl.uniform2f(u('uView'),W,H);gl.uniform2f(u('uT0'),W/2,H*.54);gl.uniform2f(u('uPO'),W/2,H*.38);gl.uniform2f(u('uT'),txF*W/100,tyF*H/100);
+ const u=pr.u;gl.uniform2f(u('uView'),W,H);gl.uniform2f(u('uT0'),W/2,center);gl.uniform2f(u('uPO'),W/2,H*.38);gl.uniform2f(u('uT'),txF*W/100,tyF*H/100);
  gl.uniform1f(u('uD'),1700);gl.uniform1f(u('uS'),k.s);gl.uniform1f(u('uC'),c);gl.uniform1f(u('uSn'),sn);gl.uniform1f(u('uCz'),Math.cos(rz));gl.uniform1f(u('uSz'),Math.sin(rz));
  const Dcam=1700,txPix=txF*W/100,tyPix=tyF*H/100,cz=Math.cos(rz),sz=Math.sin(rz);
  const ndcX=ptr.x,ndcY=-ptr.y;let kk=1,rY=0;
- for(let i=0;i<5;i++){rY=(.24*kk-.32-ndcY)*H/2;const py=(rY-tyPix)/Math.max(c,.2);kk=(Dcam-py*sn)/Dcam}
+ for(let i=0;i<5;i++){rY=(.24*kk-ndcY)*H/2+H*.38-center;const py=(rY-tyPix)/Math.max(c,.2);kk=(Dcam-py*sn)/Dcam}
  const rX=ndcX*W/2,px=rX-txPix,py=(rY-tyPix)/Math.max(c,.2),qx=px/k.s,qy=py/k.s;
- let mx=Math.max(-1500,Math.min(1500,qx*cz+qy*sz)),my=Math.max(-1500,Math.min(1500,-qx*sz+qy*cz)); const pointed=!phone&&ptr.on,hx=pointed?mx:4000,hy=pointed?my:4000,LP=[hx,hy,300],tg=[hx,hy,0],ax=[tg[0]-LP[0],tg[1]-LP[1],tg[2]-LP[2]],al=Math.hypot(...ax);
- const op=Math.max(0,Math.min(1,window.BOOKO||0));gl.uniform1f(u('uOpen'),phone?op*.4:op);
+ let mx=Math.max(-1500,Math.min(1500,qx*cz+qy*sz)),my=Math.max(-1500,Math.min(1500,-qx*sz+qy*cz)); const pointed=!light&&ptr.on,hx=pointed?mx:4000,hy=pointed?my:4000,LP=[hx,hy,300],tg=[hx,hy,0],ax=[tg[0]-LP[0],tg[1]-LP[1],tg[2]-LP[2]],al=Math.hypot(...ax);
+ const op=Math.max(0,Math.min(1,window.BOOKO||0));gl.uniform1f(u('uOpen'),light?op*.4:op);
  const LP2=[0,.02*P*(1.-op),980.-260.*op],t2=[0,0,0],a2=[t2[0]-LP2[0],t2[1]-LP2[1],t2[2]-LP2[2]],l2=Math.hypot(...a2);gl.uniform3fv(u('uLP2'),LP2);gl.uniform3f(u('uAx2'),a2[0]/l2,a2[1]/l2,a2[2]/l2);
  gl.uniform3fv(u('uLP'),LP);gl.uniform3f(u('uAx'),ax[0]/al,ax[1]/al,ax[2]/al);gl.uniform3f(u('uEye'),0,1700*Math.sin(rx),1700*Math.cos(rx));
  const R=.165*P,Hb=.1*P,Hl=.045*P,Ho=Hb+Hl,Ro=.19*P,Hh=.15*P,st=.004*P,rec=.004*P,lw=.02*P;
@@ -187,9 +192,9 @@ function frame(t){
   dr('dl',{p:[x+Math.sin(d.a)*Math.sin(tl)*zl,y-Math.cos(d.a)*Math.sin(tl)*zl,z0+Math.cos(tl)*zl],a:d.a,t:tl,mode:2,tex:T['l_'+d.k]})});
  gl.bindFramebuffer(gl.READ_FRAMEBUFFER,fbM);gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER,fbR);gl.blitFramebuffer(0,0,fw,fh,0,0,fw,fh,gl.COLOR_BUFFER_BIT,gl.NEAREST);
  gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,fw,fh);gl.disable(gl.DEPTH_TEST);gl.disable(gl.BLEND);gl.useProgram(pp);
- gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tR);gl.uniform1i(pp.u('uScn'),0);gl.uniform2f(pp.u('uRes'),fw,fh);gl.uniform1f(pp.u('uFy'),1-(.54+tyF/100));gl.uniform1f(pp.u('uAmt'),(PORT?1.1:1.6)*fw/innerWidth);gl.uniform1f(pp.u('uT'),sec%10);
+ gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tR);gl.uniform1i(pp.u('uScn'),0);gl.uniform2f(pp.u('uRes'),fw,fh);gl.uniform1f(pp.u('uFy'),1-(center/H+tyF/100));gl.uniform1f(pp.u('uAmt'),(PORT?1.1:1.6)*fw/W);gl.uniform1f(pp.u('uT'),sec%10);
  gl.bindVertexArray(emptyVao);gl.drawArrays(gl.TRIANGLES,0,3);
- if(!phone)frameRequest=requestAnimationFrame(frame)}
+ if(!light)frameRequest=requestAnimationFrame(frame)}
 function resume(){
  if(frameRequest||document.hidden||magazine.hidden)return;
  document.body.classList.add('gl');

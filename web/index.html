@@ -2,14 +2,14 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Vinicius Molding · Catálogo interactivo</title>
   <meta name="description" content="Catálogo interactivo de Vinicius Molding: cuidado capilar masculino. Abre el libro y recorre los productos.">
   <meta name="theme-color" content="#000000">
   <meta name="vm-api-base" content="https://grey-rid-gorgeous-toolkit.trycloudflare.com">
   <meta name="vm-site-base" content="https://danielbuitron.github.io/Vinicius_Molding">
   <link rel="icon" type="image/png" href="assets/favicon.png?v=274">
-  <link rel="stylesheet" href="styles.css?v=304">
+  <link rel="stylesheet" href="styles.css?v=305">
   <link id="store-css" rel="stylesheet" href="css/app.css?v=305" media="not all">
 </head>
 <body class="mode-home">
@@ -46,10 +46,15 @@
     </div>
     <div class="vig"></div><div class="grain"></div>
     <nav class="ctl" aria-label="Navegación del catálogo">
-      <button id="mag-accessories" class="accessory-shortcut" type="button">Accesorios</button>
-      <button id="prev" aria-label="Página anterior">‹</button>
-      <span id="cap" aria-live="polite">Cubierta</span>
-      <button id="next" aria-label="Página siguiente">›</button>
+      <div class="ctl-turn">
+        <button id="prev" aria-label="Página anterior" type="button">‹</button>
+        <span id="cap" aria-live="polite">Cubierta</span>
+        <button id="next" aria-label="Página siguiente" type="button">›</button>
+      </div>
+      <div class="ctl-links">
+        <button id="mag-contents" type="button">Contenido</button>
+        <button id="mag-accessories" type="button">Accesorios</button>
+      </div>
     </nav>
     <div class="bar"><b id="bar"></b></div>
   </div>
@@ -61,7 +66,7 @@
 <script src="js/i18n.js?v=303"></script>
 <script src="js/catalog-accessories.js?v=1"></script>
 <script src="js/catalog-combos.js?v=1"></script>
-<script src="js/revista.js?v=291"></script>
+<script src="js/revista.js?v=292"></script>
 <script src="js/three.min.js?v=274"></script>
 <script src="js/page-flip.browser.js?v=274"></script>
 <script src="js/volume.js?v=330"></script>
