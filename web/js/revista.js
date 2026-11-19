@@ -1,7 +1,6 @@
 (()=>{
 const WA='https://wa.me/573235835137',IG='https://instagram.com/viniciusmolding';
 const A=f=>(window.IMGS&&IMGS[f])||'assets/'+f;
-window.PORT=false;
 const pageRatio=1.28;
 let layout;
 const TIN='Keratina · Romero · Aloe vera',EXT='Romero · Keratina · Cebolla · Aloe vera · Zanahoria · Ácido hialurónico';
@@ -172,25 +171,25 @@ const controls=magazine.querySelector('.ctl');
 
 function measureBook(){
  const width=frame.clientWidth,height=frame.clientHeight;
- const single=width<570||width<height*1.12;
+ const phone=width<700;
  const compact=width<700||height<540;
- const decorations=!single&&width>=980&&!compact&&!matchMedia('(pointer: coarse)').matches;
+ const decorations=width>=980&&!compact&&!matchMedia('(pointer: coarse)').matches;
  const root=document.documentElement;
- root.classList.toggle('phone',width<700);
- root.classList.toggle('port',single);
+ root.classList.toggle('phone',phone);
  const gap=compact?12:20;
+ const inset=phone?8:gap;
  const top=topBar.getBoundingClientRect().bottom+gap;
  const bottom=height-controls.offsetHeight-parseFloat(getComputedStyle(controls).bottom)-gap;
  const available=Math.max(96,bottom-top);
- const pageWidth=Math.floor(Math.min((width-2*gap)/(single?1.04:2.12),available/(pageRatio*1.03),650));
+ const pageWidth=Math.floor(Math.min((width-2*inset)/(phone?2.04:2.12),available/(pageRatio*1.03),650));
  const center=top+available/2;
- window.PORT=single;
- window.MAG_LAYOUT=layout={width,height,center,pageWidth,single,compact,decorations};
+ const coverScale=phone?Math.min(1.73,available/(pageWidth*pageRatio*1.04)):1;
+ window.MAG_LAYOUT=layout={width,height,center,pageWidth,coverScale,compact,decorations};
  root.style.setProperty('--pw',pageWidth+'px');
  root.style.setProperty('--ph',pageWidth*pageRatio+'px');
  root.style.setProperty('--mag-book-top',center+'px');
  root.style.setProperty('--mag-controls-height',controls.offsetHeight+'px');
- stage.style.height=height+(N-1)*(single?166:95)+'px';
+ stage.style.height=height+(N-1)*95+'px';
 }
 
 function onMagazine(){
@@ -222,27 +221,24 @@ function startMagazineLighting(){
       .catch(()=>{decorationLoading=null});
   }
   if(!deskLoading){
-    deskLoading=loadMagazineScript('js/revista-gl.js?v=285')
+    deskLoading=loadMagazineScript('js/revista-gl.js?v=286')
       .catch(()=>{deskLoading=null});
   }
   if(window.resumeRevistaDesk)window.resumeRevistaDesk();
 }
 const cl=x=>Math.max(0,Math.min(1,x)),ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
-const STEP=.80/(N-2),DUR=Math.max(.008,STEP*.2),KP=.80/(N-2),PDUR=Math.max(.008,KP*.2);
-const win=i=>window.PORT?[.02+i*KP,.02+i*KP+PDUR]:(i===0?[.03,.08]:[.1+(i-1)*STEP,.1+(i-1)*STEP+DUR]);
-function pan(p){if(!window.PORT)return 0;if(p<win(0)[0])return 0;
- for(let i=0;i<N-1;i++){const[a,b]=win(i);if(p>=a&&p<=b){const t=ease((p-a)/(b-a));return i===0?-t:1-2*t}
-  const nx=i<N-2?win(i+1)[0]:1;if(p>b&&p<nx){const u=(p-b)/(nx-b);return u<.28?-1:u<.58?-1+2*ease((u-.28)/.3):1}}return 1}
-const steps=()=>{const a=[0];for(let s=1;s<N;s++){const b=win(s-1)[1],nx=s<N-1?win(s)[0]:1,pl=nx-b;a.push(b+pl*.14,b+pl*.8)}return a};
-const flatAt=s=>{if(s<=0)return 0;if(window.PORT){const a=steps();return a[Math.min(a.length-1,s*2-1)]}const done=win(s-1)[1],next=s<N-1?win(s)[0]:1;return done+Math.max(0,next-done)*.55};
+const STEP=.80/(N-2),DUR=Math.max(.008,STEP*.2);
+const win=i=>i===0?[.03,.08]:[.1+(i-1)*STEP,.1+(i-1)*STEP+DUR];
+const places=Array.from({length:N},(_,spread)=>{
+ if(spread===0)return 0;
+ const done=win(spread-1)[1],next=spread<N-1?win(spread)[0]:1;
+ return done+Math.max(0,next-done)*.55;
+});
 function nearestIndex(list,value){
  let best=0;
  for(let i=1;i<list.length;i++)if(Math.abs(list[i]-value)<Math.abs(list[best]-value))best=i;
  return best;
 }
-const places=()=>window.PORT?steps():Array.from({length:N},(_,i)=>flatAt(i));
-const preferredSide=s=>s===2||(s>=3&&s<3+PR.length&&(s-3)%2===0);
-const positionFor=(s,right=false)=>window.PORT?steps()[s?2*s-(right?0:1):0]:flatAt(s);
 let target=0,cur=0,state=-1;const sy=()=>stage.offsetHeight-frame.clientHeight;
 const D=Math.PI/180;
 function setLeaf(i,p){const [a,b]=win(i),t=i===N-1?0:cl((p-a)/(b-a)),e=ease(t),L=leaves[i],key=t.toFixed(4);if(L.key===key)return e>=.5;L.key=key;
@@ -254,10 +250,9 @@ function setLeaf(i,p){const [a,b]=win(i),t=i===N-1?0:cl((p-a)/(b-a)),e=ease(t),L
  return e>=.5}
 function draw(p){
  if(!onMagazine()||!leaves.length)return;
- const w0=win(0),o=ease(cl((p-w0[0])/(w0[1]-w0[0]))),pn=pan(p);
- const rx=layout.single?3:layout.compact?9:28-8*o;
- const tx=-pn*layout.pageWidth/2/layout.width*100;
- window.CAMT={rx,s:1,tx,ty:0,rz:0};
+ const w0=win(0),o=ease(cl((p-w0[0])/(w0[1]-w0[0])));
+ const rx=layout.compact?8:28-8*o;
+ window.CAMT={rx,s:1+(Math.max(1,layout.coverScale)-1)*(1-o),tx:0,ty:0,rz:0};
  if(!window.GLon)tilt.style.transform=`translate3d(${CAMT.tx}vw,${CAMT.ty}vh,0) rotateX(${CAMT.rx}deg) rotateZ(${CAMT.rz}deg) scale(${CAMT.s})`;
  book.style.setProperty('--o',o);window.BOOKO=o;book.style.transform=`translateX(calc(var(--pw)*${-.5*(1-o)}))`;
  if(!layout.decorations&&window.resumeRevistaDesk)window.resumeRevistaDesk();
@@ -265,13 +260,7 @@ function draw(p){
  let fl=0;leaves.forEach((_,i)=>{if(setLeaf(i,p))fl++});
  const behind=fl>0&&p<win(fl-1)[1];
  const ahead=fl<N-1&&p>win(fl)[0];
- let first=Math.max(0,fl-(behind?2:1)),last=Math.min(N-1,fl+(ahead?1:0));
- let side='spread';
- if(layout.single&&fl>0&&!behind&&!ahead){
-  if(pn<=-.99){last=first;side='left'}
-  if(pn>=.99){first=last;side='right'}
- }
- if(book.dataset.side!==side)book.dataset.side=side;
+ const first=Math.max(0,fl-(behind?2:1)),last=Math.min(N-1,fl+(ahead?1:0));
  leaves.forEach(({l},i)=>{const hidden=i<first||i>last;if(l.hidden!==hidden)l.hidden=hidden});
  book.style.setProperty('--tl',(2+fl*1.1)+'px');book.style.setProperty('--tr',(2+(N-1-fl)*1.1)+'px');
  bar.style.width=p*100+'%';if(fl!==state){state=fl;cap.textContent=CAP[fl];if(!lock)loadSpreadPhotos(fl)}}
@@ -292,26 +281,22 @@ function turnTo(p){
  scrollTo({top:p*sy(),behavior:'auto'});
  playTo(p);
 }
-const read=()=>{if(lock||!onMagazine()||!leaves.length)return;flipJob++;target=cl(scrollY/sy());if(!scrollFrame)scrollFrame=requestAnimationFrame(loop);clearTimeout(idle);idle=setTimeout(()=>{if(lock||!onMagazine())return;const pages=places();turnTo(pages[nearestIndex(pages,target)])},120)};
-function go(s,right){
+const read=()=>{if(lock||!onMagazine()||!leaves.length)return;flipJob++;target=cl(scrollY/sy());if(!scrollFrame)scrollFrame=requestAnimationFrame(loop);clearTimeout(idle);idle=setTimeout(()=>{if(lock||!onMagazine())return;turnTo(places[nearestIndex(places,target)])},120)};
+function go(s){
  if(!onMagazine())return;
  s=Math.max(0,Math.min(N-1,s));
  loadSpreadPhotos(s);
- turnTo(positionFor(s,right));
+ turnTo(places[s]);
 }
 function nav(direction){
  if(!onMagazine())return;
- const pages=places(),index=nearestIndex(pages,lock?target:cur);
- const next=Math.max(0,Math.min(pages.length-1,index+direction));
- const spread=window.PORT?Math.ceil(next/2):next;
- loadSpreadPhotos(spread);
- turnTo(pages[next]);
+ go(nearestIndex(places,lock?target:cur)+direction);
 }
 addEventListener('wheel',()=>{if(!lock)return;flipJob++;lock=0},{passive:true});
 nextButton.onclick=()=>nav(1);prevButton.onclick=()=>nav(-1);
 const accessoryShortcut=document.getElementById('mag-accessories');
-accessoryShortcut.onclick=()=>go(3+accessoryStart,preferredSide(3+accessoryStart));
-contentsShortcut.onclick=()=>go(2,true);
+accessoryShortcut.onclick=()=>go(3+accessoryStart);
+contentsShortcut.onclick=()=>go(2);
 // ---- detalle de producto
 const Z=document.getElementById('zoom'),$=id=>document.getElementById(id);let zi=0;
 function openZ(j){const p=PR[j];zi=j;$('zimg').src=shot(p);$('zimg').alt=p.cap;$('zref').textContent=tt('mag.ref',{ref:p.ref});$('zname').textContent=p.cap;$('zsub').textContent=p.sub;$('zdesc').textContent=p.d;$('zrows').innerHTML=rows(p.r);
@@ -336,11 +321,10 @@ function activateRevista(){
   accessoryShortcut.textContent=tt('cat.accesorios');
   contentsShortcut.textContent=tt('mag.contents');
   const old=layout,spread=Math.max(0,state);
-  const right=old?.single?nearestIndex(steps(),cur)%2===0:preferredSide(spread);
   measureBook();
-  if(old&&(old.width!==layout.width||old.height!==layout.height||old.single!==layout.single)){
+  if(old&&(old.width!==layout.width||old.height!==layout.height)){
     flipJob++;lock=0;clearTimeout(idle);
-    cur=target=positionFor(spread,right);
+    cur=target=places[spread];
     scrollTo(0,cur*sy());
   }
   mountBook();
@@ -386,13 +370,13 @@ book.addEventListener('scroll',event=>{
   if(peer!==pane&&peer.scrollTop!==pane.scrollTop)peer.scrollTop=pane.scrollTop;
  });
 },true);
-book.addEventListener('click',e=>{const g=(e.target.closest&&e.target.closest('[data-go]'))||goAt(e.clientX,e.clientY);if(g&&(!e.detail||(Math.abs(e.clientX-sx)<18&&Math.abs(e.clientY-sy0)<18))){e.preventDefault();e.stopPropagation();const s=+g.dataset.go;go(s,preferredSide(s));return}
+book.addEventListener('click',e=>{const g=(e.target.closest&&e.target.closest('[data-go]'))||goAt(e.clientX,e.clientY);if(g&&(!e.detail||(Math.abs(e.clientX-sx)<18&&Math.abs(e.clientY-sy0)<18))){e.preventDefault();e.stopPropagation();go(+g.dataset.go);return}
  const link=(e.target.closest&&e.target.closest('a[href]'))||linkAt(e.clientX,e.clientY);if(link&&/^https?:/i.test(link.href)){e.preventDefault();e.stopPropagation();openExternal(link.href);return}
  const mag=(e.target.closest&&e.target.closest('[data-mag]'))||magAt(e.clientX,e.clientY);if(mag){runMagazineAction(mag);return}
  if(e.target.closest('a'))return;if(state===0){nav(1);return}
  const z=e.target.closest('[data-p]');if(z&&z.matches('h2')){openZ(+z.dataset.p);return}
  const r=book.getBoundingClientRect(),x=(e.clientX-r.left)/r.width;
- if(!window.PORT){if(x>.94){nav(1);return}if(x<.06){nav(-1);return}}
+ if(x>.94){nav(1);return}if(x<.06){nav(-1);return}
  if(z)openZ(+z.dataset.p)});
 book.style.cursor='pointer';
 let sx=0,sy0=0;stage.addEventListener('pointerdown',e=>{sx=e.clientX;sy0=e.clientY});

@@ -3,7 +3,7 @@
 @font-face{font-family:Poppins;font-weight:500;src:url(assets/fonts/Poppins-Medium.ttf)}
 @font-face{font-family:Poppins;font-weight:700;src:url(assets/fonts/Poppins-Bold.ttf)}
 :root{--red:#E52C3B;--ink:#000;--teal:#00C8C2;--yellow:#FFD300;--grey:#585E65;--lime:#A4D800;
---display:'TT Travels Next',Poppins,sans-serif;--pw:min(38vw,46vh);--pwpx:480;--ph:calc(var(--pw)*1.28)}
+--display:'TT Travels Next',Poppins,sans-serif;--pw:min(38vw,46vh);--ph:calc(var(--pw)*1.28)}
 #revista *{box-sizing:border-box;margin:0}
 body.mode-home{margin:0;background:#050505}
 body.mode-home{font-family:Poppins,sans-serif;color:#fff;background:#050505;-webkit-font-smoothing:antialiased}
@@ -75,10 +75,6 @@ background-image:repeating-linear-gradient(118deg,#0000 0 2.4cqw,#00000009 2.4cq
 @media (prefers-reduced-motion:reduce){#revista .hero{transition:none}}
 #revista .prop, #revista .pen{opacity:var(--po,1)}
 #revista .bsh{position:absolute;top:0;height:100%;left:calc(50% - var(--pw)*var(--o,0));width:calc(var(--pw)*(1 + var(--o,0)));box-shadow:.6vw 1.5vw 2.4vw .2vw #000d,.1vw .25vw .5vw #000;transform:translateZ(-3px);border-radius:4px;background:#0006}
-#revista .book:is([data-side=left],[data-side=right]) .bsh{width:var(--pw);box-shadow:4px 10px 18px 2px #000a}
-#revista .book[data-side=left] .bsh{left:0}
-#revista .book[data-side=right] .bsh{left:50%}
-#revista .book[data-side=left] .edge.er,#revista .book[data-side=right] .edge.el{display:none}
 
 #revista .pg::after,#revista .pg.dark::after,#revista .pg.red::after{content:none}
 #revista .cover::before{content:'';position:absolute;inset:0;background:linear-gradient(115deg,#0000 30%,#ffffff1c 46%,#0000 60%)}
@@ -130,10 +126,8 @@ background-image:repeating-linear-gradient(118deg,#0000 0 2.4cqw,#00000009 2.4cq
 #revista .pg.cover .lg{top:9cqw;width:76cqw}
 #revista .sf, #revista .sb{right:-4px}#revista .sb{left:-4px;right:0}
 #revista .grain{opacity:.018}#revista #stage{touch-action:pan-y}
-html.port #revista .hero{top:11vh;left:6vw;right:6vw;max-width:none}html.port #revista .hero h1{font-size:clamp(26px,8.4vw,42px)}
 html.phone #revista .idx{max-height:64cqh}html.phone #revista .idx li{min-height:36px;padding:7px 2px;align-items:center}
-html.port #revista .idx{overflow-y:auto;max-height:72cqh;-webkit-overflow-scrolling:touch}
-html.port #revista .zc{grid-template-columns:1fr}html.port #revista .zi{max-height:34vh}html.port #revista .zi img{height:34vh}html.port #revista .zt{padding:18px}
+@media (max-aspect-ratio:1/1){#revista .zi img{height:min(42dvh,420px)}}
 #revista .pg.cover.brand-cover{display:flex;align-items:center;justify-content:center;padding:0;background:#101113;box-shadow:none}
 #revista .pg.cover.brand-cover::before{content:none}
 #revista .pg.cover.brand-cover::after{content:none}
@@ -202,12 +196,12 @@ body.mode-home .top-actions .locale-controls{display:inline-flex}
   }
 }
 html.phone #revista .book-light{opacity:calc(.28 - var(--o, 0) * .16)}
-html.phone #revista .pg:not(.img):not(.cover){font-size:clamp(12px,4.1cqw,16px);line-height:1.4;padding:clamp(10px,5cqw,24px)}
+html.phone #revista .pg:not(.img):not(.cover){font-size:clamp(12px,4.1cqw,16px);line-height:1.35;padding:9px 8px 8px}
 html.phone #revista .hd{font-size:10px;opacity:.9}
 html.phone #revista .hd img{height:14px}
 html.phone #revista h2{font-size:clamp(18px,8cqw,34px);line-height:1.08}
 html.phone #revista h2 em{font-size:clamp(12px,4.1cqw,16px);line-height:1.25;margin-top:5px;padding-bottom:7px}
-html.phone #revista .pg p{margin-top:9px;line-height:1.4;color:inherit}
+html.phone #revista .pg p{margin-top:6px;line-height:1.35;color:inherit}
 html.phone #revista .pg.dark p,html.phone #revista .pg.dark dt{color:#e6e6e8}
 html.phone #revista dl{padding-top:6px}
 html.phone #revista dl div{gap:6px;padding:5px 0}
@@ -229,9 +223,6 @@ html.phone #revista .big{font-size:20px}
 #revista [hidden]{display:none!important}
 body.mode-home{overflow-x:hidden}
 #revista .sticky{height:100vh;height:100dvh}
-html.port #revista .top{padding:max(12px,env(safe-area-inset-top)) 14px 8px;gap:8px}
-html.port #revista .brand{height:30px;width:auto;max-width:46vw}
-html.port #revista .btn{font-size:12px;padding:.5em .85em}
 html.phone #revista .short{display:inline}
 html.phone #revista .long{display:none}
 html.phone #revista .top{padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
@@ -249,6 +240,9 @@ html.phone #revista .desk {
 }
 #revista .leaf { pointer-events: none; }
 #revista .pg .cta { max-width:100%; text-align:center; }
+@container (max-width: 160px) {
+  html.phone #revista .pg .cta { padding:7px 5px;font-size:11px; }
+}
 @media (max-width: 980px) {
   #revista:not([hidden]) ~ .wa-fab {
     width:44px;height:44px;

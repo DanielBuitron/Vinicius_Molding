@@ -157,7 +157,7 @@ function frame(t){
  if(document.hidden||magazine.hidden||!layout)return;
  resize(layout);
  const light=!layout.decorations,decorated=!light&&prepareDecorations();
- const sec=t/1000,k=window.CAMT||{rx:54,s:.86,tx:4,ty:-3,rz:-3},PORT=!!window.PORT;
+ const sec=t/1000,k=window.CAMT||{rx:54,s:.86,tx:4,ty:-3,rz:-3};
  ptr.x+=(ptr.tx-ptr.x)*.45;ptr.y+=(ptr.ty-ptr.y)*.45;
  const rxF=k.rx+(light?0:Math.sin(sec*.35)*.1),rzF=k.rz,txF=k.tx,tyF=k.ty;
  tilt.style.transform=`translate3d(${txF}vw,${tyF}vh,0) rotateX(${rxF}deg) rotateZ(${rzF}deg) scale(${k.s})`;
@@ -178,8 +178,7 @@ function frame(t){
  dr('quad',{p:[0,0,-8],s:[3200,3200,1],mode:0,tex:T.wood,rep:[7,7]});
  const shd=(x,y,r,h,a)=>{const dx=x-LP[0],dy=y-LP[1],l=Math.hypot(dx,dy),ux=dx/l,uy=dy/l,L=h*.9;[[0,1.08,.9],[.5,1.2,.5*a],[1,1.4,.28*a]].forEach(([f,s,al])=>dr('quad',{p:[x+ux*L*f,y+uy*L*f,-7],s:[r*s,r*s,1],mode:4,col:[al,0,0]}))};
  // disposición: nada invade el espacio de la revista (cerrada o abierta)
- const side=1.62;
- const L=!decorated?{open:[],lid:[],closed:[]}:PORT?{open:[{x:-side,y:.02,c:'cr1',s:'cera',g:.5,a:.5}],lid:[],closed:[{x:side,y:.06,k:'pomada',sp:.28,ph:4}]}
+ const L=!decorated?{open:[],lid:[],closed:[]}
   :{open:[{x:-1.32,y:.44,c:'cr1',s:'cera',g:.5,a:.5},{x:1.3,y:.74,c:'cr2',s:'fibra',g:.55,a:2.1}],lid:[{x:-1.74,y:.54,a:.6,t:0,k:'cera'},{x:1.3+.33,y:.74,a:Math.PI/2,t:.47,k:'fibra'}],closed:[{x:1.3,y:-.52,k:'pasta',sp:-.3,ph:2},{x:1.46,y:.1,k:'pomada',sp:.28,ph:4}]};
  L.closed.forEach(d=>shd(d.x*P,d.y*P,R,Ho,1));L.open.forEach(d=>shd(d.x*P,d.y*P,Ro,Hh,1));L.lid.forEach(d=>shd(d.x*P,d.y*P,R,d.t?Hl*3:Hl,1));
  L.closed.forEach(d=>{const a=sec*d.sp+d.ph,x=d.x*P,y=d.y*P;
@@ -192,7 +191,7 @@ function frame(t){
   dr('dl',{p:[x+Math.sin(d.a)*Math.sin(tl)*zl,y-Math.cos(d.a)*Math.sin(tl)*zl,z0+Math.cos(tl)*zl],a:d.a,t:tl,mode:2,tex:T['l_'+d.k]})});
  gl.bindFramebuffer(gl.READ_FRAMEBUFFER,fbM);gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER,fbR);gl.blitFramebuffer(0,0,fw,fh,0,0,fw,fh,gl.COLOR_BUFFER_BIT,gl.NEAREST);
  gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,fw,fh);gl.disable(gl.DEPTH_TEST);gl.disable(gl.BLEND);gl.useProgram(pp);
- gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tR);gl.uniform1i(pp.u('uScn'),0);gl.uniform2f(pp.u('uRes'),fw,fh);gl.uniform1f(pp.u('uFy'),1-(center/H+tyF/100));gl.uniform1f(pp.u('uAmt'),(PORT?1.1:1.6)*fw/W);gl.uniform1f(pp.u('uT'),sec%10);
+ gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tR);gl.uniform1i(pp.u('uScn'),0);gl.uniform2f(pp.u('uRes'),fw,fh);gl.uniform1f(pp.u('uFy'),1-(center/H+tyF/100));gl.uniform1f(pp.u('uAmt'),1.6*fw/W);gl.uniform1f(pp.u('uT'),sec%10);
  gl.bindVertexArray(emptyVao);gl.drawArrays(gl.TRIANGLES,0,3);
  if(!light)frameRequest=requestAnimationFrame(frame)}
 function resume(){
