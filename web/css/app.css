@@ -1005,6 +1005,22 @@ body.home .brand img { height: 36px; }
   overflow: hidden;
 }
 .catalog-photo.cutout { --catalog-photo-scale: 1.25; }
+.photo-gallery { width: min(680px, 100%); margin-inline: auto; }
+.photo-gallery .catalog-photo { border: 0; padding: 0; cursor: zoom-in; }
+.photo-gallery-controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px; }
+.photo-gallery-controls button,
+.photo-gallery-dialog button {
+  border: 1px solid #ffffff35; border-radius: 999px; padding: 8px 14px;
+  background: #151518; color: #fff; font: inherit; font-size: 13px; cursor: pointer;
+}
+.photo-gallery-controls button[aria-pressed="true"] { border-color: #e52c3b; background: #8c1c28; }
+.photo-gallery-dialog {
+  max-width: min(92vw, 1040px); max-height: 92dvh; overflow: auto; padding: 12px;
+  color: #181719; background: #ebe6dc; border: 0; border-radius: 14px;
+}
+.photo-gallery-dialog::backdrop { background: #050507d9; }
+.photo-gallery-dialog form { display: flex; justify-content: end; }
+.photo-gallery-dialog img { display: block; max-width: 100%; max-height: calc(84dvh - 42px); object-fit: contain; margin-inline: auto; }
 .folio-sku .catalog-photo { background: none; }
 .product-shot-lg .catalog-photo,
 .pick .catalog-photo {

@@ -38,24 +38,24 @@ const LID_ART = {
 };
 
 const MOLDING_STAGE_ART = {
-  "cera-brillo": { box: "frente.jpg", edge: "canto-cera.jpg", ingredients: "canto-ingredientes.jpg", cream: "crema-foto.jpg", tone: "#dfd5af" },
-  "cera-fibra": { box: "frente.jpg", edge: "canto-nombre.jpg", ingredients: "canto-ingredientes.jpg", tone: "#d1cbb4" },
-  pasta: { box: "frente.jpg", tone: "#5c9da9" },
-  pomada: { box: "frente.jpg", tone: "#b6a23d" },
+  "cera-brillo": { box: "frente.jpg", boxBack: true, edge: "canto-cera.jpg", ingredients: "canto-ingredientes.jpg", cream: "crema-foto.jpg", tone: "#dfd5af" },
+  "cera-fibra": { box: "frente.jpg", boxBack: true, edge: "canto-nombre.jpg", ingredients: "canto-ingredientes.jpg", tone: "#d1cbb4" },
+  pasta: { box: "frente.jpg", boxBack: true, edge: "canto-3d.webp", ingredients: "canto-ingredientes-3d.webp", tone: "#5c9da9" },
+  pomada: { box: "frente.jpg", boxBack: true, edge: "canto-3d.webp", ingredients: "canto-ingredientes-3d.webp", tone: "#b6a23d" },
   "gel-cubre-canas": { edge: "canto-3d.webp", tone: "#131314", creamTint: "#303030", creamRoughness: 0.68, creamRelief: 0.003 },
   "cera-kids": { edge: "banda-3d.webp", band: "banda-3d.webp", tone: "#85628f", boxColor: "#be1b29", flipTopV: true },
 };
 
 const FORM = {
-  "shampoo-proteccion": { top: "pump", body: "#f7f5f2", face: "white", box: "#f3f0ea", boxBack: true, wrapFront: 0.5, labelRange: [0.1, 0.75] },
-  "shampoo-carbon": { top: "pump", body: "#121214", face: "carbon", box: "#222120", boxBack: true, wrapFront: 0.5, labelRange: [0.09, 0.76] },
+  "shampoo-proteccion": { top: "pump", body: "#f7f5f2", face: "white", box: "#f3f0ea", boxDepth: 1, boxBack: true, boxSide: true, boxLeft: true, boxWindow: "corner", emboss: true, wrapFront: 0.5, labelRange: [0.045, 0.65] },
+  "shampoo-carbon": { top: "pump", body: "#121214", face: "carbon", box: "#222120", boxDepth: 1, boxBack: true, boxSide: true, boxLeft: true, boxWindow: "corner", emboss: true, wrapFront: 0.5, labelRange: [0.05, 0.69] },
   "ducha-intima": { top: "tube", body: "#221f1f", face: "tube", labelBack: true, labelRange: [0.1, 0.91] },
-  tonico: { top: "spray", body: "#151619", face: "tonico", box: "#094b53", boxBack: true, wrapFront: 0.25, labelRange: [0.075, 0.79] },
-  "tonico-minoxidil": { top: "spray", body: "#160d0e", face: "minox", box: "#a52224", boxDepth: 0.53, boxSide: "left", boxBack: true, labelBase: "#a52224", labelBack: true, labelRange: [0.075, 0.79] },
-  "tonico-23": { top: "spray", box: "#1b1b1c", boxDepth: 0.55, boxSide: true, boxBack: true, labelRange: [0.075, 0.8] },
-  "serum-barba": { top: "dropper", body: "#121214", face: "serum", box: "#222220", boxSide: true, wrapFront: 0.25, labelRange: [0.09, 0.77] },
-  splash: { top: "spray", body: "#174e69", face: "splash", wrapFront: 0.25, labelRange: [0.10, 0.83] },
-  "shaving-gel": { top: "pump", body: "#d78124", face: "shave", wrapFront: 0.25, labelRange: [0.09, 0.82] },
+  tonico: { top: "spray", body: "#151619", face: "tonico", box: "#094b53", boxDepth: 0.53, boxBack: true, boxSide: true, boxLeft: true, boxTop: true, boxWindow: "front", boxLining: "#123d43", wrapFront: 0.25, labelRange: [0.045, 0.79] },
+  "tonico-minoxidil": { top: "spray", body: "#160d0e", face: "minox", box: "#a52224", boxDepth: 0.53, boxSide: "left", boxBack: true, boxRight: true, boxWindow: "right", wrapFront: 0.25, wrapFile: "envoltura-3d.webp", labelRange: [0.035, 0.79] },
+  "tonico-23": { top: "spray", box: "#1b1b1c", boxDepth: 0.55, boxSide: "left", boxBack: true, boxRight: true, boxWindow: "right", boxLining: "#251a1b", wrapFront: 0.25, wrapFile: "envoltura-3d.webp", labelRange: [0.045, 0.8] },
+  "serum-barba": { top: "dropper", body: "#121214", face: "serum", box: "#222220", boxSide: true, boxBack: true, wrapFront: 0.25, labelRange: [0.09, 0.77] },
+  splash: { top: "spray", body: "#79762d", face: "splash", wrapFront: 0.25, labelRange: [0.03, 0.91] },
+  "shaving-gel": { top: "pump", body: "#da9124", face: "shave", wrapFront: 0.25, labelRange: [0.045, 0.89] },
 };
 
 const SHELF = {
@@ -269,15 +269,12 @@ async function renderPackStill(src) {
   if (pack.kind === "tin") {
     root.rotation.x = 0.48;
     root.rotation.y = 0.28;
-    root.rotation.z = 0.04;
   } else if (pack.kind === "tube") {
     root.rotation.x = 0.06;
     root.rotation.y = 0.38;
-    root.rotation.z = 0.08;
   } else {
     root.rotation.x = 0.05;
     root.rotation.y = -0.38;
-    root.rotation.z = 0;
   }
   scene.add(root);
   const sphere = new THREE.Box3().setFromObject(root).getBoundingSphere(new THREE.Sphere());
@@ -310,8 +307,8 @@ function loadLocalVolumeTextures() {
     localVolumeTextures = new Promise((resolve, reject) => {
       const script = document.createElement("script");
       script.src = volumeScriptUrl
-        ? new URL("volume-textures.local.js?v=4", volumeScriptUrl).href
-        : "js/volume-textures.local.js?v=4";
+        ? new URL("volume-textures.local.js?v=5", volumeScriptUrl).href
+        : "js/volume-textures.local.js?v=5";
       script.onload = () => {
         script.remove();
         if (window.VOLUME_LOCAL_TEXTURES) resolve(window.VOLUME_LOCAL_TEXTURES);
@@ -1715,8 +1712,25 @@ function makePackBox(pack, art) {
   const board = new THREE.MeshStandardMaterial({ color: pack.box || pack.body || "#f4f1ea", roughness: 0.74, metalness: 0.03 });
   const side = art.boxSide ? photoMat(art.boxSide, 0.66, 0.02) : board;
   const back = art.boxBack ? photoMat(art.boxBack, 0.62, 0.02) : board;
-  const sides = pack.boxSide === "left" ? [board, side] : [side, board];
-  return new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), [...sides, board, board, print, back]);
+  const left = art.boxLeft ? photoMat(art.boxLeft, 0.66, 0.02) : pack.boxSide === "left" ? side : board;
+  const right = art.boxRight ? photoMat(art.boxRight, 0.66, 0.02) : pack.boxSide === "left" ? board : side;
+  const top = art.boxTop ? photoMat(art.boxTop, 0.66, 0.02) : board;
+  if (pack.boxWindow) {
+    print.alphaTest = 0.7;
+    if (pack.boxWindow === "corner") left.alphaTest = 0.7;
+    if (pack.boxWindow === "right") right.alphaTest = 0.7;
+  }
+  const carton = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), [right, left, top, board, print, back]);
+  carton.name = "PackagingBox";
+  if (pack.boxWindow) {
+    const lining = new THREE.Mesh(
+      new THREE.PlaneGeometry(width - 0.009, height - 0.009),
+      new THREE.MeshStandardMaterial({ color: pack.boxLining || (pack.boxWindow === "corner" ? "#b0a79b" : "#631c1d"), roughness: 0.94 })
+    );
+    lining.position.z = -depth / 2 + 0.007;
+    carton.add(lining);
+  }
+  return carton;
 }
 
 async function makeForm(id) {
@@ -1724,11 +1738,14 @@ async function makeForm(id) {
   const pack = { id, ...PACKS[id], ...spec };
   const art = { logo: volumeLogo, word: volumeWord };
   if (spec.labelRange) {
-    const files = [[spec.wrapFront == null ? "photo" : "wrap", "etiqueta-3d.webp"]];
+    const files = [[spec.wrapFront == null ? "photo" : "wrap", spec.wrapFile || "etiqueta-3d.webp"]];
     if (spec.labelBack) files.push(["back", "reverso-3d.webp"]);
-    if (spec.box) files.push(["box", "caja-3d.webp?v=2"]);
+    if (spec.box) files.push(["box", "caja-3d.webp?v=3"]);
     if (spec.boxSide) files.push(["boxSide", "caja-lateral-3d.webp"]);
     if (spec.boxBack) files.push(["boxBack", "caja-reverso-3d.webp"]);
+    if (spec.boxLeft) files.push(["boxLeft", "caja-izquierda-3d.webp"]);
+    if (spec.boxRight) files.push(["boxRight", "caja-derecha-3d.webp"]);
+    if (spec.boxTop) files.push(["boxTop", "caja-superior-3d.webp"]);
     const base = "productos_3d/" + id + "/texturas/";
     await Promise.all(files.map(async ([name, file]) => {
       try { art[name] = await loadBitmap(base + file); } catch (error) { /* El visor puede dibujar la etiqueta de respaldo. */ }
@@ -1773,7 +1790,7 @@ async function makeShelf(id) {
   return group;
 }
 
-function photographicMoldBox(front, canto, ingredients, { color = "#141418", flipTopV = false } = {}) {
+function photographicMoldBox(front, canto, ingredients, { color = "#141418", flipTopV = false, rear } = {}) {
   const board = new THREE.MeshStandardMaterial({ color, roughness: 0.8, metalness: 0.02, side: THREE.DoubleSide });
   const face = (img) => (img ? photoMat(img, 0.5, 0.04) : board);
   const width = 2.35;
@@ -1798,8 +1815,9 @@ function photographicMoldBox(front, canto, ingredients, { color = "#141418", fli
   backGeo.setAttribute("position", new THREE.Float32BufferAttribute([
     left, top, backZ, right, top, backZ, 0, bottom, backZ,
   ], 3));
+  backGeo.setAttribute("uv", new THREE.Float32BufferAttribute([1, 1, 0, 1, 0.5, 0], 2));
   backGeo.computeVertexNormals();
-  box.add(new THREE.Mesh(backGeo, board));
+  box.add(new THREE.Mesh(backGeo, face(rear)));
   box.add(faceQuad([
     new THREE.Vector3(left, top, frontZ),
     new THREE.Vector3(right, top, frontZ),
@@ -1824,15 +1842,16 @@ function photographicMoldBox(front, canto, ingredients, { color = "#141418", fli
 
 async function makeMoldingStage(pack, spec) {
   const base = "productos_3d/" + pack.id + "/texturas/";
-  const [front, lid, cream, edge, ingredients, band] = await Promise.all([
+  const [front, lid, cream, edge, ingredients, band, rear] = await Promise.all([
     loadBitmap(base + (spec.box || "caja-3d.webp")),
     loadBitmap(base + "tapa-3d.webp"),
     loadBitmap(base + (spec.cream || "crema-3d.webp")),
     spec.edge && loadBitmap(base + spec.edge),
     spec.ingredients && loadBitmap(base + spec.ingredients),
     loadBitmap(spec.band ? base + spec.band : LID_ART[pack.id][1]),
+    spec.boxBack && loadBitmap(base + "caja-reverso-3d.webp"),
   ]);
-  const box = photographicMoldBox(front, edge, ingredients, { color: spec.boxColor, flipTopV: spec.flipTopV });
+  const box = photographicMoldBox(front, edge, ingredients, { color: spec.boxColor, flipTopV: spec.flipTopV, rear });
   box.position.set(0.02, box.position.y, -0.49);
   box.rotation.y = -0.08;
   const jar = makeOpenableJar(lid, null, cream, {
@@ -2442,11 +2461,11 @@ function addSpray(group, mat, pack) {
   nozzle.position.set(0.07, y0 + 0.52, 0);
   group.add(neck, seat, collar, actuator, stem, nozzle);
   const glass = new THREE.MeshPhysicalMaterial({
-    color: "#c7bcb1",
+    color: "#6e604d",
     roughness: 0.02,
     metalness: 0,
     transparent: true,
-    opacity: 0.26,
+    opacity: 0.38,
     clearcoat: 1,
     clearcoatRoughness: 0.02,
     side: THREE.DoubleSide,
@@ -2558,13 +2577,12 @@ function assignWrapUV(geometry) {
   uv.needsUpdate = true;
 }
 
-function bodyPrint(pack, art, vBottom, vTop, span) {
+function bodyPrint(pack, art, vBottom, vTop, span, labelOnly = false) {
   const canvas = document.createElement("canvas");
   canvas.width = 2048;
   canvas.height = 1536;
   const ctx = canvas.getContext("2d");
-  const glass = pack.face === "serum";
-  if (!glass) {
+  if (!labelOnly) {
     ctx.fillStyle = pack.body;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
@@ -2597,6 +2615,20 @@ function bodyPrint(pack, art, vBottom, vTop, span) {
   return canvasTexture(canvas, 0.5);
 }
 
+function bottleEmboss(art) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1024;
+  canvas.height = 1024;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  for (const [mark, width, y] of [[art.logo, 62, 124], [art.word, 210, 187]]) {
+    if (!mark) continue;
+    ctx.drawImage(mark, (canvas.width - width) / 2, y, width, width * mark.height / mark.width);
+  }
+  return canvasTexture(canvas, 0.5);
+}
+
 function makeBottle(pack, art, top) {
   const group = new THREE.Group();
   const pump = top === "pump";
@@ -2620,27 +2652,29 @@ function makeBottle(pack, art, top) {
       clearcoatRoughness: top === "spray" ? 0.1 : 0.22,
     }));
   group.add(body);
-  if (dropper) {
-    const skinGeo = body.geometry.clone();
-    assignWrapUV(skinGeo);
-    const skin = new THREE.Mesh(skinGeo, new THREE.MeshStandardMaterial({
-      map: bodyPrint(pack, art, labelBottom, labelTop),
-      transparent: true,
-      alphaTest: 0.4,
-      roughness: 0.46,
-      metalness: 0,
-    }));
-    skin.scale.setScalar(1.012);
-    group.add(skin);
-  } else {
+  if (pack.emboss) {
     assignWrapUV(body.geometry);
-    body.material.color.set("#ffffff");
-    body.material.map = bodyPrint(pack, art, labelBottom, labelTop);
+    body.material.bumpMap = bottleEmboss(art);
+    body.material.bumpScale = 0.022;
   }
+  const skinGeometry = body.geometry.clone();
+  assignWrapUV(skinGeometry);
+  const skin = new THREE.Mesh(skinGeometry, new THREE.MeshStandardMaterial({
+    map: bodyPrint(pack, art, labelBottom, labelTop, undefined, true),
+    alphaTest: 0.5,
+    roughness: 0.59,
+    metalness: 0,
+  }));
+  skin.name = "PrintedLabel";
+  skin.scale.set(1.008, 1, 1.008);
+  group.add(skin);
+  const clearPump = pump && pack.face === "white";
   const capMat = new THREE.MeshPhysicalMaterial({
     color: pump && (pack.face === "white" || shave) ? "#eeebe5" : "#161618",
     roughness: pump && (pack.face === "white" || shave) ? 0.18 : 0.3,
     metalness: pump && (pack.face === "white" || shave) ? 0 : 0.2,
+    transparent: clearPump,
+    opacity: clearPump ? 0.65 : 1,
     clearcoat: 0.3,
     clearcoatRoughness: 0.25,
   });

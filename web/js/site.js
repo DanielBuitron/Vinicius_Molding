@@ -140,8 +140,6 @@ const CATALOG_PHOTO_ALIGNMENT = {
   "kit-crecimiento-23": "skewX(-2.25deg)",
   "kit-restaurador": "skewX(-2.7deg)",
   "lapiz-para-barba": "rotate(2.5deg) skewX(5.9deg)",
-  "patillera-amarilla": "rotate(1deg)",
-  "patillera-azul": "rotate(0.85deg)",
   "shampoo-y-minoxidil-12-5": "skewX(-0.7deg)",
   "soplador-200w": "skewX(1.5deg)",
 };
@@ -173,21 +171,35 @@ function catalogProductById(id) {
   return product ? catalogEntry(product) : CATALOG_ADDITIONS_BY_ID.get(canonicalId);
 }
 
-function catalogPhoto(product, alt, linked) {
+function catalogPhotoSource(product) {
   const original = String(product.image || "").split("?")[0].replace(/^\//, "");
   const defaultPath = "assets/products/" + product.id + ".";
   const useKitPhoto = !original || ["jpg", "jpeg", "png"].some((ext) => original === defaultPath + ext);
-  const src = (useKitPhoto && CATALOG_KIT_PHOTOS[product.id]) || product.image || "";
+  const kit = useKitPhoto && CATALOG_KIT_PHOTOS[product.id];
+  return kit ? kit + "?v=4" : product.image || "";
+}
+
+function catalogPhoto(product, alt, linked) {
+  const src = catalogPhotoSource(product);
   const cutout = src.startsWith("assets/revista-productos/") ||
-    src.startsWith("assets/catalogo-combos/") || src === CATALOG_KIT_PHOTOS[product.id];
+    src.startsWith("assets/catalogo-combos/") || src.split("?")[0] === CATALOG_KIT_PHOTOS[product.id];
   const style = cutout ? "catalog-photo cutout" : "catalog-photo";
   const file = src.split("/").pop().split(/[.?]/, 1)[0];
   const alignment = cutout && CATALOG_PHOTO_ALIGNMENT[file];
   const inlineStyle = alignment ? ` style="--catalog-photo-alignment: ${alignment}"` : "";
   const image = `<img src="${esc(src)}" alt="${esc(alt)}" loading="lazy" decoding="async" draggable="false">`;
-  return linked
-    ? `<a class="${style}" href="#/producto/${esc(product.id)}"${inlineStyle}>${image}</a>`
-    : `<div class="${style}"${inlineStyle}>${image}</div>`;
+  if (linked) return `<a class="${style}" href="#/producto/${esc(product.id)}"${inlineStyle}>${image}</a>`;
+  const choices = studioPhotoChoices(product.id, src);
+  return `<div class="photo-gallery">
+    <button type="button" class="${style}" data-act="photo-zoom" aria-label="${esc(t("gallery.zoom"))}"${inlineStyle}>${image}</button>
+    <div class="photo-gallery-controls">${choices.map(([url, label], index) =>
+      `<button type="button" data-act="photo-angle" data-src="${esc(url)}" aria-pressed="${index === 0}">${esc(label)}</button>`
+    ).join("")}<button type="button" data-act="photo-zoom">${esc(t("gallery.zoom"))}</button></div>
+    <dialog class="photo-gallery-dialog" aria-label="${esc(alt)}">
+      <form method="dialog"><button type="submit">${esc(t("mag.close"))}</button></form>
+      <img alt="${esc(alt)}">
+    </dialog>
+  </div>`;
 }
 
 function catalogMedia(product, alt, linked) {
@@ -196,9 +208,28 @@ function catalogMedia(product, alt, linked) {
     : catalogPhoto(product, alt, linked);
 }
 
+const CATALOG_VOLUME_PREVIEWS = {
+  "cera-brillo": "cera",
+  "cera-fibra": "cera-fibra",
+  pasta: "pasta",
+  pomada: "pomada",
+  "gel-cubre-canas": "cubre-canas",
+  "pasta-minoxidil": "pasta-minoxidil",
+  "cera-kids": "kids",
+  "shampoo-proteccion": "anticaida",
+  "shampoo-carbon": "carbon",
+  "ducha-intima": "ducha",
+  "serum-barba": "serum",
+  tonico: "tonico",
+  "tonico-minoxidil": "tonico-minoxidil",
+  "tonico-23": "tonico-23",
+  splash: "splash",
+  "shaving-gel": "shaving",
+};
+
 function catalogOrbit(src, alt, id) {
-  const previews = { "cera-kids": "assets/revista-productos/kids.webp?v=2", "tonico-23": "assets/revista-productos/tonico-23.webp" };
-  const preview = previews[id] || cutoutSrc(src);
+  const studio = CATALOG_VOLUME_PREVIEWS[id];
+  const preview = studio ? `assets/revista-productos/${studio}.webp?v=4` : cutoutSrc(src);
   const img = `<img src="${esc(preview)}" alt="${esc(alt)}" loading="lazy" decoding="async" draggable="false">`;
   const parts = Object.hasOwn(MOLDING_STAGE_ART, id) ? `
       <button type="button" data-orbit-act="cerrado">Cerrado</button>

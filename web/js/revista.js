@@ -16,11 +16,15 @@ const PR=[
 {id:'serum',n:'Serum',sub:'Barba · bigote',cap:'Serum Barba · Bigote',c:'#A4D800',tx:'#0c1204',v:'color',studio:1,img:'assets/revista-productos/serum.webp',d:'Cuidado diario para barba y bigote, con aceites naturales.',r:[['Contenido','65 ml · 2.3 fl oz'],['Contiene','Argán · Jojoba · Aloe vera'],['Uso','Externo']]},
 {id:'tonico',n:'Tónico',sub:'Orgánico · cuero cabelludo',cap:'Tónico Orgánico',c:'#FFD300',tx:'#14110a',v:'color',d:'Tónico de extractos para el cuero cabelludo. 19 activos.',r:[['Contenido','65 ml'],['Uso','Cuero cabelludo'],['Contiene','Romero · Biotina · Aloe vera']],studio:1,img:'assets/revista-productos/tonico.webp'},
 {id:'cubre-canas',n:'Gel',sub:'Cubre canas',cap:'Gel Cubre Canas',c:'#E52C3B',v:'dark',d:'Cubre las canas con un acabado húmedo brillante.',r:[['Contenido','150 g'],['Acabado','Húmedo brillante'],['Contiene',TIN]],studio:1,img:'assets/revista-productos/cubre-canas.webp'},
+{id:'pasta-minoxidil',n:'Pasta',sub:'Minoxidil',cap:'Pasta Minoxidil',c:'#00C8C2',v:'dark',d:'Pasta moldeadora con minoxidil.',r:[['Contenido','150 g']],studio:1,img:'assets/revista-productos/pasta-minoxidil.webp',
+ copy:{en:{n:'Styling paste',sub:'Minoxidil',cap:'Minoxidil Styling Paste',d:'Styling paste with minoxidil.',r:[['Size','150 g']]},zh:{n:'造型发泥',sub:'米诺地尔',cap:'米诺地尔造型发泥',d:'含米诺地尔的造型发泥。',r:[['规格','150 g']]}}},
 {id:'tonico-minoxidil',n:'Tónico',sub:'Minoxidil 12.5%',cap:'Tónico Minoxidil 12.5%',c:'#00C8C2',v:'dark',d:'Nutre, fortalece y estimula el crecimiento en cabello, barba y cejas.',r:[['Contenido','65 ml'],['Uso','Cabello · barba · cejas'],['Contiene','Minoxidil 12.5%']],studio:1,img:'assets/revista-productos/tonico-minoxidil.webp'},
 {id:'tonico-23',n:'Tónico',sub:'Minoxidil 23%',cap:'Tónico Minoxidil 23%',c:'#E52C3B',v:'dark',d:'Tónico capilar en presentación de 65 ml.',r:[['Contenido','65 ml'],['Contiene','Minoxidil 23%']],studio:1,img:'assets/revista-productos/tonico-23.webp'},
 {id:'kit-capilar',n:'Kit Capilar',sub:'Anticaída',cap:'Kit Capilar',c:'#E52C3B',v:'paper',d:'Fortalece el cabello y ayuda a reducir la caída con una rutina completa.',r:[['Tipo','Combo'],['Uso','Rutina diaria'],['Incluye','Shampoo · Tónico']],studio:1,img:'assets/revista-productos/kit-capilar.webp'},
 {id:'kit-capilar-completo',n:'Kit Completo',sub:'Con dermaroller',cap:'Kit Capilar Completo',c:'#FFD300',tx:'#14110a',v:'color',d:'Rutina completa con dermaroller de microagujas.',r:[['Tipo','Combo'],['Incluye','Rutina · Dermaroller'],['Enfoque','Crecimiento']],studio:1,img:'assets/revista-productos/kit-capilar-completo.webp'},
 {id:'kit-capilar-avanzado',n:'Kit Avanzado',sub:'Cabello · barba · cejas',cap:'Kit Capilar Avanzado',c:'#00C8C2',v:'dark',d:'Kit avanzado para cabello, barba y cejas con dermaroller.',r:[['Tipo','Combo'],['Incluye','Tónico · Dermaroller'],['Enfoque','Avanzado']],studio:1,img:'assets/revista-productos/kit-capilar-avanzado.webp'},
+{id:'kit-capilar-avanzado-plus',n:'Kit Avanzado Plus',sub:'Cabello · barba · cejas',cap:'Kit Capilar Avanzado Plus',c:'#6D4AFF',v:'paper',d:'Kit capilar para cabello, barba y cejas.',r:[],studio:1,img:'assets/products/kit-capilar-avanzado-plus.webp?v=4',
+ copy:{en:{n:'Advanced Plus Kit',sub:'Hair · beard · brows',cap:'Advanced Plus Hair Kit',d:'Hair, beard and brow care kit.',r:[]},zh:{n:'进阶护理套装 Plus',sub:'头发 · 胡须 · 眉毛',cap:'进阶护理套装 Plus',d:'用于头发、胡须和眉毛的护理套装。',r:[]}}},
 {id:'kit-12-5',n:'Kit 12.5%',sub:'Tónico + rodillo',cap:'Kit Capilar 12.5%',c:'#A4D800',v:'paper',d:'Tónico 12.5% + rodillo para cabello, barba y cejas.',r:[['Tipo','Combo'],['Incluye','Tónico 12.5% · Rodillo'],['Enfoque','Crecimiento']],studio:1,img:'assets/revista-productos/kit-12-5.webp'},
 {id:'kit-organico',n:'Kit Orgánico',sub:'Con dermaroller',cap:'Kit Orgánico',c:'#00C8C2',tx:'#06100f',v:'color',d:'Cabello, barba y cejas con dermaroller de microagujas.',r:[['Tipo','Combo'],['Incluye','Tónico orgánico · Dermaroller'],['Enfoque','Orgánico']],studio:1,img:'assets/revista-productos/kit-organico.webp'},
 {id:'kit-organico-avanzado',n:'Kit Orgánico Avanzado',sub:'Con rodillo',cap:'Kit Orgánico Avanzado',c:'#FFD300',v:'dark',d:'Tratamiento de crecimiento para cabello, barba y cejas + rodillo.',r:[['Tipo','Combo'],['Incluye','Tónico · Rodillo'],['Enfoque','Avanzado']],studio:1,img:'assets/revista-productos/kit-organico-avanzado.webp'},
@@ -38,6 +42,13 @@ for(const item of CATALOG_ACCESSORIES){
   const fill=item.magazineFill;
   PR.push({...copy.es,id:item.id,copy,c:fill||item.accent,v:fill?'color':'dark',tx:'#101014',
     accessory:true,studio:1,img:item.image});
+}
+for(const item of CATALOG_COMBOS){
+  const copy=Object.fromEntries(['es','en','zh'].map(lang=>{
+    const text=lang==='es'?item:item[lang];
+    return [lang,{n:text.name,sub:'',cap:text.name,d:text.description||'',r:[]}];
+  }));
+  PR.push({...copy.es,id:item.id,copy,c:item.accent,v:'dark',studio:1,img:item.image});
 }
 const TIN_ZH='角蛋白 · 迷迭香 · 芦荟',EXT_ZH='迷迭香 · 角蛋白 · 洋葱 · 芦荟 · 胡萝卜 · 透明质酸';
 const PR_EN={
@@ -92,7 +103,7 @@ shaving:{n:'剃须啫喱',sub:'男士 · 芦荟',cap:'男士剃须啫喱',d:'男
 splash:{n:'身体喷雾',sub:'男士专用',cap:'男士身体喷雾',d:'身体喷雾。桉树与薄荷醇。按需喷涂。',r:[['规格','250 ml'],['成分','桉树 · 薄荷醇'],['用法','身体']]},
 ducha:{n:'私密洗护',sub:'男士专用',cap:'男士私密洗护',d:'男士卫生护理。无香精、无色素、无对羟基苯甲酸酯。',r:[['规格','180 g'],['配方','无香精无防腐剂'],['用法','外用']]}
 };
-const PES={cera:36000,pasta:36000,pomada:36000,'cera-fibra':36000,kids:36000,anticaida:49000,carbon:49000,serum:30000,tonico:67000,'pasta-minoxidil':36000,'cubre-canas':36000,'tonico-minoxidil':47000,'kit-capilar':156000,'kit-capilar-completo':101000,'kit-capilar-avanzado':189000,'kit-12-5':67000,'kit-organico':119000,'kit-organico-avanzado':189000,'kit-restaurador':205000,'kit-crecimiento-23':205000,shaving:29000,splash:29000,ducha:29000};
+const PES={cera:36000,pasta:36000,pomada:36000,'cera-fibra':36000,kids:36000,anticaida:49000,carbon:49000,serum:30000,tonico:67000,'pasta-minoxidil':36000,'cubre-canas':36000,'tonico-minoxidil':47000,'kit-capilar':156000,'kit-capilar-completo':101000,'kit-capilar-avanzado':189000,'kit-capilar-avanzado-plus':119000,'kit-12-5':67000,'kit-organico':119000,'kit-organico-avanzado':189000,'kit-restaurador':205000,'kit-crecimiento-23':205000,shaving:29000,splash:29000,ducha:29000};
 const cop=n=>typeof money==='function'?money(n):('$'+Number(n).toLocaleString('es-CO'));
 const LINK={cera:'cera-brillo',pasta:'pasta',pomada:'pomada','cera-fibra':'cera-fibra',kids:'cera-kids',anticaida:'shampoo-proteccion',carbon:'shampoo-carbon',serum:'serum-barba',tonico:'tonico','pasta-minoxidil':'pasta-minoxidil','cubre-canas':'gel-cubre-canas','tonico-minoxidil':'tonico-minoxidil','kit-capilar':'kit-capilar','kit-capilar-completo':'kit-capilar-completo','kit-capilar-avanzado':'kit-capilar-avanzado','kit-12-5':'kit-12-5','kit-organico':'kit-organico','kit-organico-avanzado':'kit-organico-avanzado','kit-restaurador':'kit-restaurador','kit-crecimiento-23':'kit-crecimiento-23',shaving:'shaving-gel',splash:'splash',ducha:'ducha-intima'};
 PR.forEach((p,j)=>{p.ref=String(j+1).padStart(2,'0');if(!p.accessory)p.price=PES[p.id]||0;p._es={n:p.n,sub:p.sub,cap:p.cap,d:p.d,r:p.r.map(row=>row.slice())}});
@@ -139,7 +150,7 @@ function localizePR(){
 }
 const hd=n=>`<div class="hd"><img src="assets/isotipo-rojo.png" alt=""><span>${n}</span></div>`;
 const rows=r=>r.map(x=>`<div><dt>${x[0]}</dt><dd>${x[1]}</dd></div>`).join('');
-const shot=p=>p.img||A('p-'+p.id+'.jpg');
+const shot=p=>p.img?.startsWith('assets/revista-productos/')?p.img.split('?')[0]+'?v=4':p.img||A('p-'+p.id+'.jpg');
 const askHref=p=>WA+'?text='+encodeURIComponent(tt('mag.waAsk',{name:p.cap,ref:p.ref}));
 const magQty={};
 const imgP=j=>{const p=PR[j],studio=p.studio?' studio':'',price=priceOnRequest(p)?'':`<b class="px">${cop(p.price)}</b>`;
@@ -324,7 +335,13 @@ contentsShortcut.onclick=()=>go(2);
 // ---- detalle de producto
 const Z=document.getElementById('zoom'),$=id=>document.getElementById(id);let zi=0;
 function openZ(j){const p=PR[j];zi=j;$('zimg').src=shot(p);$('zimg').alt=p.cap;$('zref').textContent=tt('mag.ref',{ref:p.ref});$('zname').textContent=p.cap;$('zsub').textContent=p.sub;$('zdesc').textContent=p.d;$('zrows').innerHTML=rows(p.r);
- $('zrows').hidden=!p.r.length;$('zwa').href=askHref(p);zi_.classList.remove('z2');zi_.classList.toggle('studio',!!p.studio&&!p.bleed);Z.style.setProperty('--ac',p.c);Z.hidden=false;document.body.style.overflow='hidden';$('zx').focus()}
+ $('zrows').hidden=!p.r.length;$('zwa').href=askHref(p);zi_.classList.remove('z2');zi_.classList.toggle('studio',!!p.studio&&!p.bleed);Z.style.setProperty('--ac',p.c);Z.hidden=false;document.body.style.overflow='hidden';
+ const angles=$('zangles');angles.replaceChildren(...studioPhotoChoices(p.id,shot(p)).map(([url,label],index)=>{
+  const button=document.createElement('button');button.type='button';button.textContent=label;
+  button.setAttribute('aria-pressed',String(index===0));
+  button.onclick=()=>{$('zimg').src=url;zi_.classList.remove('z2');for(const option of angles.children)option.setAttribute('aria-pressed',String(option===button))};
+  return button
+ }));angles.hidden=!angles.childElementCount;$('zx').focus()}
 const closeZ=()=>{Z.hidden=true;document.body.style.overflow=''};
 $('zx').onclick=closeZ;Z.addEventListener('click',e=>{if(e.target===Z)closeZ()});
 $('zp').onclick=()=>openZ((zi+PR.length-1)%PR.length);$('zn').onclick=()=>openZ((zi+1)%PR.length);

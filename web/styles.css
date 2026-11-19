@@ -116,6 +116,8 @@ background-image:repeating-linear-gradient(118deg,#0000 0 2.4cqw,#00000009 2.4cq
 #revista .zt dl{margin:6px 0}#revista .zt dl div{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-top:1px solid #ffffff22;font-size:14px}#revista .zt dt{opacity:.6}#revista .zt dd{text-align:right;font-weight:500}
 #revista .zt .cta{font-size:14px;padding:.9em 1.4em;text-align:center;width:auto;margin:0;cursor:pointer}#revista .zrow{display:flex;gap:10px;margin-top:auto;flex-wrap:wrap}
 #revista .zt button{background:none;border:1px solid #ffffff44;color:#fff;border-radius:8px;padding:.8em 1.2em;font:500 13px Poppins;cursor:pointer}#revista .zt button:hover{border-color:#fff}
+#revista #zangles{display:flex;flex-wrap:wrap;gap:6px}
+#revista #zangles [aria-pressed="true"]{border-color:var(--red)}
 
 #revista .sf, #revista .sb{right:-1px;left:0}#revista .sb{left:-1px;right:0}#revista .sb .cl{margin-left:1px}
 
