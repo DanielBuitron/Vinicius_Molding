@@ -20,7 +20,8 @@ const PACKS = {
   "shampoo-carbon": { kind: "pump", accent: "#d7ff3a", body: "#171717", ink: "#f4f1ea", title: "SHAMPOO", lidSub: "CARBÓN ACTIVO", size: "500 ml", face: "carbon", v: "#ececec" },
   "serum-barba": { kind: "dropper", accent: "#A4D800", body: "#1a1a1c", ink: "#f4f1ea", title: "SERUM", lidSub: "BARBA · BIGOTE", size: "65 ml", face: "serum" },
   "tonico": { kind: "spray", accent: "#E4C84A", body: "#101012", ink: "#f7f4ea", title: "TÓNICO", lidSub: "ORGÁNICO", size: "65 ml", face: "tonico" },
-  "tonico-minoxidil": { kind: "spray", accent: "#E52C3B", body: "#101012", ink: "#f7f4ea", title: "TÓNICO", lidSub: "MINOXIDIL 12.5%", size: "65 ml", face: "minox" },
+  "tonico-minoxidil": { kind: "spray", accent: "#E52C3B", body: "#101012", ink: "#f7f4ea", title: "TÓNICO", lidSub: "MINOXIDIL 12.5%", concentration: "12.5%", size: "65 ml", face: "minox" },
+  "tonico-23": { kind: "spray", accent: "#E52C3B", body: "#18181a", ink: "#f7f4ea", title: "TÓNICO", lidSub: "MINOXIDIL 23%", concentration: "23%", size: "65 ml", face: "minox" },
   "ducha-intima": { kind: "tube", accent: "#8ED400", body: "#141416", ink: "#f4f1ea", title: "DUCHA ÍNTIMA", lidSub: "FOR MEN", size: "180 g", face: "tube" },
   "splash": { kind: "spray", accent: "#4BA3DC", body: "#0c2f4a", ink: "#f4f8fc", title: "BODY SPLASH", lidSub: "FOR MEN", size: "250 ml", face: "splash" },
   "shaving-gel": { kind: "tube", accent: "#FF6A00", body: "#161616", ink: "#f4f1ea", title: "SHAVING GEL", lidSub: "FOR MEN", size: "250 ml", face: "shave" },
@@ -51,7 +52,7 @@ const FORM = {
   "ducha-intima": { top: "tube", body: "#221f1f", face: "tube", labelBack: true, labelRange: [0.1, 0.91] },
   tonico: { top: "spray", body: "#151619", face: "tonico", box: "#094b53", boxBack: true, wrapFront: 0.25, labelRange: [0.075, 0.79] },
   "tonico-minoxidil": { top: "spray", body: "#160d0e", face: "minox", box: "#a52224", labelBase: "#a52224", labelRange: [0.075, 0.79] },
-  "tonico-23": { top: "spray", body: "#160d0e", face: "minox" },
+  "tonico-23": { top: "spray", box: "#1b1b1c", boxDepth: 0.55, boxSide: true, boxBack: true, labelRange: [0.075, 0.8] },
   "serum-barba": { top: "dropper", body: "#121214", face: "serum", box: "#222220", boxSide: true, wrapFront: 0.25, labelRange: [0.09, 0.77] },
   splash: { top: "spray", body: "#174e69", face: "splash", wrapFront: 0.25, labelRange: [0.10, 0.83] },
   "shaving-gel": { top: "pump", body: "#d78124", face: "shave", wrapFront: 0.25, labelRange: [0.09, 0.82] },
@@ -309,8 +310,8 @@ function loadLocalVolumeTextures() {
     localVolumeTextures = new Promise((resolve, reject) => {
       const script = document.createElement("script");
       script.src = volumeScriptUrl
-        ? new URL("volume-textures.local.js?v=2", volumeScriptUrl).href
-        : "js/volume-textures.local.js?v=2";
+        ? new URL("volume-textures.local.js?v=3", volumeScriptUrl).href
+        : "js/volume-textures.local.js?v=3";
       script.onload = () => {
         script.remove();
         if (window.VOLUME_LOCAL_TEXTURES) resolve(window.VOLUME_LOCAL_TEXTURES);
@@ -1709,7 +1710,7 @@ function makePackBox(pack, art) {
   const face = art.box || frontLabel(pack, art);
   const height = pack.top === "pump" ? 2.56 : 2.32;
   const width = height * face.width / face.height;
-  const depth = width * 0.8;
+  const depth = width * (pack.boxDepth ?? 0.8);
   const print = photoMat(face, 0.62, 0.02);
   const board = new THREE.MeshStandardMaterial({ color: pack.box || pack.body || "#f4f1ea", roughness: 0.74, metalness: 0.03 });
   const side = art.boxSide ? photoMat(art.boxSide, 0.66, 0.02) : board;
@@ -2214,8 +2215,13 @@ function frontLabel(pack, art) {
     ctx.globalAlpha = 1;
     ctx.textAlign = "center";
   } else if (pack.face === "minox") {
-    ctx.fillStyle = "#c41218";
+    const is23 = pack.concentration === "23%";
+    ctx.fillStyle = is23 ? "#19191b" : "#c41218";
     ctx.fillRect(70, 80, 760, 1220);
+    if (is23) {
+      ctx.fillStyle = "#c41218";
+      ctx.fillRect(70, 310, 760, 350);
+    }
     drawWord(ctx, 160, 150, 580, "#ffffff");
     ctx.textAlign = "center";
     ctx.fillStyle = "#ffffff";
@@ -2225,19 +2231,23 @@ function frontLabel(pack, art) {
     ctx.fillText("TÓNICO", 450, 400);
     ctx.font = "700 48px Outfit, sans-serif";
     ctx.fillText("Minoxidil", 450, 470);
-    ctx.fillStyle = "#d9dde2";
-    ctx.fillRect(120, 520, 660, 130);
-    ctx.fillStyle = "#c41218";
+    if (!is23) {
+      ctx.fillStyle = "#d9dde2";
+      ctx.fillRect(120, 520, 660, 130);
+    }
+    ctx.fillStyle = is23 ? "#ffffff" : "#c41218";
     ctx.font = "800 78px Outfit, sans-serif";
-    ctx.fillText("12.5%", 450, 590);
-    ctx.textAlign = "left";
+    ctx.fillText(pack.concentration, 450, 590);
     ctx.fillStyle = "#ffffff";
-    ctx.font = "700 28px Outfit, sans-serif";
-    ctx.fillText("Contiene", 140, 720);
-    ctx.font = "600 26px Outfit, sans-serif";
-    ["12.5% minoxidil", "Dudasteride 0.5%", "Biotina", "Ácido hialurónico"].forEach((line, index) => {
-      ctx.fillText(line, 140, 770 + index * 40);
-    });
+    if (!is23) {
+      ctx.textAlign = "left";
+      ctx.font = "700 28px Outfit, sans-serif";
+      ctx.fillText("Contiene", 140, 720);
+      ctx.font = "600 26px Outfit, sans-serif";
+      ["12.5% minoxidil", "Dudasteride 0.5%", "Biotina", "Ácido hialurónico"].forEach((line, index) => {
+        ctx.fillText(line, 140, 770 + index * 40);
+      });
+    }
     ctx.textAlign = "center";
     ctx.font = "600 26px Outfit, sans-serif";
     ctx.fillText("2.3 FL. Oz  /  65 ml", 450, 1180);

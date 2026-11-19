@@ -91,7 +91,20 @@ function orbit(src, alt, id) {
 }
 
 const CATALOG_VOLUME_LINES = new Set(["molding", "limpieza", "tratamiento", "kids", "cuerpo"]);
-const CATALOG_ADDITIONS = CATALOG_ACCESSORIES.concat(CATALOG_COMBOS);
+const CATALOG_ADDITIONS = CATALOG_ACCESSORIES.concat(CATALOG_COMBOS, {
+  id: "tonico-23",
+  name: "Tónico Minoxidil 23%",
+  finish: "23%",
+  category: "tratamiento",
+  size: "65 ml",
+  accent: "#E52C3B",
+  image: "assets/revista-productos/tonico-23.webp",
+  summary: "Tónico capilar con minoxidil 23%.",
+  description: "Tónico Minoxidil 23% en presentación de 65 ml.",
+  consultationOnly: true,
+  en: { name: "Minoxidil Tonic 23%", summary: "Hair tonic with 23% minoxidil.", description: "23% minoxidil tonic in a 65 ml bottle." },
+  zh: { name: "23% 米诺地尔头皮护理液", summary: "含 23% 米诺地尔的头皮护理液。", description: "23% 米诺地尔护理液，65 毫升装。" },
+});
 const CATALOG_ADDITIONS_BY_ID = new Map(CATALOG_ADDITIONS.map((item) => [item.id, item]));
 const LEGACY_ACCESSORIES = new Map(Object.entries({
   cuadros: "cuadro-redondo-closed",
@@ -185,7 +198,8 @@ function catalogMedia(product, alt, linked) {
 }
 
 function catalogOrbit(src, alt, id) {
-  const preview = id === "cera-kids" ? "assets/revista-productos/kids.webp?v=2" : cutoutSrc(src);
+  const previews = { "cera-kids": "assets/revista-productos/kids.webp?v=2", "tonico-23": "assets/revista-productos/tonico-23.webp" };
+  const preview = previews[id] || cutoutSrc(src);
   const img = `<img src="${esc(preview)}" alt="${esc(alt)}" loading="lazy" decoding="async" draggable="false">`;
   const parts = Object.hasOwn(MOLDING_STAGE_ART, id) ? `
       <button type="button" data-orbit-act="cerrado">Cerrado</button>

@@ -17,6 +17,7 @@ const PR=[
 {id:'tonico',n:'Tónico',sub:'Orgánico · cuero cabelludo',cap:'Tónico Orgánico',c:'#FFD300',tx:'#14110a',v:'color',d:'Tónico de extractos para el cuero cabelludo. 19 activos.',r:[['Contenido','65 ml'],['Uso','Cuero cabelludo'],['Contiene','Romero · Biotina · Aloe vera']],studio:1,img:'assets/revista-productos/tonico.webp'},
 {id:'cubre-canas',n:'Gel',sub:'Cubre canas',cap:'Gel Cubre Canas',c:'#E52C3B',v:'dark',d:'Cubre las canas con un acabado húmedo brillante.',r:[['Contenido','150 g'],['Acabado','Húmedo brillante'],['Contiene',TIN]],studio:1,img:'assets/revista-productos/cubre-canas.webp'},
 {id:'tonico-minoxidil',n:'Tónico',sub:'Minoxidil 12.5%',cap:'Tónico Minoxidil 12.5%',c:'#00C8C2',v:'dark',d:'Nutre, fortalece y estimula el crecimiento en cabello, barba y cejas.',r:[['Contenido','65 ml'],['Uso','Cabello · barba · cejas'],['Contiene','Minoxidil 12.5%']],studio:1,img:'assets/revista-productos/tonico-minoxidil.webp'},
+{id:'tonico-23',n:'Tónico',sub:'Minoxidil 23%',cap:'Tónico Minoxidil 23%',c:'#E52C3B',v:'dark',d:'Tónico capilar en presentación de 65 ml.',r:[['Contenido','65 ml'],['Contiene','Minoxidil 23%']],studio:1,img:'assets/revista-productos/tonico-23.webp'},
 {id:'kit-capilar',n:'Kit Capilar',sub:'Anticaída',cap:'Kit Capilar',c:'#E52C3B',v:'paper',d:'Fortalece el cabello y ayuda a reducir la caída con una rutina completa.',r:[['Tipo','Combo'],['Uso','Rutina diaria'],['Incluye','Shampoo · Tónico']],studio:1,img:'assets/revista-productos/kit-capilar.webp'},
 {id:'kit-capilar-completo',n:'Kit Completo',sub:'Con dermaroller',cap:'Kit Capilar Completo',c:'#FFD300',tx:'#14110a',v:'color',d:'Rutina completa con dermaroller de microagujas.',r:[['Tipo','Combo'],['Incluye','Rutina · Dermaroller'],['Enfoque','Crecimiento']],studio:1,img:'assets/revista-productos/kit-capilar-completo.webp'},
 {id:'kit-capilar-avanzado',n:'Kit Avanzado',sub:'Cabello · barba · cejas',cap:'Kit Capilar Avanzado',c:'#00C8C2',v:'dark',d:'Kit avanzado para cabello, barba y cejas con dermaroller.',r:[['Tipo','Combo'],['Incluye','Tónico · Dermaroller'],['Enfoque','Avanzado']],studio:1,img:'assets/revista-productos/kit-capilar-avanzado.webp'},
@@ -52,6 +53,7 @@ tonico:{n:'Tonic',sub:'Organic · scalp',cap:'Organic Tonic',d:'Extract tonic fo
 'pasta-minoxidil':{n:'Paste',sub:'Minoxidil · beeswax',cap:'Minoxidil Paste',d:'Minoxidil, panthenol and rosemary on a beeswax base. Use on dry or semi-dry hair.',r:[['Size','150 g'],['Base','Beeswax'],['Contains','Minoxidil · Panthenol · Rosemary']]},
 'cubre-canas':{n:'Gel',sub:'Gray cover',cap:'Gray Cover Gel',d:'Covers gray hair with a wet glossy finish.',r:[['Size','150 g'],['Finish','Wet glossy'],['Contains',TIN_EN]]},
 'tonico-minoxidil':{n:'Tonic',sub:'Minoxidil 12.5%',cap:'Minoxidil Tonic 12.5%',d:'Nourishes, strengthens and boosts growth for hair, beard and brows.',r:[['Size','65 ml'],['Use','Hair · beard · brows'],['Contains','Minoxidil 12.5%']]},
+'tonico-23':{n:'Tonic',sub:'Minoxidil 23%',cap:'Minoxidil Tonic 23%',d:'Hair tonic in a 65 ml bottle.',r:[['Size','65 ml'],['Contains','Minoxidil 23%']]},
 'kit-capilar':{n:'Hair Kit',sub:'Anti-hair loss',cap:'Hair Kit',d:'Strengthens hair and helps reduce hair loss with a full routine.',r:[['Type','Combo'],['Use','Daily routine'],['Includes','Shampoo · Tonic']]},
 'kit-capilar-completo':{n:'Complete Kit',sub:'With dermaroller',cap:'Complete Hair Kit',d:'Complete routine with a microneedle dermaroller.',r:[['Type','Combo'],['Includes','Routine · Dermaroller'],['Focus','Growth']]},
 'kit-capilar-avanzado':{n:'Advanced Kit',sub:'Hair · beard · brows',cap:'Advanced Hair Kit',d:'Advanced kit for hair, beard and brows with dermaroller.',r:[['Type','Combo'],['Includes','Tonic · Dermaroller'],['Focus','Advanced']]},
@@ -77,6 +79,7 @@ tonico:{n:'精华液',sub:'有机 · 头皮',cap:'有机头皮精华',d:'头皮�
 'pasta-minoxidil':{n:'发泥',sub:'米诺地尔 · 蜂蜡',cap:'米诺地尔发泥',d:'以蜂蜡为基底，含米诺地尔、泛醇与迷迭香。用于干发或半干发。',r:[['规格','150 g'],['基质','蜂蜡'],['成分','米诺地尔 · 泛醇 · 迷迭香']]},
 'cubre-canas':{n:'啫喱',sub:'遮盖白发',cap:'遮盖白发啫喱',d:'遮盖白发，呈现湿润亮泽效果。',r:[['规格','150 g'],['效果','湿润亮泽'],['成分',TIN_ZH]]},
 'tonico-minoxidil':{n:'精华液',sub:'米诺地尔 12.5%',cap:'米诺地尔精华 12.5%',d:'滋养、强韧并促进头发、胡须与眉毛生长。',r:[['规格','65 ml'],['用法','头发 · 胡须 · 眉毛'],['成分','米诺地尔 12.5%']]},
+'tonico-23':{n:'头皮护理液',sub:'米诺地尔 23%',cap:'23% 米诺地尔头皮护理液',d:'65 毫升瓶装头皮护理液。',r:[['规格','65 ml'],['成分','米诺地尔 23%']]},
 'kit-capilar':{n:'护发套装',sub:'防脱',cap:'护发套装',d:'完整护理，强化发丝并帮助减少脱落。',r:[['类型','套装'],['用法','日常护理'],['包含','洗发水 · 精华']]},
 'kit-capilar-completo':{n:'完整套装',sub:'含微针滚轮',cap:'完整护发套装',d:'完整护理，搭配微针滚轮。',r:[['类型','套装'],['包含','护理 · 滚轮'],['重点','生发']]},
 'kit-capilar-avanzado':{n:'进阶套装',sub:'头发 · 胡须 · 眉毛',cap:'进阶护发套装',d:'头发、胡须与眉毛进阶护理，含微针滚轮。',r:[['类型','套装'],['包含','精华 · 滚轮'],['重点','进阶']]},
@@ -93,8 +96,29 @@ const PES={cera:36000,pasta:36000,pomada:36000,'cera-fibra':36000,kids:36000,ant
 const cop=n=>typeof money==='function'?money(n):('$'+Number(n).toLocaleString('es-CO'));
 const LINK={cera:'cera-brillo',pasta:'pasta',pomada:'pomada','cera-fibra':'cera-fibra',kids:'cera-kids',anticaida:'shampoo-proteccion',carbon:'shampoo-carbon',serum:'serum-barba',tonico:'tonico','pasta-minoxidil':'pasta-minoxidil','cubre-canas':'gel-cubre-canas','tonico-minoxidil':'tonico-minoxidil','kit-capilar':'kit-capilar','kit-capilar-completo':'kit-capilar-completo','kit-capilar-avanzado':'kit-capilar-avanzado','kit-12-5':'kit-12-5','kit-organico':'kit-organico','kit-organico-avanzado':'kit-organico-avanzado','kit-restaurador':'kit-restaurador','kit-crecimiento-23':'kit-crecimiento-23',shaving:'shaving-gel',splash:'splash',ducha:'ducha-intima'};
 PR.forEach((p,j)=>{p.ref=String(j+1).padStart(2,'0');if(!p.accessory)p.price=PES[p.id]||0;p._es={n:p.n,sub:p.sub,cap:p.cap,d:p.d,r:p.r.map(row=>row.slice())}});
-try{const saved=JSON.parse(localStorage.getItem('vm_catalog')||'{}');PR.forEach(p=>{const s=saved[LINK[p.id]||p.id];if(!s)return;if(s.name){p.n=s.name;p._es.n=s.name}if(s.finish){p.sub=s.finish;p._es.sub=s.finish}if(s.description){p.d=s.description;p._es.d=s.description}if(s.image && String(p.id).indexOf('kit-')!==0){p.img=s.image;p.bleed=1}if(s.price!=null){p.price=Number(s.price)}if(s.size){const row=p._es.r.find(x=>x[0]==='Contenido');if(row)row[1]=s.size}if(s.ingredients){const txt=Array.isArray(s.ingredients)?s.ingredients.join(' · '):s.ingredients;const row=p._es.r.find(x=>x[0]==='Contiene');if(row)row[1]=txt}})}catch(e){}
+try{
+ const saved=JSON.parse(localStorage.getItem('vm_catalog')||'{}');
+ PR.forEach(p=>{
+  const s=saved[LINK[p.id]||p.id];
+  if(!s)return;
+  if(s.name){p.n=s.name;p._es.n=s.name}
+  if(s.finish){p.sub=s.finish;p._es.sub=s.finish}
+  if(s.description){p.d=s.description;p._es.d=s.description}
+  const stockTonicPhoto=p.id==='tonico-23'&&/^\/?assets\/products\/tonico-23\.(?:jpe?g|png)(?:[?#]|$)/i.test(s.image);
+  if(s.image&&!p.id.startsWith('kit-')&&!stockTonicPhoto){p.img=s.image;p.bleed=1}
+  if(s.price!=null)p.price=Number(s.price);
+  if(s.size){
+   const row=p._es.r.find(x=>x[0]==='Contenido');
+   if(row)row[1]=s.size;
+  }
+  if(s.ingredients){
+   const row=p._es.r.find(x=>x[0]==='Contiene');
+   if(row)row[1]=Array.isArray(s.ingredients)?s.ingredients.join(' · '):s.ingredients;
+  }
+ });
+}catch(e){}
 const tt=(k,vars)=>typeof t==='function'?t(k,vars):k;
+const priceOnRequest=p=>p.accessory||!(p.price>0);
 const langNow=()=>typeof getLang==='function'?getLang():'es';
 const labelMap=()=>({Precio:tt('mag.price'),Contenido:tt('mag.size'),Acabado:tt('mag.finishLabel'),Contiene:tt('mag.contains'),Base:tt('mag.base'),Uso:tt('mag.use'),Fórmula:tt('mag.formula'),Price:tt('mag.price'),Size:tt('mag.size'),Finish:tt('mag.finishLabel'),Contains:tt('mag.contains'),Use:tt('mag.use'),Formula:tt('mag.formula'),'价格':tt('mag.price'),'规格':tt('mag.size'),'效果':tt('mag.finishLabel'),'成分':tt('mag.contains'),'基质':tt('mag.base'),'用法':tt('mag.use'),'配方':tt('mag.formula')});
 function localizePR(){
@@ -110,7 +134,7 @@ function localizePR(){
     }
     p.n=n;p.sub=sub;p.cap=cap;p.d=d;
     p.r=rows.map(([a,b])=>[map[a]||a,b]);
-    if(!p.accessory)p.r.unshift([map.Precio||tt('mag.price'),cop(p.price)]);
+    if(!priceOnRequest(p))p.r.unshift([map.Precio||tt('mag.price'),cop(p.price)]);
   });
 }
 const hd=n=>`<div class="hd"><img src="assets/isotipo-rojo.png" alt=""><span>${n}</span></div>`;
@@ -118,10 +142,10 @@ const rows=r=>r.map(x=>`<div><dt>${x[0]}</dt><dd>${x[1]}</dd></div>`).join('');
 const shot=p=>p.img||A('p-'+p.id+'.jpg');
 const askHref=p=>WA+'?text='+encodeURIComponent(tt('mag.waAsk',{name:p.cap,ref:p.ref}));
 const magQty={};
-const imgP=j=>{const p=PR[j],studio=p.studio?' studio':'',price=p.accessory?'':`<b class="px">${cop(p.price)}</b>`;
+const imgP=j=>{const p=PR[j],studio=p.studio?' studio':'',price=priceOnRequest(p)?'':`<b class="px">${cop(p.price)}</b>`;
   return `<div class="pg img${p.bleed?' bleed':''}${studio}" data-p="${j}"><img data-revista-src="${esc(shot(p))}" alt="${esc(p.cap)}" decoding="async"><div class="capline"><span>${p.cap}</span>${price}</div><b class="zm">+</b></div>`};
 const infoP=(j,n)=>{const p=PR[j],cls=p.v==='color'?'pg col':p.v==='dark'?'pg dark':'pg',st=`--ac:${p.c}`+(p.v==='color'?`;--bg:${p.c};--fg:${p.tx}`:'');
- const action=p.accessory
+ const action=priceOnRequest(p)
    ? `<a class="cta" href="${askHref(p)}" target="_blank" rel="noopener">${tt('mag.wa')}</a>`
    : `<div class="buy"><button type="button" class="q" data-mag="q" data-p="${j}" data-dir="-1" aria-label="${tt('mag.less')}">−</button><b data-mag-qty="${j}">${magQty[j]||1}</b><button type="button" class="q" data-mag="q" data-p="${j}" data-dir="1" aria-label="${tt('mag.more')}">+</button><button type="button" class="add" data-mag="add" data-p="${j}">${tt('mag.add')}</button></div>`;
  return `<div class="${cls}" style="${st}">${hd(n)}<div class="num">${p.ref}</div><h2 data-p="${j}">${p.n}<em>${p.sub}</em></h2><p>${p.d}</p><dl>${rows(p.r)}</dl>${action}</div>`};
