@@ -1061,21 +1061,6 @@ function bind() {
     const node = event.target.closest("[data-act]");
     if (!node) return;
     const act = node.dataset.act;
-    if (act === "photo-angle" || act === "photo-zoom") {
-      const gallery = node.closest(".photo-gallery");
-      const image = gallery.querySelector(".catalog-photo img");
-      if (act === "photo-angle") {
-        image.src = node.dataset.src;
-        gallery.querySelectorAll("[data-act=photo-angle]").forEach((button) => {
-          button.setAttribute("aria-pressed", String(button === node));
-        });
-      } else {
-        const dialog = gallery.querySelector("dialog");
-        dialog.querySelector("img").src = image.currentSrc || image.src;
-        dialog.showModal();
-      }
-      return;
-    }
     if (act === "star") {
       const form = node.closest("form");
       const value = Number(node.dataset.value || 5);

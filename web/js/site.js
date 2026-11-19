@@ -115,35 +115,6 @@ const LEGACY_ACCESSORIES = new Map(Object.entries({
   "tapete-iman": "tapete-con-iman-tijeras",
   "tapete-sin-iman": "tapete-sin-iman-barbershop",
 }));
-const CATALOG_KIT_PHOTOS = {
-  "kit-capilar": "assets/revista-productos/kit-capilar.webp",
-  "kit-capilar-avanzado": "assets/revista-productos/kit-capilar-avanzado.webp",
-  "kit-capilar-avanzado-plus": "assets/products/kit-capilar-avanzado-plus.webp",
-  "kit-capilar-completo": "assets/revista-productos/kit-capilar-completo.webp",
-  "kit-12-5": "assets/revista-productos/kit-12-5.webp",
-  "kit-crecimiento-23": "assets/revista-productos/kit-crecimiento-23.webp",
-  "kit-organico": "assets/revista-productos/kit-organico.webp",
-  "kit-organico-avanzado": "assets/revista-productos/kit-organico-avanzado.webp",
-  "kit-restaurador": "assets/revista-productos/kit-restaurador.webp",
-};
-
-// Small corrections for the measured axes of the original catalog cutouts.
-const CATALOG_PHOTO_ALIGNMENT = {
-  "ducha-intima-y-cera-fibra": "skewX(-1.9deg)",
-  "ducha-intima-y-cera-moldeadora": "skewX(-0.9deg)",
-  "ducha-intima-y-pasta-en-caja": "skewX(-2.2deg)",
-  "ducha-intima-y-patillera-amarilla": "skewX(-3deg)",
-  "ducha-intima-y-patillera-plateada": "skewX(-2.5deg)",
-  "ducha-intima-y-pomada-en-caja": "skewX(-0.7deg)",
-  "ducha-intima-y-shampoo-carbon": "skewX(-0.7deg)",
-  "ducha-intima-y-shampoo-proteccion": "skewX(1.2deg)",
-  "kit-crecimiento-23": "skewX(-2.25deg)",
-  "kit-restaurador": "skewX(-2.7deg)",
-  "lapiz-para-barba": "rotate(2.5deg) skewX(5.9deg)",
-  "shampoo-y-minoxidil-12-5": "skewX(-0.7deg)",
-  "soplador-200w": "skewX(1.5deg)",
-};
-
 function catalogEntry(product) {
   const approved = CATALOG_ADDITIONS_BY_ID.get(product.id);
   const image = String(product.image || "").split("?")[0].replace(/^\//, "");
@@ -171,35 +142,39 @@ function catalogProductById(id) {
   return product ? catalogEntry(product) : CATALOG_ADDITIONS_BY_ID.get(canonicalId);
 }
 
-function catalogPhotoSource(product) {
-  const original = String(product.image || "").split("?")[0].replace(/^\//, "");
-  const defaultPath = "assets/products/" + product.id + ".";
-  const useKitPhoto = !original || ["jpg", "jpeg", "png"].some((ext) => original === defaultPath + ext);
-  const kit = useKitPhoto && CATALOG_KIT_PHOTOS[product.id];
-  return kit ? kit + "?v=4" : product.image || "";
-}
-
 function catalogPhoto(product, alt, linked) {
-  const src = catalogPhotoSource(product);
-  const cutout = src.startsWith("assets/revista-productos/") ||
-    src.startsWith("assets/catalogo-combos/") || src.split("?")[0] === CATALOG_KIT_PHOTOS[product.id];
-  const style = cutout ? "catalog-photo cutout" : "catalog-photo";
-  const file = src.split("/").pop().split(/[.?]/, 1)[0];
-  const alignment = cutout && CATALOG_PHOTO_ALIGNMENT[file];
-  const inlineStyle = alignment ? ` style="--catalog-photo-alignment: ${alignment}"` : "";
-  const image = `<img src="${esc(src)}" alt="${esc(alt)}" loading="lazy" decoding="async" draggable="false">`;
-  if (linked) return `<a class="${style}" href="#/producto/${esc(product.id)}"${inlineStyle}>${image}</a>`;
-  const choices = studioPhotoChoices(product.id, src);
-  return `<div class="photo-gallery">
-    <button type="button" class="${style}" data-act="photo-zoom" aria-label="${esc(t("gallery.zoom"))}"${inlineStyle}>${image}</button>
-    <div class="photo-gallery-controls">${choices.map(([url, label], index) =>
-      `<button type="button" data-act="photo-angle" data-src="${esc(url)}" aria-pressed="${index === 0}">${esc(label)}</button>`
-    ).join("")}<button type="button" data-act="photo-zoom">${esc(t("gallery.zoom"))}</button></div>
+  const photos = studioPhotoChoices(product.id);
+  const studio = photos.length > 0;
+  if (!studio) photos.push({ src: product.image || "", small: product.image || "", label: t("gallery.front") });
+  const cover = photos[0];
+  const style = studio ? "catalog-photo cutout" : "catalog-photo";
+  const image = `<img data-photo-image src="${esc(linked ? cover.small : cover.src)}" alt="${esc(alt + " · " + cover.label)}" loading="${linked ? "lazy" : "eager"}" decoding="async" draggable="false">`;
+  const slide = linked
+    ? `<a class="${style}" href="#/producto/${esc(product.id)}">${image}</a>`
+    : `<button type="button" class="${style}" data-studio-zoom aria-label="${esc(t("gallery.zoom"))}">${image}</button>`;
+  const arrows = studio ? studioArrows() : "";
+  return `<div class="photo-gallery ${linked ? "photo-carousel-card" : "photo-carousel-detail"}" data-photo-gallery data-photos="${esc(JSON.stringify(photos))}" data-photo-index="0" data-photo-name="${esc(alt)}">
+    <div class="photo-carousel-stage" data-photo-stage>${slide}${arrows}
+      <span class="photo-carousel-count" data-photo-count aria-live="polite" ${studio ? "" : "hidden"}>1 / ${photos.length}</span>
+    </div>
+    ${linked ? "" : `<div class="photo-gallery-controls">
+      ${studio ? `<div class="photo-thumbnails">${photos.map((photo, index) =>
+        `<button type="button" data-photo-select="${index}" aria-pressed="${index === 0}">
+          <img src="${esc(photo.small)}" alt="" loading="lazy" decoding="async" draggable="false"><span>${esc(photo.label)}</span>
+        </button>`
+      ).join("")}</div>` : ""}
+      <button type="button" data-studio-zoom>${esc(t("gallery.zoom"))}</button>
+    </div>
     <dialog class="photo-gallery-dialog" aria-label="${esc(alt)}">
       <form method="dialog"><button type="submit">${esc(t("mag.close"))}</button></form>
-      <img alt="${esc(alt)}">
-    </dialog>
+      <div class="photo-carousel-stage" data-photo-stage><img alt="${esc(alt)}">${arrows}</div>
+    </dialog>`}
   </div>`;
+}
+
+function studioArrows() {
+  return `<button type="button" class="photo-carousel-arrow previous" data-photo-step="-1" aria-label="${esc(t("gallery.previous"))}">‹</button>
+    <button type="button" class="photo-carousel-arrow next" data-photo-step="1" aria-label="${esc(t("gallery.next"))}">›</button>`;
 }
 
 function catalogMedia(product, alt, linked) {

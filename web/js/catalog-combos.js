@@ -52,6 +52,6 @@ const CATALOG_COMBOS = [
     accent,
     category: "kits",
     consultationOnly: true,
-    image: "assets/catalogo-combos/" + id + ".webp?v=2",
+    image: studioCover(id),
   };
 });

@@ -32,20 +32,6 @@ const accessoryPageColors = {
   "soplador-200w": "#FFD300",
 };
 
-const CATALOG_PHOTO_ALTERNATES = {
-  dermaroller: "dermaroller-reverso",
-  "patillera-amarilla": "patillera-amarilla-lateral",
-  "patillera-azul": "patillera-azul-lateral",
-  "patillera-plateada": "patillera-plateada-lateral",
-};
-
-function studioPhotoChoices(id, front) {
-  const alternate = CATALOG_PHOTO_ALTERNATES[id];
-  return alternate
-    ? [[front, t("gallery.front")], [`assets/revista-productos/${alternate}.webp`, t("gallery.angle")]]
-    : [];
-}
-
 const CATALOG_ACCESSORIES = accessoryGroups.flatMap((group) => group.models.map(([id, ...finishes]) => {
   const copy = Object.fromEntries(["es", "en", "zh"].map((lang, i) => [
     lang,
@@ -65,7 +51,7 @@ const CATALOG_ACCESSORIES = accessoryGroups.flatMap((group) => group.models.map(
     category: "accesorios",
     accent: group.c,
     magazineFill: accessoryPageColors[id],
-    image: `assets/revista-productos/${id}.webp?v=4`,
+    image: studioCover(id),
     consultationOnly: true,
   };
 }));
