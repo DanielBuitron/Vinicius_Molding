@@ -114,7 +114,7 @@ try{
   if(s.finish){p.sub=s.finish;p._es.sub=s.finish}
   if(s.description){p.d=s.description;p._es.d=s.description}
   const stockTonicPhoto=p.id==='tonico-23'&&/^\/?assets\/products\/tonico-23\.(?:jpe?g|png)(?:[?#]|$)/i.test(s.image);
-  if(s.image&&!p.id.startsWith('kit-')&&!stockTonicPhoto){p.img=s.image;p.bleed=1}
+  if(s.image&&!studioCover(p.id)&&!stockTonicPhoto){p.img=s.image;p.bleed=1}
   if(s.price!=null)p.price=Number(s.price);
   if(s.size){
    const row=p._es.r.find(x=>x[0]==='Contenido');
@@ -331,33 +331,11 @@ const accessoryShortcut=document.getElementById('mag-accessories');
 accessoryShortcut.onclick=()=>go(3+accessoryStart);
 contentsShortcut.onclick=()=>go(2);
 // ---- detalle de producto
-const Z=document.getElementById('zoom'),$=id=>document.getElementById(id);let zi=0,zoomPlayback;
-function openZ(j){zoomPlayback?.dispose();zoomPlayback=undefined;const p=PR[j];zi=j;$('zimg').src=shot(p);$('zimg').alt=p.cap;$('zref').textContent=tt('mag.ref',{ref:p.ref});$('zname').textContent=p.cap;$('zsub').textContent=p.sub;$('zdesc').textContent=p.d;$('zrows').innerHTML=rows(p.r);
+const Z=document.getElementById('zoom'),$=id=>document.getElementById(id);let zi=0;
+function openZ(j){const p=PR[j];zi=j;$('zimg').src=shot(p);$('zimg').alt=p.cap;$('zref').textContent=tt('mag.ref',{ref:p.ref});$('zname').textContent=p.cap;$('zsub').textContent=p.sub;$('zdesc').textContent=p.d;$('zrows').innerHTML=rows(p.r);
  $('zrows').hidden=!p.r.length;$('zwa').href=askHref(p);zi_.classList.remove('z2');zi_.classList.toggle('studio',!!p.studio&&!p.bleed);Z.style.setProperty('--ac',p.c);Z.hidden=false;document.body.style.overflow='hidden';
- const angles=$('zangles'),photos=studioPhotoChoices(p.id);
- let selected=0;
- const makeButton=(label,action)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=action;return b};
- const select=index=>{
-  zoomPlayback?.reset();
-  selected=(index+photos.length)%photos.length;
-  const photo=photos[selected];
-  $('zimg').src=photo.src;
-  $('zimg').alt=p.cap+' · '+photo.label;
-  zi_.classList.remove('z2');
-  options.forEach((option,i)=>option.setAttribute('aria-pressed',String(i===selected)));
- };
- const options=photos.map((photo,index)=>makeButton(photo.label,()=>select(index)));
- angles.hidden=!options.length;
- angles.replaceChildren();
- if(options.length){
-  const prev=makeButton('‹',()=>select(selected-1)),next=makeButton('›',()=>select(selected+1));
-  const playback=makeButton('Ⅱ',null);
-  prev.setAttribute('aria-label',tt('gallery.previous'));next.setAttribute('aria-label',tt('gallery.next'));
-  angles.append(playback,prev,...options,next);select(0);
-  zoomPlayback=startStudioPlayback(zi_,playback,()=>select(selected+1),()=>zi_.classList.contains('z2')||!!angles.querySelector(':focus-visible'));
- }
  $('zx').focus()}
-const closeZ=()=>{zoomPlayback?.dispose();zoomPlayback=undefined;Z.hidden=true;document.body.style.overflow=''};
+const closeZ=()=>{Z.hidden=true;document.body.style.overflow=''};
 $('zx').onclick=closeZ;Z.addEventListener('click',e=>{if(e.target===Z)closeZ()});
 $('zp').onclick=()=>openZ((zi+PR.length-1)%PR.length);$('zn').onclick=()=>openZ((zi+1)%PR.length);
 const zi_=Z.querySelector('.zi');zi_.onclick=()=>zi_.classList.toggle('z2');
