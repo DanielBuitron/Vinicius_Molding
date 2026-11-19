@@ -75,7 +75,7 @@ function lathe(pts,vs){const P=[],Nn=[],T=[],I=[],sn=[];
 const discR=r=>{const P=[0,0,0],N=[0,0,1],T=[.5,.5],I=[];for(let i=0;i<=SEG;i++){const a=i/SEG*Math.PI*2,c=Math.cos(a),s=Math.sin(a);P.push(r*c,r*s,0);N.push(0,0,1);T.push(.5+.5*c,.5+.5*s);if(i<SEG)I.push(0,i+1,i+2)}return mesh(P,N,T,I)};
 const arc=(cr,cz,r,a0,a1,n=7)=>{const a=[];for(let i=0;i<=n;i++){const q=a0+(a1-a0)*i/n;a.push([cr+r*Math.cos(q),cz+r*Math.sin(q)])}return a};
 const QUAD=mesh([-1,-1,0,1,-1,0,1,1,0,-1,1,0],[0,0,1,0,0,1,0,0,1,0,0,1],[0,0,1,0,1,1,0,1],[0,1,2,0,2,3]);
-let M={},builtP=0;
+let M={quad:QUAD},builtP=0;
 function build(P){if(Math.round(P)===builtP)return;builtP=Math.round(P);
  const R=.165*P,Hb=.1*P,Hl=.045*P,fr=.008*P,st=.004*P,Ro=.19*P,Hh=.15*P,t=.014*P,lw=.02*P,rec=.004*P,H2=Math.PI/2;
  M.body=lathe([...arc(R-fr,fr,fr,-H2,0),[R,Hb]],Hb);
@@ -102,13 +102,13 @@ function cream(base,seed,sw){let s=seed;const rnd=()=>(s=(s*16807)%2147483647)/2
  ng.putImageData(ni,0,0);ag.putImageData(ai,0,0);return{alb:cvTex(ac),nrm:cvTex(nc)}}
 const[bc,bg]=mk(128);{const r=bg.createRadialGradient(64,64,0,64,64,64);r.addColorStop(0,'rgba(0,0,0,1)');r.addColorStop(.4,'rgba(0,0,0,.6)');r.addColorStop(1,'rgba(0,0,0,0)');bg.fillStyle=r;bg.fillRect(0,0,128,128)}
 function deskSurface(){
- const N=2048,c=document.createElement('canvas');c.width=c.height=N;const g=c.getContext('2d');
+ const N=innerWidth<700?1024:2048,c=document.createElement('canvas');c.width=c.height=N;const g=c.getContext('2d');
  g.fillStyle='#5c6070';g.fillRect(0,0,N,N);
  const img=g.getImageData(0,0,N,N),d=img.data;
  for(let i=0;i<d.length;i+=4){const n=(Math.random()-.5)*5;d[i]+=n;d[i+1]+=n;d[i+2]+=n+0.4}
  g.putImageData(img,0,0);
  g.globalCompositeOperation='overlay';
- for(let i=0;i<420;i++){
+ for(let i=0;i<N*420/2048;i++){
   const y=Math.random()*N,a=.025+Math.random()*.05;
   g.strokeStyle=`rgba(255,255,255,${a})`;g.lineWidth=Math.random()<.85?1:0.6;
   g.beginPath();g.moveTo(0,y);g.lineTo(N,y+(Math.random()-.5)*6);g.stroke();
@@ -119,8 +119,15 @@ function deskSurface(){
  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT);
  return t;
 }
-const T={wood:deskSurface(),blob:cvTex(bc),cr1:cream([236,214,172],5,16),cr2:cream([224,220,208],11,13)};
-['cera','pasta','pomada','fibra'].forEach(k=>{T['l_'+k]=tex(TEX['lid_'+k]);T['s_'+k]=tex(TEX['strip_'+k])});
+const T={wood:deskSurface(),blob:cvTex(bc)};
+function prepareDecorations(){
+ if(typeof TEX==='undefined')return false;
+ if(!T.cr1){
+  T.cr1=cream([236,214,172],5,16);T.cr2=cream([224,220,208],11,13);
+  ['cera','pasta','pomada','fibra'].forEach(k=>{T['l_'+k]=tex(TEX['lid_'+k]);T['s_'+k]=tex(TEX['strip_'+k])});
+ }
+ return true;
+}
 // ---- framebuffer MSAA + resolve
 let fbM,fbR,tR,rC,rD,fw=0,fh=0;
 function resize(){const phone=innerWidth<760,d=phone?1:Math.min(Math.max(devicePixelRatio||1,1.5),2);cv.width=Math.round(innerWidth*d);cv.height=Math.round(innerHeight*d);cv.style.width='100%';cv.style.height='100%';
@@ -143,13 +150,14 @@ const magazine=document.getElementById('revista');
 let frameRequest=0;
 function frame(t){
  frameRequest=0;
- if(document.hidden||magazine.hidden||innerWidth<700)return;
+ if(document.hidden||magazine.hidden)return;
+ const phone=innerWidth<700,decorated=!phone&&prepareDecorations();
  const sec=t/1000,k=window.CAMT||{rx:54,s:.86,tx:4,ty:-3,rz:-3},PORT=!!window.PORT;
  ptr.x+=(ptr.tx-ptr.x)*.45;ptr.y+=(ptr.ty-ptr.y)*.45;const pm=PORT?.35:1;
- const rxF=k.rx+Math.sin(sec*.35)*.1,rzF=k.rz,txF=k.tx,tyF=k.ty;
+ const rxF=k.rx+(phone?0:Math.sin(sec*.35)*.1),rzF=k.rz,txF=k.tx,tyF=k.ty;
  tilt.style.transform=`translate3d(${txF}vw,${tyF}vh,0) rotateX(${rxF}deg) rotateZ(${rzF}deg) scale(${k.s})`;
  const P=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pwpx'))||480,W=innerWidth,H=innerHeight,rx=rxF*Math.PI/180,rz=rzF*Math.PI/180,c=Math.cos(rx),sn=Math.sin(rx);
- build(P);
+ if(decorated)build(P);
  gl.bindFramebuffer(gl.FRAMEBUFFER,fbM);gl.viewport(0,0,fw,fh);gl.clearColor(.003,.003,.004,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.useProgram(pr);
  const u=pr.u;gl.uniform2f(u('uView'),W,H);gl.uniform2f(u('uT0'),W/2,H*.54);gl.uniform2f(u('uPO'),W/2,H*.38);gl.uniform2f(u('uT'),txF*W/100,tyF*H/100);
  gl.uniform1f(u('uD'),1700);gl.uniform1f(u('uS'),k.s);gl.uniform1f(u('uC'),c);gl.uniform1f(u('uSn'),sn);gl.uniform1f(u('uCz'),Math.cos(rz));gl.uniform1f(u('uSz'),Math.sin(rz));
@@ -157,8 +165,8 @@ function frame(t){
  const ndcX=ptr.x,ndcY=-ptr.y;let kk=1,rY=0;
  for(let i=0;i<5;i++){rY=(.24*kk-.32-ndcY)*H/2;const py=(rY-tyPix)/Math.max(c,.2);kk=(Dcam-py*sn)/Dcam}
  const rX=ndcX*W/2,px=rX-txPix,py=(rY-tyPix)/Math.max(c,.2),qx=px/k.s,qy=py/k.s;
- let mx=Math.max(-1500,Math.min(1500,qx*cz+qy*sz)),my=Math.max(-1500,Math.min(1500,-qx*sz+qy*cz)); const hx=ptr.on?mx:4000,hy=ptr.on?my:4000,LP=[hx,hy,300],tg=[hx,hy,0],ax=[tg[0]-LP[0],tg[1]-LP[1],tg[2]-LP[2]],al=Math.hypot(...ax);
- const op=Math.max(0,Math.min(1,window.BOOKO||0));gl.uniform1f(u('uOpen'),innerWidth<700?op*.4:op);
+ let mx=Math.max(-1500,Math.min(1500,qx*cz+qy*sz)),my=Math.max(-1500,Math.min(1500,-qx*sz+qy*cz)); const pointed=!phone&&ptr.on,hx=pointed?mx:4000,hy=pointed?my:4000,LP=[hx,hy,300],tg=[hx,hy,0],ax=[tg[0]-LP[0],tg[1]-LP[1],tg[2]-LP[2]],al=Math.hypot(...ax);
+ const op=Math.max(0,Math.min(1,window.BOOKO||0));gl.uniform1f(u('uOpen'),phone?op*.4:op);
  const LP2=[0,.02*P*(1.-op),980.-260.*op],t2=[0,0,0],a2=[t2[0]-LP2[0],t2[1]-LP2[1],t2[2]-LP2[2]],l2=Math.hypot(...a2);gl.uniform3fv(u('uLP2'),LP2);gl.uniform3f(u('uAx2'),a2[0]/l2,a2[1]/l2,a2[2]/l2);
  gl.uniform3fv(u('uLP'),LP);gl.uniform3f(u('uAx'),ax[0]/al,ax[1]/al,ax[2]/al);gl.uniform3f(u('uEye'),0,1700*Math.sin(rx),1700*Math.cos(rx));
  const R=.165*P,Hb=.1*P,Hl=.045*P,Ho=Hb+Hl,Ro=.19*P,Hh=.15*P,st=.004*P,rec=.004*P,lw=.02*P;
@@ -166,7 +174,7 @@ function frame(t){
  const shd=(x,y,r,h,a)=>{const dx=x-LP[0],dy=y-LP[1],l=Math.hypot(dx,dy),ux=dx/l,uy=dy/l,L=h*.9;[[0,1.08,.9],[.5,1.2,.5*a],[1,1.4,.28*a]].forEach(([f,s,al])=>dr('quad',{p:[x+ux*L*f,y+uy*L*f,-7],s:[r*s,r*s,1],mode:4,col:[al,0,0]}))};
  // disposición: nada invade el espacio de la revista (cerrada o abierta)
  const side=1.62;
- const L=innerWidth<700?{open:[],lid:[],closed:[]}:PORT?{open:[{x:-side,y:.02,c:'cr1',s:'cera',g:.5,a:.5}],lid:[],closed:[{x:side,y:.06,k:'pomada',sp:.28,ph:4}]}
+ const L=!decorated?{open:[],lid:[],closed:[]}:PORT?{open:[{x:-side,y:.02,c:'cr1',s:'cera',g:.5,a:.5}],lid:[],closed:[{x:side,y:.06,k:'pomada',sp:.28,ph:4}]}
   :{open:[{x:-1.32,y:.44,c:'cr1',s:'cera',g:.5,a:.5},{x:1.3,y:.74,c:'cr2',s:'fibra',g:.55,a:2.1}],lid:[{x:-1.74,y:.54,a:.6,t:0,k:'cera'},{x:1.3+.33,y:.74,a:Math.PI/2,t:.47,k:'fibra'}],closed:[{x:1.3,y:-.52,k:'pasta',sp:-.3,ph:2},{x:1.46,y:.1,k:'pomada',sp:.28,ph:4}]};
  L.closed.forEach(d=>shd(d.x*P,d.y*P,R,Ho,1));L.open.forEach(d=>shd(d.x*P,d.y*P,Ro,Hh,1));L.lid.forEach(d=>shd(d.x*P,d.y*P,R,d.t?Hl*3:Hl,1));
  L.closed.forEach(d=>{const a=sec*d.sp+d.ph,x=d.x*P,y=d.y*P;
@@ -181,9 +189,11 @@ function frame(t){
  gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,fw,fh);gl.disable(gl.DEPTH_TEST);gl.disable(gl.BLEND);gl.useProgram(pp);
  gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tR);gl.uniform1i(pp.u('uScn'),0);gl.uniform2f(pp.u('uRes'),fw,fh);gl.uniform1f(pp.u('uFy'),1-(.54+tyF/100));gl.uniform1f(pp.u('uAmt'),(PORT?1.1:1.6)*fw/innerWidth);gl.uniform1f(pp.u('uT'),sec%10);
  gl.bindVertexArray(emptyVao);gl.drawArrays(gl.TRIANGLES,0,3);
- frameRequest=requestAnimationFrame(frame)}
+ if(!phone)frameRequest=requestAnimationFrame(frame)}
 function resume(){
- if(!frameRequest&&!document.hidden&&!magazine.hidden&&innerWidth>=700)frameRequest=requestAnimationFrame(frame);
+ if(frameRequest||document.hidden||magazine.hidden)return;
+ document.body.classList.add('gl');
+ frameRequest=requestAnimationFrame(frame);
 }
 window.resumeRevistaDesk=resume;
 document.addEventListener('visibilitychange',resume);
