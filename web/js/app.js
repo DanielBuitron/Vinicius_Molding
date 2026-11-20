@@ -10,7 +10,7 @@ function loadStoreVolume() {
   if (!storeVolumeModule) {
     storeVolumeModule = new Promise((resolve, reject) => {
       const script = document.createElement("script");
-      script.src = new URL("volume.js?v=337", storeScriptUrl).href;
+      script.src = new URL("volume.js?v=338", storeScriptUrl).href;
       script.onload = resolve;
       script.onerror = () => { script.remove(); reject(new Error("No se pudo cargar el visor.")); };
       document.head.appendChild(script);

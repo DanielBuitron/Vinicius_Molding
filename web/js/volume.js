@@ -1380,6 +1380,18 @@ function makeWaxUnboxing(model) {
   };
 }
 
+function resizeVolumeRenderer(renderer, width, height, desktopRatio, mobileRatio, mobilePixels) {
+  const compact = matchMedia("(pointer: coarse), (max-width: 780px)").matches;
+  // Bound GPU work on smaller screens, especially when several viewers are visible.
+  const limit = compact ? Math.min(mobileRatio, Math.sqrt(mobilePixels / (width * height))) : desktopRatio;
+  const ratio = Math.min(window.devicePixelRatio || 1, limit);
+  const canvas = renderer.domElement;
+  if (canvas.width !== Math.floor(width * ratio) || canvas.height !== Math.floor(height * ratio) ||
+      renderer.getPixelRatio() !== ratio) {
+    renderer.setDrawingBufferSize(width, height, ratio);
+  }
+}
+
 function createCampaignVolume() {
   const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "low-power" });
   renderer.setClearColor(0x000000, 0);
@@ -1441,15 +1453,15 @@ function createCampaignVolume() {
     if (!host || !host.clientWidth || !host.clientHeight) return;
     const width = host.clientWidth;
     const height = host.clientHeight;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, matchMedia("(pointer: coarse)").matches ? 1 : 1.45));
-    renderer.setSize(width, height, false);
+    resizeVolumeRenderer(renderer, width, height, 1.45, 2.5, 1_250_000);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
     const size = frameBounds.getSize(new THREE.Vector3());
     const horizontalFit = camera.aspect < 0.8 ? 0.68 : 0.62;
     const baseDistance = Math.max(size.y * 0.72 + size.z * 0.27, size.x * horizontalFit / camera.aspect)
       / Math.tan(Math.PI / 12) + size.z * 0.43;
-    distance = story ? Math.max(5.7, 5.9 / camera.aspect) : baseDistance * 0.88;
+    const portrait = matchMedia("(max-width: 780px) and (orientation: portrait)").matches;
+    distance = story ? Math.max(5.7, (portrait ? 5.4 : 5.9) / camera.aspect) : baseDistance * 0.88;
     redraw();
   }
 
@@ -3135,8 +3147,8 @@ function attachVolume(el, model) {
     const width = el.clientWidth || 300;
     const reserved = catalogCard ? Math.max(22, (controls?.offsetHeight || 0) + 13) : 22;
     const height = Math.max(1, el.clientHeight - reserved);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, width > 340 ? 1.6 : 1));
-    renderer.setSize(width, height, false);
+    resizeVolumeRenderer(renderer, width, height, width > 340 ? 1.6 : 1,
+      catalogCard ? 2.2 : 2.5, catalogCard ? 320_000 : 1_800_000);
     camera.aspect = width / height;
     updateProjection();
   };
