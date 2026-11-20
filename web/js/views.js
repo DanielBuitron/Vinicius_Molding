@@ -4,25 +4,23 @@ function shellPublic(content) {
   const links = [["inicio", t("nav.home")], ["catalogo", t("nav.catalog")], ["testimonios", t("nav.voices")]];
   const home = page === "inicio";
   return `
-    ${home ? "" : `<a class="wa-side" href="${waHref()}" target="_blank" rel="noopener" aria-label="${t("nav.advisor")}">${iconWhatsapp()}<span>${t("nav.advisor")}</span></a>`}
-    <header class="site-header ${home ? "desk-header" : ""}">
+    <a class="wa-side" href="${waHref()}" target="_blank" rel="noopener" aria-label="${t("nav.advisor")}">${iconWhatsapp()}<span>${t("nav.advisor")}</span></a>
+    <header class="site-header ${home ? "campaign-header" : ""}">
       <a class="brand" href="#/inicio"><img src="assets/logo-white.png" alt="Vinicius Molding"></a>
-      ${home ? "" : `
-      <nav class="nav ${VM.menu ? "open" : ""}">
+      <nav class="nav ${VM.menu ? "open" : ""}" id="site-navigation">
         ${localeControlsHtml("nav-locale")}
-        ${links.map(([id, label]) => `<a href="#/${id}" class="${page === id || (id === "catalogo" && page === "linea") ? "active" : ""}">${label}</a>`).join("")}
-        <a href="#/login">${t("nav.panel")}</a>
-      </nav>`}
+        ${home ? `<button type="button" data-campaign-jump="explore">${campaignText("exploreShort")}</button><button type="button" data-campaign-jump="style">${campaignText("discover")}</button>` : ""}
+        ${links.filter(([id]) => !home || id !== "inicio").map(([id, label]) => `<a href="#/${id}" class="${page === id || (id === "catalogo" && page === "linea") ? "active" : ""}">${label}</a>`).join("")}
+        ${home ? `<a data-campaign-account href="${VM.user ? "#/panel/resumen" : "#/login"}">${t(VM.user ? "nav.panel" : "nav.loginShort")}</a>` : `<a href="#/login">${t("nav.panel")}</a>`}
+      </nav>
       <div class="header-actions">
         ${localeControlsHtml("bar-locale")}
-        <a class="btn touch" href="${waHref()}" target="_blank" rel="noopener">${t("nav.talk")}</a>
-        ${home ? "" : `
+        ${home ? `<a class="campaign-mobile-link" href="#/catalogo">${t("nav.catalog")}</a>` : `<a class="btn touch" href="${waHref()}" target="_blank" rel="noopener">${t("nav.talk")}</a>`}
         <a class="icon-btn" href="#/carrito" aria-label="${t("nav.cart")}">${iconBag()}<span class="cart-count ${count ? "show" : ""}" data-cart-count>${count}</span></a>
-        <button class="menu-toggle" data-act="menu" aria-label="${t("nav.menu")}">${VM.menu ? iconClose() : iconMenu()}</button>`}
+        <button type="button" class="menu-toggle" data-act="menu" aria-label="${t("nav.menu")}" aria-controls="site-navigation" aria-expanded="${Boolean(VM.menu)}">${VM.menu ? iconClose() : iconMenu()}</button>
       </div>
     </header>
     <main>${content}</main>
-    ${home ? "" : `
     <footer class="site-footer">
       <div>
         <img src="assets/logo-white.png" alt="">
@@ -44,7 +42,7 @@ function shellPublic(content) {
         <strong>${t("footer.advisor")}</strong>
         <a href="${waHref()}" target="_blank" rel="noopener">WhatsApp</a>
       </div>
-    </footer>`}`;
+    </footer>`;
 }
 
 function packShot(item) {
@@ -156,7 +154,7 @@ function viewDesk() {
 }
 
 function viewHome() {
-  return viewDesk();
+  return viewCampaign();
 }
 
 function viewTestimonials() {

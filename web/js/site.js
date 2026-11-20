@@ -189,7 +189,7 @@ function catalogOrbit(src, alt, id) {
     ? "assets/revista-productos/pasta-minoxidil.webp?v=4"
     : cutoutSrc(src));
   const img = `<img src="${esc(preview)}" alt="${esc(alt)}" loading="lazy" decoding="async" draggable="false">`;
-  const parts = Object.hasOwn(MOLDING_STAGE_ART, id) ? `
+  const parts = typeof MOLDING_STAGE_ART !== "undefined" && Object.hasOwn(MOLDING_STAGE_ART, id) ? `
       <button type="button" data-orbit-act="cerrado">Cerrado</button>
       <button type="button" data-orbit-act="abierto">Abierto</button>
       <button type="button" data-orbit-act="completo">Completo</button>` : "";

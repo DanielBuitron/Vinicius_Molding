@@ -7,6 +7,27 @@ let volumeLogo = null;
 let volumeWord = null;
 let localVolumeTextures;
 const volumeScriptUrl = typeof document !== "undefined" && document.currentScript?.src;
+let volumeEngine;
+
+function loadVolumeEngine() {
+  if (typeof THREE !== "undefined") return Promise.resolve();
+  if (!volumeEngine) {
+    volumeEngine = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = volumeScriptUrl ? new URL("three.min.js?v=274", volumeScriptUrl).href : "js/three.min.js?v=274";
+      script.onload = resolve;
+      script.onerror = () => {
+        script.remove();
+        reject(new Error("No se pudo cargar el visor 3D."));
+      };
+      document.head.appendChild(script);
+    }).catch((error) => {
+      volumeEngine = undefined;
+      throw error;
+    });
+  }
+  return volumeEngine;
+}
 
 const PACKS = {
   "cera-fibra": { kind: "tin", accent: "#6E45C8", body: "#121214", ink: "#f6f3ec", title: "CERA & FIBRA", lidLines: ["ACABADO HÚMEDO"], size: "200 g", hold: 4, wax: ["#fbfaf6", "#efeae0", "#ddd4c4"] },
@@ -100,13 +121,15 @@ function mountOrbits(job) {
   });
 }
 
-function mountVolumes() {
+async function mountVolumes() {
   releaseVolumes();
   volumeJob += 1;
   const job = volumeJob;
   if (mountVolumes.observer) mountVolumes.observer.disconnect();
   const nodes = [...document.querySelectorAll("[data-orbit]")];
-  if (!nodes.length || typeof THREE === "undefined") return;
+  if (!nodes.length) return;
+  try { await loadVolumeEngine(); } catch (_) { return; }
+  if (job !== volumeJob) return;
   const maxLive = 8;
   const active = [];
   const distance = (el) => {
@@ -1270,6 +1293,169 @@ function setCeraView(root, mode) {
   }
   if (wax) wax.visible = mode !== "cerrado";
   if (box) box.visible = mode === "completo";
+}
+
+function createCampaignVolume() {
+  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "low-power" });
+  renderer.setClearColor(0x000000, 0);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.22;
+  renderer.domElement.setAttribute("aria-hidden", "true");
+  const scene = new THREE.Scene();
+  const pivot = new THREE.Group();
+  const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 80);
+  const frameBounds = new THREE.Box3();
+  const center = new THREE.Vector3();
+  const aim = new THREE.Euler();
+  const rim = new THREE.DirectionalLight(0xe52c3b, 0.22);
+  rim.position.set(4.6, 2, -3.1);
+  studioLights(scene);
+  scene.add(pivot, rim);
+  let host, subject, shot, mode, observer, frame, lidMove;
+  let distance = 4;
+  let progress = 0;
+  let userMotion = false;
+  let heroFrame = false;
+
+  function redraw() {
+    if (subject && host && !document.hidden && !frame) frame = requestAnimationFrame(draw);
+  }
+
+  function draw(now) {
+    frame = 0;
+    if (!host || document.hidden) return;
+    const ease = userMotion ? 0.19 : 0.13;
+    const cameraZ = distance / (1 + progress * 0.10);
+    pivot.rotation.x += (aim.x - pivot.rotation.x) * ease;
+    pivot.rotation.y += (aim.y - pivot.rotation.y) * ease;
+    subject.position.lerp(center, 0.17);
+    camera.position.z += (cameraZ - camera.position.z) * 0.17;
+    if (lidMove) {
+      const p = Math.min(1, (now - lidMove.started) / 670);
+      const sweep = Math.min(1, Math.max(0, (p - 0.22) / 0.53));
+      const lift = Math.min(1, p / 0.22, (1 - p) / 0.25);
+      lidMove.lid.position.lerpVectors(lidMove.from, lidMove.to, sweep * sweep * (3 - 2 * sweep));
+      lidMove.lid.position.y += Math.max(0, lift) * 0.32;
+      lidMove.lid.quaternion.slerpQuaternions(lidMove.fromRotation, lidMove.toRotation, sweep);
+      if (p === 1) lidMove = null;
+    }
+    renderer.render(scene, camera);
+    if (lidMove || subject.position.distanceToSquared(center) > 0.000005 ||
+        Math.abs(cameraZ - camera.position.z) > 0.003 || Math.abs(aim.y - pivot.rotation.y) > 0.002 ||
+        Math.abs(aim.x - pivot.rotation.x) > 0.002) redraw();
+  }
+
+  function fit() {
+    if (!host || !host.clientWidth || !host.clientHeight) return;
+    const width = host.clientWidth;
+    const height = host.clientHeight;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, matchMedia("(pointer: coarse)").matches ? 1 : 1.45));
+    renderer.setSize(width, height, false);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    const size = frameBounds.getSize(new THREE.Vector3());
+    const horizontalFit = camera.aspect < 0.8 ? 0.68 : 0.62;
+    const baseDistance = Math.max(size.y * 0.72 + size.z * 0.27, size.x * horizontalFit / camera.aspect)
+      / Math.tan(Math.PI / 12) + size.z * 0.43;
+    distance = baseDistance * (heroFrame ? 0.84 : 0.88);
+    redraw();
+  }
+
+  function measure() {
+    const oldPosition = subject.position.clone();
+    const oldRotation = pivot.rotation.clone();
+    subject.position.set(0, 0, 0);
+    pivot.rotation.set(0, 0, 0);
+    pivot.updateMatrixWorld(true);
+    frameBounds.makeEmpty();
+    subject.traverseVisible((node) => {
+      if (!node.isMesh) return;
+      if (!node.geometry.boundingBox) node.geometry.computeBoundingBox();
+      frameBounds.union(node.geometry.boundingBox.clone().applyMatrix4(node.matrixWorld));
+    });
+    frameBounds.getCenter(center).negate();
+    pivot.rotation.copy(oldRotation);
+    subject.position.copy(oldPosition);
+    fit();
+  }
+
+  function pose(next, animate = false) {
+    if (!shot.frameParts || mode === next) return;
+    const lid = subject.getObjectByName("ContainerLid");
+    const from = lid?.position.clone();
+    const fromRotation = lid?.quaternion.clone();
+    setCeraView(subject, next);
+    mode = next;
+    measure();
+    lidMove = null;
+    if (animate && lid && from) {
+      lidMove = { lid, from, fromRotation, to: lid.position.clone(), toRotation: lid.quaternion.clone(), started: performance.now() };
+      lid.position.copy(from);
+      lid.quaternion.copy(fromRotation);
+    }
+    redraw();
+  }
+
+  function detach() {
+    if (frame) cancelAnimationFrame(frame);
+    frame = 0;
+    observer?.disconnect();
+    renderer.domElement.remove();
+    pivot.clear();
+    host = null;
+    subject = null;
+    lidMove = null;
+  }
+
+  return {
+    mount(container, model, initialPose, hero, accent) {
+      detach();
+      shot = model;
+      host = container;
+      heroFrame = hero;
+      subject = model.object.clone();
+      pivot.add(subject);
+      rim.color.set(accent);
+      rim.intensity = 0.22;
+      aim.set(hero ? 0.70 : model.tilt, hero ? -0.22 : 0.08, 0);
+      pivot.rotation.copy(aim);
+      mode = initialPose;
+      if (shot.frameParts) setCeraView(subject, initialPose);
+      userMotion = false;
+      progress = 0;
+      measure();
+      subject.position.copy(center);
+      camera.position.set(0, 0, distance);
+      camera.lookAt(0, 0, 0);
+      renderer.render(scene, camera);
+      host.appendChild(renderer.domElement);
+      observer = new ResizeObserver(fit);
+      observer.observe(host);
+    },
+    pose,
+    turn(x, y, instant) {
+      userMotion = true;
+      aim.x = Math.min(1.08, Math.max(-0.73, aim.x + x));
+      aim.y += y;
+      if (instant) pivot.rotation.copy(aim);
+      redraw();
+    },
+    compose(next, lookX, lookY) {
+      if (userMotion) return;
+      progress = next;
+      rim.intensity = 0.22 + next * 0.34;
+      aim.set(0.70 - next * 0.24 + lookY * 0.07, -0.22 + next * 0.51 + lookX * 0.16, 0);
+      redraw();
+    },
+    detach,
+    redraw,
+    dispose() {
+      detach();
+      renderer.dispose();
+      renderer.forceContextLoss();
+    },
+  };
 }
 
 function ceraLidPrint() {

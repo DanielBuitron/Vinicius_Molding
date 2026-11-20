@@ -2,6 +2,25 @@ let renderSeq = 0;
 let bootCatalog, bootConfig, bootSession, bootComments;
 let advisorDone = false;
 let checkoutOrder = null;
+let storeVolumeModule;
+const storeScriptUrl = document.currentScript.src;
+
+function loadStoreVolume() {
+  if (typeof loadVolumeEngine === "function") return Promise.resolve();
+  if (!storeVolumeModule) {
+    storeVolumeModule = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = new URL("volume.js?v=336", storeScriptUrl).href;
+      script.onload = resolve;
+      script.onerror = () => { script.remove(); reject(new Error("No se pudo cargar el visor.")); };
+      document.head.appendChild(script);
+    }).catch((error) => {
+      storeVolumeModule = undefined;
+      throw error;
+    });
+  }
+  return storeVolumeModule;
+}
 
 function parseRoute() {
   const search = new URLSearchParams(location.search);
@@ -87,34 +106,6 @@ function bindShowcases() {
     root.addEventListener("pointerenter", () => { root.dataset.pause = "1"; });
     root.addEventListener("pointerleave", () => { delete root.dataset.pause; });
   });
-}
-
-function syncMagazine(home) {
-  const revista = document.getElementById("revista");
-  const app = document.getElementById("app");
-  const css = document.getElementById("store-css");
-  if (revista) revista.hidden = !home;
-  if (app) app.hidden = home;
-  if (css) css.media = home ? "not all" : "all";
-  document.body.classList.toggle("mode-home", !!home);
-  document.body.classList.toggle("mode-app", !home);
-  const badge = document.getElementById("mag-count");
-  if (badge) {
-    const count = cartCount();
-    badge.textContent = String(count);
-    badge.hidden = count < 1;
-  }
-  if (home && typeof window.activateRevista === "function") window.activateRevista();
-  if (home) offerWelcome();
-  const login = document.getElementById("login-link");
-  if (login) {
-    if (VM.user) {
-      login.setAttribute("href", "#/panel/resumen");
-    } else {
-      login.setAttribute("href", "#/login");
-    }
-  }
-  if (typeof applyStaticLang === "function") applyStaticLang();
 }
 
 function stopWhatsappPoll() {
@@ -313,6 +304,7 @@ function mountWhatsappQr() {
 }
 
 function paint(html, bodyClass) {
+  unmountCampaign();
   const page = (VM.parts && VM.parts[0]) || "inicio";
   const extras = [];
   const keepGl = document.body.classList.contains("gl");
@@ -341,6 +333,7 @@ function paint(html, bodyClass) {
     if (typeof destroyDesk === "function") destroyDesk();
     if (typeof mountDesk === "function") mountDesk();
   }
+  if (page === "inicio") mountCampaign();
 }
 
 function refreshShop() {
@@ -452,12 +445,13 @@ async function render() {
     vincular: bootSession,
     testimonios: bootComments,
   }[page];
-  if (required) await required;
+  if (["catalogo", "linea", "producto"].includes(page)) {
+    await Promise.all([required, loadStoreVolume().catch(() => {})]);
+  } else if (required) await required;
   if (seq !== renderSeq) return;
   VM.parts = route.parts;
   VM.qs = route.qs;
   titles();
-  syncMagazine(page === "inicio");
 
   if (page === "login") {
     if (VM.user) {
@@ -553,12 +547,12 @@ async function render() {
   }
 
   if (page === "inicio") {
+    paint(shellPublic(viewHome()), "site");
     trackView();
     return;
   }
 
   const content = {
-    inicio: viewHome,
     catalogo: viewCatalog,
     linea: viewCatalog,
     testimonios: viewTestimonials,
@@ -569,7 +563,7 @@ async function render() {
     carrito: viewCart,
     pago: viewCheckout,
   }[page];
-  paint(shellPublic(content ? content() : viewHome()), "site");
+  paint(shellPublic(content ? content() : viewDesk()), "site");
   if (page === "catalogo" || page === "linea") {
     const qInput = document.querySelector("[data-catalog-q]");
     if (qInput && document.activeElement && document.activeElement.hasAttribute && document.activeElement.hasAttribute("data-catalog-q")) {
@@ -906,7 +900,13 @@ function addToCart(id, qty) {
   else VM.cart.push({ id, qty: amount });
   saveCart();
   toast(product.name + " en el carrito");
-  render();
+  if (VM.parts[0] === "inicio") {
+    const count = cartCount();
+    document.querySelectorAll("[data-cart-count]").forEach((badge) => {
+      badge.textContent = String(count);
+      badge.classList.toggle("show", count > 0);
+    });
+  } else render();
 }
 window.addToCart = addToCart;
 
@@ -1102,7 +1102,7 @@ function bind() {
     }
     if (act === "menu") {
       VM.menu = !VM.menu;
-      render();
+      if (!showCampaignMenu(VM.menu)) render();
       return;
     }
     if (act === "reel-sound") {
@@ -1629,6 +1629,7 @@ function boot() {
   const read = (path) => api(path, { signal: AbortSignal.timeout(4500) }).catch(() => null);
   bootCatalog = read("/api/products").then((data) => {
     if (Array.isArray(data?.products)) VM.products = mergeCatalog(data.products);
+    refreshCampaign();
     if (typeof getLang === "function" && getLang() !== "es" && typeof warmProductTranslations === "function") {
       warmProductTranslations(VM.products);
     }
@@ -1643,6 +1644,7 @@ function boot() {
         const rate = { usdRate: config.usdRate, date: config.trmDate || "", source: config.trmSource || "TRM" };
         VM.trm = saveCachedTrm(rate) || rate;
       }
+      refreshCampaign();
     }
     if (!config?.usdRate && typeof getCurrency === "function" && getCurrency() === "USD") {
       loadTrm().then(() => render()).catch(() => {});
@@ -1653,7 +1655,11 @@ function boot() {
     VM.token = VM.user ? "cookie" : "";
     localStorage.removeItem("vm_token");
     localStorage.removeItem("vm_user");
-    if (parseRoute().parts[0] === "inicio") syncMagazine(true);
+    const account = document.querySelector("[data-campaign-account]");
+    if (account) {
+      account.href = VM.user ? "#/panel/resumen" : "#/login";
+      account.textContent = t(VM.user ? "nav.panel" : "nav.loginShort");
+    }
   });
   bootComments = read("/api/comments").then((data) => {
     try {

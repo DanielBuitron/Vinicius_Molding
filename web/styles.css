@@ -1,7 +1,7 @@
-@font-face{font-family:Poppins;font-weight:300;src:url(assets/fonts/Poppins-Light.ttf)}
-@font-face{font-family:Poppins;font-weight:400;src:url(assets/fonts/Poppins-Regular.ttf)}
-@font-face{font-family:Poppins;font-weight:500;src:url(assets/fonts/Poppins-Medium.ttf)}
-@font-face{font-family:Poppins;font-weight:700;src:url(assets/fonts/Poppins-Bold.ttf)}
+@font-face{font-family:Poppins;font-weight:300;font-display:swap;src:url(assets/fonts/Poppins-Light.ttf)}
+@font-face{font-family:Poppins;font-weight:400;font-display:swap;src:url(assets/fonts/Poppins-Regular.ttf)}
+@font-face{font-family:Poppins;font-weight:500;font-display:swap;src:url(assets/fonts/Poppins-Medium.ttf)}
+@font-face{font-family:Poppins;font-weight:700;font-display:swap;src:url(assets/fonts/Poppins-Bold.ttf)}
 :root{--red:#E52C3B;--ink:#000;--teal:#00C8C2;--yellow:#FFD300;--grey:#585E65;--lime:#A4D800;
 --display:'TT Travels Next',Poppins,sans-serif;--pw:min(38vw,46vh);--ph:calc(var(--pw)*1.28)}
 #revista *{box-sizing:border-box;margin:0}
