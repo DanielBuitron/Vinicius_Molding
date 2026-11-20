@@ -9,7 +9,7 @@ function shellPublic(content) {
       <a class="brand" href="#/inicio"><img src="assets/logo-white.png" alt="Vinicius Molding"></a>
       <nav class="nav ${VM.menu ? "open" : ""}" id="site-navigation">
         ${localeControlsHtml("nav-locale")}
-        ${home ? `<button type="button" data-campaign-jump="explore">${campaignText("exploreShort")}</button><button type="button" data-campaign-jump="style">${campaignText("discover")}</button>` : ""}
+        ${home ? `<button type="button" data-campaign-jump="style">${campaignText("discover")}</button>` : ""}
         ${links.filter(([id]) => !home || id !== "inicio").map(([id, label]) => `<a href="#/${id}" class="${page === id || (id === "catalogo" && page === "linea") ? "active" : ""}">${label}</a>`).join("")}
         ${home ? `<a data-campaign-account href="${VM.user ? "#/panel/resumen" : "#/login"}">${t(VM.user ? "nav.panel" : "nav.loginShort")}</a>` : `<a href="#/login">${t("nav.panel")}</a>`}
       </nav>

@@ -2,8 +2,7 @@ const CAMPAIGN_COPY = {
   kicker: ["Cuidado capilar masculino", "Men’s hair care", "男士头发护理"],
   slogan: ["Somos la solución,|no el problema.", "We are the solution,|not the problem.", "我们是解决方案，|而非问题。"],
   intro: ["Moldeado y cuidado capilar Vinicius Molding.", "Styling and hair care by Vinicius Molding.", "Vinicius Molding 造型与头发护理。"],
-  explore: ["Explorar productos", "Explore products", "探索产品"],
-  exploreShort: ["Explorar", "Explore", "探索"],
+  stages: ["Pasos de apertura", "Opening stages", "开启步骤"],
   scroll: ["Desliza para abrir la caja", "Scroll to open the box", "向下滑动打开包装盒"],
   discover: ["Descubre tu estilo", "Discover your style", "发现你的风格"],
   question: ["¿Qué quieres conseguir con tu peinado?", "What look are you going for?", "你想要什么样的造型？"],
@@ -12,8 +11,6 @@ const CAMPAIGN_COPY = {
   control: ["Fijación y control", "Hold and control", "定型与控制"],
   structure: ["Peinado estructurado", "Structured styling", "立体造型"],
   care: ["Cuidado capilar", "Hair care", "头发护理"],
-  line: ["Líneas de producto", "Product lines", "产品系列"],
-  molding: ["Moldeado", "Styling", "造型"],
   product: ["Ver ficha", "View product", "查看产品"],
   add: ["Añadir al carrito", "Add to cart", "加入购物车"],
   closed: ["Cerrado", "Closed", "闭合"],
@@ -24,7 +21,6 @@ const CAMPAIGN_COPY = {
   view3d: ["Ver en 3D", "View in 3D", "查看 3D"],
   loading3d: ["Cargando el visor", "Loading viewer", "正在加载查看器"],
   unavailable3d: ["El visor no está disponible. Puedes explorar la foto y la ficha del producto.", "The viewer is unavailable. You can explore the product photo and details.", "查看器不可用。你可以查看产品照片和详情。"],
-  other: ["Completa tu rutina", "Complete your routine", "完善日常护理"],
   all: ["Ver catálogo completo", "View full catalog", "查看完整目录"],
   use: ["Modo de uso", "Directions", "使用方法"],
   waxBenefit: ["Define y moldea con brillo medio.", "Shapes and defines with medium shine.", "塑造线条，呈现中等光泽。"],
@@ -42,33 +38,52 @@ const CAMPAIGN_GOALS = {
   structure: ["pasta", "usePaste"],
   care: ["shampoo-proteccion", "useShampoo"],
 };
-const CAMPAIGN_LINES = ["molding", "limpieza", "tratamiento", "kids", "cuerpo", "kits", "accesorios"];
 const CAMPAIGN_ACCENTS = {
   "cera-brillo": "#e52c3b", "cera-fibra": "#585e65", pasta: "#00c8c2", pomada: "#a4d800",
-  "cera-kids": "#ffd300", "shampoo-proteccion": "#e52c3b", "shampoo-carbon": "#585e65",
-  "ducha-intima": "#a4d800", "serum-barba": "#a4d800", tonico: "#00c8c2",
-  "tonico-minoxidil": "#e52c3b", "tonico-23": "#e52c3b", splash: "#00c8c2",
-  "shaving-gel": "#e52c3b",
+  "cera-kids": "#ffd300", "shampoo-proteccion": "#e52c3b",
 };
 const CAMPAIGN_POSTER = "assets/inicio/cera-cerrada.webp";
+const CAMPAIGN_WAXES = { "cera-brillo": "cera", "cera-fibra": "cera-fibra", "cera-kids": "cera-kids" };
 const CAMPAIGN_STORY = [
-  { at: 0, preview: "cera-caja", label: ["Caja", "Box", "包装盒"],
+  { at: 0, preview: "caja", label: ["Caja", "Box", "包装盒"],
     title: ["Quiénes somos", "About us", "关于我们"],
     text: ["Vinicius Molding es una marca de cuidado capilar y personal con atención desde Cali.", "Vinicius Molding is a hair and personal care brand serving customers from Cali.", "Vinicius Molding 是一个来自卡利的头发与个人护理品牌。"] },
-  { at: 0.36, preview: "cera-caja-abierta", label: ["Abrir", "Open", "打开"],
+  { at: 0.36, preview: "caja-abierta", label: ["Abrir", "Open", "打开"],
     title: ["Qué encuentras", "What we make", "我们的产品"],
     text: ["Ceras, pastas y pomadas para dar forma y definir el peinado. También tenemos línea Kids, productos para el cuerpo y accesorios de barbería.", "Waxes, pastes and pomades to shape and define hair, plus Kids, body care and barber accessories.", "提供塑形发蜡、发泥与发膏，以及儿童系列、身体护理和理发配件。"] },
-  { at: 0.67, preview: "cera-envase", label: ["Destapar", "Unscrew", "旋开"],
+  { at: 0.67, preview: "envase", label: ["Destapar", "Unscrew", "旋开"],
     title: ["Limpieza y tratamiento", "Cleansing and treatment", "清洁与护理"],
     text: ["Champús para la limpieza y el cuidado capilar. Sérum para barba y bigote, y tónicos con indicaciones según cada fórmula.", "Shampoos for cleansing and hair care, serum for beards and moustaches, and tonics with directions for each formula.", "洗发水用于清洁和护理头发，精华用于胡须护理，护理液的用法因配方而异。"], href: "#/catalogo/tratamiento" },
-  { at: 1, preview: "cera-interior", label: ["Interior", "Inside", "内部"],
+  { at: 1, preview: "interior", label: ["Interior", "Inside", "内部"],
     title: ["La tienda Vinicius", "The Vinicius shop", "Vinicius 商店"],
-    text: ["La Cera Moldeadora define el peinado con brillo medio. En la tienda puedes comparar acabados, consultar cada ficha y comprar desde el carrito.", "Molding Wax defines hair with a medium shine. Browse finishes, check product details and shop from your cart.", "塑形发蜡呈现中等光泽。你可以在商店比较不同效果、查看详情并通过购物车购买。"], href: "#/producto/cera-brillo" },
+    text: ["En la tienda puedes comparar acabados, consultar cada ficha y comprar desde el carrito.", "Browse finishes, check product details and shop from your cart.", "你可以在商店比较不同效果、查看详情并通过购物车购买。"] },
 ];
-const storyAsset = (scene) => `assets/inicio/${scene.preview}.webp`;
-const campaignSelection = { line: "molding", item: "cera-brillo", goal: "natural" };
+const storyAsset = (id, scene) => `assets/inicio/${CAMPAIGN_WAXES[id]}-${scene.preview}.webp`;
+let campaignGoal = "natural";
+let campaignWax;
+let lastCampaignWax;
 let campaignController;
 let campaignIntroduced = false;
+
+function selectCampaignWax() {
+  if (campaignWax) return campaignWax;
+  try { lastCampaignWax = localStorage.getItem("vm_last_wax") || lastCampaignWax; } catch (_) { /* storage can be disabled */ }
+  const options = Object.keys(CAMPAIGN_WAXES).filter((id) => id !== lastCampaignWax);
+  campaignWax = options[Math.floor(Math.random() * options.length)];
+  lastCampaignWax = campaignWax;
+  try { localStorage.setItem("vm_last_wax", campaignWax); } catch (_) { /* keep the choice in memory */ }
+  return campaignWax;
+}
+
+if (new URLSearchParams(location.search).get("pedido") !== "1" &&
+    (!location.hash || /^#\/?inicio(?:[/?]|$)/.test(location.hash))) {
+  const poster = document.createElement("link");
+  poster.rel = "preload";
+  poster.as = "image";
+  poster.href = storyAsset(selectCampaignWax(), CAMPAIGN_STORY[0]);
+  poster.fetchPriority = "high";
+  document.head.appendChild(poster);
+}
 
 function campaignText(key) {
   return campaignLocalized(CAMPAIGN_COPY[key]);
@@ -82,29 +97,11 @@ function campaignName(item) {
   return productField(item, "name") || item.name;
 }
 
-function campaignLineName(line) {
-  return line === "molding" ? campaignText("molding") : categoryName(line);
-}
-
-function campaignCatalog() {
-  const products = catalogProducts();
-  const groups = new Map(CAMPAIGN_LINES.map((line) => [line, products.filter((item) => item.category === line)]));
-  const molding = groups.get("molding");
-  const wax = molding.findIndex((item) => item.id === "cera-brillo");
-  if (wax > 0) molding.unshift(molding.splice(wax, 1)[0]);
-  const firstLine = CAMPAIGN_LINES.find((line) => groups.get(line).length);
-  if (!groups.get(campaignSelection.line).length && firstLine) campaignSelection.line = firstLine;
-  const current = groups.get(campaignSelection.line);
-  const index = Math.max(0, current.findIndex((item) => item.id === campaignSelection.item));
-  if (current[index]) campaignSelection.item = current[index].id;
-  return { groups, current, index };
-}
-
-function campaignFigure(item, placement) {
+function campaignFigure(item) {
   const model = CATALOG_VOLUME_LINES.has(item.category);
   const main = studioCover(item.id) || item.image;
   const closed = item.id === "cera-brillo" ? ` data-campaign-closed="${CAMPAIGN_POSTER}"` : "";
-  return `<figure class="campaign-figure campaign-figure-${placement}" data-campaign-figure="${placement}"
+  return `<figure class="campaign-figure campaign-figure-style" data-campaign-figure="style"
       data-product="${esc(item.id)}" data-cover="${esc(main)}"${closed}${model ? " data-campaign-3d" : ""}>
     <div class="campaign-visual" data-campaign-visual${model ? ` aria-label="${esc(campaignName(item))}"` : ""}>
       <img class="campaign-poster" src="${esc(main)}" alt="${esc(campaignName(item))}" draggable="false" decoding="async" loading="lazy">
@@ -123,20 +120,18 @@ function campaignFigure(item, placement) {
   </figure>`;
 }
 
-function campaignDetails(item, usage, heading = "h2") {
+function campaignDetails(item, usage) {
   const name = campaignName(item);
   const finish = [productField(item, "finish"), item.size].filter(Boolean).join("  /  ");
-  const ingredients = (item.ingredients || []).slice(0, 3).join(" · ");
   const displayPrice = Number(item.price) > 0 && !item.consultationOnly;
   const buy = displayPrice && productById(item.id);
   const benefit = { "cera-brillo": "waxBenefit", "shampoo-proteccion": "shampooBenefit" }[item.id];
   const summary = benefit ? campaignText(benefit) : (productField(item, "summary") || item.summary);
   return `<div class="campaign-detail">
     ${finish ? `<p class="campaign-eyebrow">${esc(finish)}</p>` : ""}
-    <${heading}>${esc(name)}</${heading}>
+    <h3>${esc(name)}</h3>
     ${summary ? `<p class="campaign-description">${esc(summary)}</p>` : ""}
-    ${!usage && ingredients ? `<p class="campaign-fine">${esc(ingredients)}</p>` : ""}
-    ${usage ? `<p class="campaign-usage"><strong>${campaignText("use")}</strong><span>${campaignText(usage)}</span></p>` : ""}
+    <p class="campaign-usage"><strong>${campaignText("use")}</strong><span>${campaignText(usage)}</span></p>
     ${displayPrice ? `<p class="campaign-price">${esc(money(item.price))} <small>${esc(getCurrency())}</small></p>` : ""}
     <div class="campaign-actions">
       ${buy ? `<button type="button" class="campaign-primary" data-act="add" data-id="${esc(item.id)}" data-qty="1" ${item.stock > 0 ? "" : "disabled"}>${item.stock > 0 ? campaignText("add") : t("stock.out")}</button>` :
@@ -146,46 +141,20 @@ function campaignDetails(item, usage, heading = "h2") {
   </div>`;
 }
 
-function campaignExplorer() {
-  const { groups, current, index } = campaignCatalog();
-  const item = current[index];
-  if (!item) return `<a class="campaign-link" href="#/catalogo">${campaignText("all")}</a>`;
-  const next = current[(index + 1) % current.length];
-  return `<div class="campaign-explorer-body" style="--scene-accent:${CAMPAIGN_ACCENTS[item.id] || "#585e65"}">
-    <div class="campaign-inner">
-      <div class="campaign-lines" role="group" aria-label="${campaignText("line")}">${[...groups].filter(([, products]) => products.length).map(([line]) =>
-        `<button type="button" data-campaign-line="${line}" aria-pressed="${line === campaignSelection.line}">${esc(campaignLineName(line))}</button>`).join("")}</div>
-      <div class="campaign-product-scene">
-        <div class="campaign-media-wrap">
-          ${campaignFigure(item, "product")}
-          ${current.length > 1 ? `<div class="campaign-steps">
-            <button type="button" data-campaign-step="-1" aria-label="${t("catalog.prev")}">‹</button>
-            <button type="button" data-campaign-step="1" aria-label="${t("catalog.next")}">›</button>
-          </div>` : ""}
-        </div>
-        <div class="campaign-product-copy">
-          ${campaignDetails(item)}
-          ${current.length > 1 ? `<div class="campaign-next">
-            <button type="button" data-campaign-step="-1" aria-label="${t("catalog.prev")}">←</button>
-            <button type="button" data-campaign-step="1" aria-label="${t("catalog.next")} · ${esc(campaignName(next))}">${esc(campaignName(next))} <span aria-hidden="true">→</span></button>
-          </div>` : ""}
-        </div>
-      </div>
-    </div>
-  </div>`;
-}
-
 function campaignRecommendation() {
-  const [id, usage] = CAMPAIGN_GOALS[campaignSelection.goal];
+  const [id, usage] = CAMPAIGN_GOALS[campaignGoal];
   const item = catalogProductById(id);
   if (!item) return `<a class="campaign-link" href="#/catalogo">${campaignText("all")}</a>`;
   return `<div class="campaign-style-result" style="--scene-accent:${CAMPAIGN_ACCENTS[item.id] || "#585e65"}">
-    ${campaignFigure(item, "style")}${campaignDetails(item, usage, "h3")}
+    ${campaignFigure(item)}${campaignDetails(item, usage)}
   </div>`;
 }
 
 function viewCampaign() {
-  const hero = catalogProductById("cera-brillo");
+  const waxId = selectCampaignWax();
+  const hero = catalogProductById(waxId);
+  const heroName = hero ? campaignName(hero) : campaignText("intro");
+  const firstFrame = storyAsset(waxId, CAMPAIGN_STORY[0]);
   const [start, finish] = campaignText("slogan").split("|");
   return `<div class="campaign" data-campaign>
     <section class="campaign-hero campaign-story" data-campaign-hero>
@@ -195,14 +164,14 @@ function viewCampaign() {
           <div class="campaign-hero-copy">
             <p class="campaign-eyebrow">${campaignText("kicker")}</p>
             <h1><span>${start}</span><span>${finish}</span></h1>
-            <p class="campaign-intro">${hero ? esc(campaignName(hero)) : campaignText("intro")}</p>
+            <p class="campaign-intro">${esc(heroName)}</p>
             <p class="campaign-story-mobile-hint" aria-hidden="true">↓ ${campaignText("scroll")}</p>
             <a class="campaign-link" href="#/catalogo">${t("nav.askCatalog")} <span aria-hidden="true">→</span></a>
           </div>
-          <figure class="campaign-figure campaign-story-figure" data-campaign-figure="hero" data-product="cera-brillo"
-            data-cover="${storyAsset(CAMPAIGN_STORY[0])}" data-campaign-3d>
+          <figure class="campaign-figure campaign-story-figure" data-campaign-figure="hero" data-product="${waxId}"
+            data-cover="${firstFrame}" data-campaign-3d>
             <div class="campaign-visual" data-campaign-visual>
-              <img class="campaign-poster" src="${storyAsset(CAMPAIGN_STORY[0])}" alt="${hero ? esc(campaignName(hero)) : "Vinicius Molding"}"
+              <img class="campaign-poster" src="${firstFrame}" alt="${esc(heroName)}"
                 width="960" height="960" fetchpriority="high" decoding="async">
             </div>
             <span class="sr-only" data-campaign-view-status role="status"></span>
@@ -211,39 +180,32 @@ function viewCampaign() {
             ${CAMPAIGN_STORY.map((scene, index) => `<article class="campaign-chapter" data-campaign-chapter="${index}" ${index ? "hidden" : ""}>
               <p class="campaign-eyebrow">${campaignLocalized(scene.label)}</p>
               <h2>${campaignLocalized(scene.title)}</h2>
-              <p>${campaignLocalized(scene.text)}</p>
-              ${scene.href ? `<a class="campaign-link" href="${scene.href}">${index === 2 ? t("footer.treatment") : campaignText("product")} <span aria-hidden="true">→</span></a>` : ""}
+              <p>${index === CAMPAIGN_STORY.length - 1 && hero ? `${esc(productField(hero, "summary") || hero.summary || "")} ` : ""}${campaignLocalized(scene.text)}</p>
+              ${scene.href ? `<a class="campaign-link" href="${scene.href}">${t("footer.treatment")} <span aria-hidden="true">→</span></a>` :
+                index === CAMPAIGN_STORY.length - 1 ? `<a class="campaign-link" href="#/producto/${waxId}">${campaignText("product")} <span aria-hidden="true">→</span></a>` : ""}
             </article>`).join("")}
           </div>
         </div>
         <div class="campaign-story-navigation">
           <button type="button" class="campaign-scroll" data-story-next><span aria-hidden="true">↓</span> <span data-story-next-label>${campaignText("scroll")}</span></button>
-          <div class="campaign-story-steps" role="group" aria-label="${campaignText("exploreShort")}">
+          <div class="campaign-story-steps" role="group" aria-label="${campaignText("stages")}">
             ${CAMPAIGN_STORY.map((scene, index) => `<button type="button" data-story-step="${index}" aria-pressed="${index === 0}">${campaignLocalized(scene.label)}</button>`).join("")}
           </div>
         </div>
       </div>
       </div>
     </section>
-    <section class="campaign-explore" id="campaign-explore" tabindex="-1" aria-label="${campaignText("explore")}" data-campaign-explorer>${campaignExplorer()}</section>
     <section class="campaign-style" id="campaign-style" tabindex="-1" aria-labelledby="campaign-style-title">
       <div class="campaign-inner campaign-style-grid">
         <div class="campaign-quiz">
           <h2 id="campaign-style-title">${campaignText("discover")}</h2>
           <p>${campaignText("question")}</p>
           <div class="campaign-goals" role="group" aria-label="${campaignText("question")}">
-            ${Object.keys(CAMPAIGN_GOALS).map((goal) => `<button type="button" data-campaign-goal="${goal}" aria-pressed="${goal === campaignSelection.goal}">${campaignText(goal)}<span aria-hidden="true">→</span></button>`).join("")}
+            ${Object.keys(CAMPAIGN_GOALS).map((goal) => `<button type="button" data-campaign-goal="${goal}" aria-pressed="${goal === campaignGoal}">${campaignText(goal)}<span aria-hidden="true">→</span></button>`).join("")}
           </div>
         </div>
         <div data-campaign-recommendation>${campaignRecommendation()}</div>
       </div>
-    </section>
-    <section class="campaign-complements campaign-inner">
-      <h2>${campaignText("other")}</h2>
-      <div class="campaign-complement-links">
-        ${["limpieza", "kits", "accesorios"].map((line) => `<a href="#/catalogo/${line}">${esc(campaignLineName(line))}<span aria-hidden="true">↗</span></a>`).join("")}
-      </div>
-      <a class="campaign-link" href="#/catalogo">${campaignText("all")} <span aria-hidden="true">→</span></a>
     </section>
     <p class="sr-only" role="status" data-campaign-announcement></p>
   </div>`;
@@ -260,6 +222,7 @@ function mountCampaign() {
     campaignIntroduced = true;
   }
   const hero = root.querySelector("[data-campaign-hero]");
+  const waxId = hero.querySelector("[data-campaign-figure]").dataset.product;
   const pin = hero.querySelector(".campaign-story-pin");
   const poster = hero.querySelector(".campaign-poster");
   const chapters = [...hero.querySelectorAll("[data-campaign-chapter]")];
@@ -285,7 +248,7 @@ function mountCampaign() {
   function setLive(figure, live) {
     figure.toggleAttribute("data-campaign-live", live);
     const visual = figure.querySelector("[data-campaign-visual]");
-    if (!live && figure.dataset.campaignFigure === "hero") poster.src = storyAsset(CAMPAIGN_STORY[storyChapter]);
+    if (!live && figure.dataset.campaignFigure === "hero") poster.src = storyAsset(waxId, CAMPAIGN_STORY[storyChapter]);
     if (live && figure.dataset.campaignFigure !== "hero") visual.tabIndex = 0;
     else visual.removeAttribute("tabindex");
     const enable = figure.querySelector("[data-campaign-enable]");
@@ -400,9 +363,9 @@ function mountCampaign() {
     chapters.forEach((chapter, i) => { chapter.hidden = i !== index; });
     storySteps.forEach((step, i) => step.setAttribute("aria-pressed", String(i === index)));
     storyNext.textContent = index === 0 ? campaignText("scroll") :
-      (index === CAMPAIGN_STORY.length - 1 ? campaignText("explore") : campaignLocalized(CAMPAIGN_STORY[index + 1].label));
+      (index === CAMPAIGN_STORY.length - 1 ? campaignText("discover") : campaignLocalized(CAMPAIGN_STORY[index + 1].label));
     mobileHint.textContent = "↓ " + storyNext.textContent;
-    if (active?.dataset.campaignFigure !== "hero") poster.src = storyAsset(CAMPAIGN_STORY[index]);
+    if (active?.dataset.campaignFigure !== "hero") poster.src = storyAsset(waxId, CAMPAIGN_STORY[index]);
   }
 
   function update() {
@@ -443,20 +406,18 @@ function mountCampaign() {
     schedule();
   }
 
-  function refreshScene(key, focus, announce = true) {
-    const explorer = key === "explorer";
-    const target = root.querySelector(explorer ? "[data-campaign-explorer]" : "[data-campaign-recommendation]");
-    const markup = explorer ? campaignExplorer() : campaignRecommendation();
+  function refreshRecommendation(announce = true) {
+    const target = root.querySelector("[data-campaign-recommendation]");
+    const markup = campaignRecommendation();
     if (target.innerHTML !== markup) target.innerHTML = markup;
-    if (focus) target.querySelector(focus)?.focus({ preventScroll: true });
-    if (announce) root.querySelector("[data-campaign-announcement]").textContent = target.querySelector(".campaign-detail h2, .campaign-detail h3")?.textContent || "";
+    if (announce) root.querySelector("[data-campaign-announcement]").textContent = target.querySelector(".campaign-detail h3")?.textContent || "";
     registerFigures();
   }
 
   function click(event) {
     const button = event.target.closest("button");
     if (!button) return;
-    const { campaignJump, campaignLine, campaignStep, campaignGoal, campaignPose, campaignRotate } = button.dataset;
+    const { campaignJump, campaignGoal: goal, campaignPose, campaignRotate } = button.dataset;
     if (button.hasAttribute("data-story-step")) {
       seekStory(Number(button.dataset.storyStep));
       return;
@@ -467,7 +428,7 @@ function mountCampaign() {
       return;
     }
     if (campaignJump || storyAdvance) {
-      const section = root.querySelector(`#campaign-${campaignJump || "explore"}`);
+      const section = root.querySelector("#campaign-style");
       if (VM.menu) {
         VM.menu = false;
         showCampaignMenu(false);
@@ -476,24 +437,12 @@ function mountCampaign() {
       section.scrollIntoView({ behavior: motion.matches ? "instant" : "smooth", block: "start" });
       return;
     }
-    if (campaignLine && campaignLine !== campaignSelection.line) {
-      campaignSelection.line = campaignLine;
-      refreshScene("explorer", `[data-campaign-line="${campaignLine}"]`);
-      return;
-    }
-    if (campaignStep) {
-      const { current, index } = campaignCatalog();
-      campaignSelection.item = current[(index + Number(campaignStep) + current.length) % current.length].id;
-      const nav = button.closest(".campaign-steps") ? ".campaign-steps" : ".campaign-next";
-      refreshScene("explorer", `${nav} [data-campaign-step="${campaignStep}"]`);
-      return;
-    }
-    if (campaignGoal && campaignGoal !== campaignSelection.goal) {
-      campaignSelection.goal = campaignGoal;
+    if (goal && goal !== campaignGoal) {
+      campaignGoal = goal;
       for (const option of root.querySelectorAll("[data-campaign-goal]")) {
         option.setAttribute("aria-pressed", String(option === button));
       }
-      refreshScene("recommendation");
+      refreshRecommendation();
       return;
     }
     const figure = button.closest("[data-campaign-3d]");
@@ -566,8 +515,7 @@ function mountCampaign() {
   registerFigures();
   campaignController = {
     refresh() {
-      refreshScene("explorer", null, false);
-      refreshScene("recommendation", null, false);
+      refreshRecommendation(false);
     },
     dispose() {
       controller.abort();
@@ -577,9 +525,10 @@ function mountCampaign() {
   };
 }
 
-function unmountCampaign() {
+function unmountCampaign(leaving = false) {
   campaignController?.dispose();
   campaignController = undefined;
+  if (leaving) campaignWax = undefined;
 }
 
 function refreshCampaign() {

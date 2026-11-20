@@ -304,8 +304,8 @@ function mountWhatsappQr() {
 }
 
 function paint(html, bodyClass) {
-  unmountCampaign();
   const page = (VM.parts && VM.parts[0]) || "inicio";
+  unmountCampaign(page !== "inicio");
   const extras = [];
   const keepGl = document.body.classList.contains("gl");
   if (bodyClass === "site" && (page === "inicio" || !page)) extras.push("home");
