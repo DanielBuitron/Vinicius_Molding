@@ -64,7 +64,7 @@ const MOLDING_STAGE_ART = {
   pasta: { box: "frente.jpg", boxBack: true, edge: "canto-3d.webp", ingredients: "canto-ingredientes-3d.webp", tone: "#5c9da9" },
   pomada: { box: "frente.jpg", boxBack: true, edge: "canto-3d.webp", ingredients: "canto-ingredientes-3d.webp", tone: "#b6a23d" },
   "gel-cubre-canas": { edge: "canto-3d.webp", ingredients: "canto-ingredientes-3d.webp", tone: "#131314", creamTint: "#303030", creamRoughness: 0.68, creamRelief: 0.003 },
-  "cera-kids": { edge: "canto-3d.webp", ingredients: "canto-ingredientes-3d.webp", contact: "canto-contacto-3d.webp", band: "banda-3d.webp", tone: "#85628f", boxColor: "#be1b29" },
+  "cera-kids": { edge: "canto-3d.webp", ingredients: "canto-ingredientes-3d.webp", contact: "canto-contacto-3d.webp", band: "banda-3d.webp", creamSource: "cera-fibra", tone: "#85628f", creamTint: "#e9afff", boxColor: "#be1b29" },
 };
 
 const FORM = {
@@ -330,8 +330,8 @@ function loadLocalVolumeTextures() {
     localVolumeTextures = new Promise((resolve, reject) => {
       const script = document.createElement("script");
       script.src = volumeScriptUrl
-        ? new URL("volume-textures.local.js?v=6", volumeScriptUrl).href
-        : "js/volume-textures.local.js?v=6";
+        ? new URL("volume-textures.local.js?v=7", volumeScriptUrl).href
+        : "js/volume-textures.local.js?v=7";
       script.onload = () => {
         script.remove();
         if (window.VOLUME_LOCAL_TEXTURES) resolve(window.VOLUME_LOCAL_TEXTURES);
@@ -2148,10 +2148,11 @@ function photographicMoldBox(front, canto, ingredients, { color = "#141418", con
 
 async function makeMoldingStage(pack, spec) {
   const base = "productos_3d/" + pack.id + "/texturas/";
+  const creamBase = spec.creamSource ? `productos_3d/${spec.creamSource}/texturas/` : base;
   const [front, lid, cream, edge, ingredients, band, rear, contact] = await Promise.all([
     loadBitmap(base + (spec.box || "caja-3d.webp")),
     loadBitmap(base + "tapa-3d.webp"),
-    loadBitmap(base + (spec.cream || "crema-3d.webp")),
+    loadBitmap(creamBase + (spec.cream || "crema-3d.webp")),
     spec.edge && loadBitmap(base + spec.edge),
     spec.ingredients && loadBitmap(base + spec.ingredients),
     loadBitmap(spec.band ? base + spec.band : LID_ART[pack.id][1]),
