@@ -1295,6 +1295,91 @@ function setCeraView(root, mode) {
   if (box) box.visible = mode === "completo";
 }
 
+function makeWaxUnboxing(model) {
+  const object = model.clone();
+  const box = object.getObjectByName("PackagingBox");
+  const jar = object.getObjectByName("cera-tin");
+  const lid = jar.getObjectByName("ContainerLid");
+  const front = box.getObjectByName("CartonFront");
+  const points = front.geometry.attributes.position;
+  const left = new THREE.Vector3().fromBufferAttribute(points, 0);
+  const tip = new THREE.Vector3().fromBufferAttribute(points, 1);
+  const right = new THREE.Vector3().fromBufferAttribute(points, 2);
+  const edge = new THREE.Vector3(0, left.y, left.z);
+  const hinge = new THREE.Group();
+  hinge.position.copy(edge);
+  hinge.add(front);
+  front.position.sub(edge);
+  front.material = front.material.clone();
+  front.material.side = THREE.FrontSide;
+  const paper = new THREE.MeshStandardMaterial({ color: "#b7b29f", roughness: 0.92, side: THREE.DoubleSide });
+  const insidePaper = paper.clone();
+  insidePaper.side = THREE.BackSide;
+  const underside = new THREE.Mesh(front.geometry, insidePaper);
+  underside.position.copy(front.position);
+  underside.position.z -= 0.007;
+  hinge.add(underside);
+
+  box.children.slice().forEach((panel) => {
+    panel.material = panel.material.clone();
+    panel.material.side = THREE.FrontSide;
+    const inner = new THREE.Mesh(panel.geometry, insidePaper);
+    inner.position.copy(panel.position);
+    box.add(inner);
+  });
+  box.add(hinge);
+  const tabs = [[left, tip], [tip, right]].map(([a, b]) => {
+    const joint = new THREE.Group();
+    const length = b.clone().sub(a);
+    const axis = length.clone().normalize();
+    const outside = new THREE.Vector3(axis.y, -axis.x, 0).multiplyScalar(0.31);
+    joint.position.copy(a).sub(edge);
+    joint.add(faceQuad([
+      new THREE.Vector3(), outside.clone().addScaledVector(length, 0.13),
+      outside.clone().addScaledVector(length, 0.92), length,
+    ], [0, 0, 0, 1, 1, 1, 1, 0], paper));
+    hinge.add(joint);
+    return { joint, axis };
+  });
+
+  const carton = new THREE.Group();
+  carton.add(box);
+  object.add(carton);
+  box.position.set(0, -(left.y + tip.y) / 2, 0);
+  box.rotation.set(0, 0, 0);
+  jar.scale.setScalar(0.73);
+  const seat = new THREE.Vector3(0, (left.y * 2 + tip.y) / 3 + box.position.y, -edge.z + 0.014);
+  const lift = new THREE.Vector3();
+  const [shutX, shutY, shutZ] = lid.userData.shut;
+  const blend = (value, start, end) => kidsEase((value - start) / (end - start));
+
+  return {
+    object,
+    seek(t) {
+      const lay = blend(t, 0.045, 0.25);
+      const unfold = blend(t, 0.22, 0.40);
+      const rise = blend(t, 0.39, 0.50);
+      const exit = blend(t, 0.48, 0.66);
+      const turn = blend(t, 0.66, 0.82);
+      const release = blend(t, 0.81, 0.89);
+      const aside = blend(t, 0.86, 0.99);
+      carton.rotation.set(-0.12 - lay * 1.45, -0.13 * (1 - lay), 0);
+      carton.position.set(-exit * 0.34, -lay * 0.40, -exit * 0.60);
+      hinge.rotation.x = -unfold * 1.88;
+      tabs.forEach(({ joint, axis }) => {
+        joint.visible = unfold > 0.085;
+        joint.quaternion.setFromAxisAngle(axis, 1.32 - unfold * 1.18);
+      });
+      jar.visible = t >= 0.23;
+      lift.copy(seat).applyEuler(carton.rotation).add(carton.position);
+      jar.position.set(lift.x + 0.66 * exit, lift.y + rise * 0.95 - exit * 0.57, lift.z + exit * 1.76);
+      jar.rotation.set((carton.rotation.x + Math.PI / 2) * (1 - exit), -exit * 0.22, 0);
+      lid.position.set(shutX - aside * 1.46, shutY + turn * 0.07 + release * 0.34 - aside * 0.38, shutZ + aside * 0.15);
+      lid.rotation.set(aside * 0.70, turn * Math.PI * 2.5 - aside * (Math.PI * 0.5 + 0.10), 0);
+    },
+  };
+}
+
 function createCampaignVolume() {
   const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "low-power" });
   renderer.setClearColor(0x000000, 0);
@@ -1316,7 +1401,7 @@ function createCampaignVolume() {
   let distance = 4;
   let progress = 0;
   let userMotion = false;
-  let heroFrame = false;
+  let story;
 
   function redraw() {
     if (subject && host && !document.hidden && !frame) frame = requestAnimationFrame(draw);
@@ -1326,11 +1411,17 @@ function createCampaignVolume() {
     frame = 0;
     if (!host || document.hidden) return;
     const ease = userMotion ? 0.19 : 0.13;
-    const cameraZ = distance / (1 + progress * 0.10);
+    const cartonReveal = story ? kidsEase((progress - 0.13) / 0.27) : 0;
+    const cameraZ = story ? distance * (1 + cartonReveal * 0.35)
+      : distance / (1 + progress * 0.10);
     pivot.rotation.x += (aim.x - pivot.rotation.x) * ease;
     pivot.rotation.y += (aim.y - pivot.rotation.y) * ease;
     subject.position.lerp(center, 0.17);
-    camera.position.z += (cameraZ - camera.position.z) * 0.17;
+    camera.position.z += (cameraZ - camera.position.z) * (story ? 1 : 0.17);
+    if (story) {
+      camera.position.y = 0.56 * cartonReveal;
+      camera.lookAt(0, camera.position.y, 0);
+    }
     if (lidMove) {
       const p = Math.min(1, (now - lidMove.started) / 670);
       const sweep = Math.min(1, Math.max(0, (p - 0.22) / 0.53));
@@ -1358,7 +1449,7 @@ function createCampaignVolume() {
     const horizontalFit = camera.aspect < 0.8 ? 0.68 : 0.62;
     const baseDistance = Math.max(size.y * 0.72 + size.z * 0.27, size.x * horizontalFit / camera.aspect)
       / Math.tan(Math.PI / 12) + size.z * 0.43;
-    distance = baseDistance * (heroFrame ? 0.84 : 0.88);
+    distance = story ? Math.max(5.7, 5.9 / camera.aspect) : baseDistance * 0.88;
     redraw();
   }
 
@@ -1381,7 +1472,7 @@ function createCampaignVolume() {
   }
 
   function pose(next, animate = false) {
-    if (!shot.frameParts || mode === next) return;
+    if (story || !shot.frameParts || mode === next) return;
     const lid = subject.getObjectByName("ContainerLid");
     const from = lid?.position.clone();
     const fromRotation = lid?.quaternion.clone();
@@ -1406,6 +1497,7 @@ function createCampaignVolume() {
     host = null;
     subject = null;
     lidMove = null;
+    story = null;
   }
 
   return {
@@ -1413,18 +1505,22 @@ function createCampaignVolume() {
       detach();
       shot = model;
       host = container;
-      heroFrame = hero;
-      subject = model.object.clone();
+      story = hero ? makeWaxUnboxing(model.object) : null;
+      story?.seek(0);
+      subject = story ? story.object : model.object.clone();
       pivot.add(subject);
       rim.color.set(accent);
       rim.intensity = 0.22;
-      aim.set(hero ? 0.70 : model.tilt, hero ? -0.22 : 0.08, 0);
+      aim.set(hero ? 0.22 : model.tilt, hero ? -0.10 : 0.08, 0);
       pivot.rotation.copy(aim);
       mode = initialPose;
-      if (shot.frameParts) setCeraView(subject, initialPose);
+      if (shot.frameParts && !story) setCeraView(subject, initialPose);
       userMotion = false;
       progress = 0;
-      measure();
+      if (story) {
+        center.set(0, 0, 0);
+        fit();
+      } else measure();
       subject.position.copy(center);
       camera.position.set(0, 0, distance);
       camera.lookAt(0, 0, 0);
@@ -1443,6 +1539,15 @@ function createCampaignVolume() {
     },
     compose(next, lookX, lookY) {
       if (userMotion) return;
+      if (story) {
+        progress = next;
+        story.seek(next);
+        const overhead = kidsEase((next - 0.09) / 0.31);
+        aim.set(0.22 + overhead * 0.40 + lookY * 0.018, -0.10 + next * 0.19 + lookX * 0.034, 0);
+        rim.intensity = 0.22 + next * 0.34;
+        redraw();
+        return;
+      }
       progress = next;
       rim.intensity = 0.22 + next * 0.34;
       aim.set(0.70 - next * 0.24 + lookY * 0.07, -0.22 + next * 0.51 + lookX * 0.16, 0);
@@ -1997,7 +2102,9 @@ function photographicMoldBox(front, canto, ingredients, { color = "#141418", con
   ], 3));
   frontGeo.setAttribute("uv", new THREE.Float32BufferAttribute([0, 1, 0.5, 0, 1, 1], 2));
   frontGeo.computeVertexNormals();
-  box.add(new THREE.Mesh(frontGeo, photoMat(front, 0.48, 0.04)));
+  const frontPanel = new THREE.Mesh(frontGeo, photoMat(front, 0.48, 0.04));
+  frontPanel.name = "CartonFront";
+  box.add(frontPanel);
   const backGeo = new THREE.BufferGeometry();
   backGeo.setAttribute("position", new THREE.Float32BufferAttribute([
     left, top, backZ, right, top, backZ, 0, bottom, backZ,

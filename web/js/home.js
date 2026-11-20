@@ -4,7 +4,7 @@ const CAMPAIGN_COPY = {
   intro: ["Moldeado y cuidado capilar Vinicius Molding.", "Styling and hair care by Vinicius Molding.", "Vinicius Molding 造型与头发护理。"],
   explore: ["Explorar productos", "Explore products", "探索产品"],
   exploreShort: ["Explorar", "Explore", "探索"],
-  scroll: ["Desliza para ver el interior", "Scroll to see inside", "向下滑动查看内部"],
+  scroll: ["Desliza para abrir la caja", "Scroll to open the box", "向下滑动打开包装盒"],
   discover: ["Descubre tu estilo", "Discover your style", "发现你的风格"],
   question: ["¿Qué quieres conseguir con tu peinado?", "What look are you going for?", "你想要什么样的造型？"],
   natural: ["Acabado natural", "Natural finish", "自然效果"],
@@ -51,12 +51,31 @@ const CAMPAIGN_ACCENTS = {
   "shaving-gel": "#e52c3b",
 };
 const CAMPAIGN_POSTER = "assets/inicio/cera-cerrada.webp";
+const CAMPAIGN_STORY = [
+  { at: 0, preview: "cera-caja", label: ["Caja", "Box", "包装盒"],
+    title: ["Quiénes somos", "About us", "关于我们"],
+    text: ["Vinicius Molding es una marca de cuidado capilar y personal con atención desde Cali.", "Vinicius Molding is a hair and personal care brand serving customers from Cali.", "Vinicius Molding 是一个来自卡利的头发与个人护理品牌。"] },
+  { at: 0.36, preview: "cera-caja-abierta", label: ["Abrir", "Open", "打开"],
+    title: ["Qué encuentras", "What we make", "我们的产品"],
+    text: ["Ceras, pastas y pomadas para dar forma y definir el peinado. También tenemos línea Kids, productos para el cuerpo y accesorios de barbería.", "Waxes, pastes and pomades to shape and define hair, plus Kids, body care and barber accessories.", "提供塑形发蜡、发泥与发膏，以及儿童系列、身体护理和理发配件。"] },
+  { at: 0.67, preview: "cera-envase", label: ["Destapar", "Unscrew", "旋开"],
+    title: ["Limpieza y tratamiento", "Cleansing and treatment", "清洁与护理"],
+    text: ["Champús para la limpieza y el cuidado capilar. Sérum para barba y bigote, y tónicos con indicaciones según cada fórmula.", "Shampoos for cleansing and hair care, serum for beards and moustaches, and tonics with directions for each formula.", "洗发水用于清洁和护理头发，精华用于胡须护理，护理液的用法因配方而异。"], href: "#/catalogo/tratamiento" },
+  { at: 1, preview: "cera-interior", label: ["Interior", "Inside", "内部"],
+    title: ["La tienda Vinicius", "The Vinicius shop", "Vinicius 商店"],
+    text: ["La Cera Moldeadora define el peinado con brillo medio. En la tienda puedes comparar acabados, consultar cada ficha y comprar desde el carrito.", "Molding Wax defines hair with a medium shine. Browse finishes, check product details and shop from your cart.", "塑形发蜡呈现中等光泽。你可以在商店比较不同效果、查看详情并通过购物车购买。"], href: "#/producto/cera-brillo" },
+];
+const storyAsset = (scene) => `assets/inicio/${scene.preview}.webp`;
 const campaignSelection = { line: "molding", item: "cera-brillo", goal: "natural" };
 let campaignController;
 let campaignIntroduced = false;
 
 function campaignText(key) {
-  return CAMPAIGN_COPY[key][({ es: 0, en: 1, zh: 2 })[getLang()] ?? 0];
+  return campaignLocalized(CAMPAIGN_COPY[key]);
+}
+
+function campaignLocalized(values) {
+  return values[({ es: 0, en: 1, zh: 2 })[getLang()] ?? 0];
 }
 
 function campaignName(item) {
@@ -82,16 +101,15 @@ function campaignCatalog() {
 }
 
 function campaignFigure(item, placement) {
-  const hero = placement === "hero";
   const model = CATALOG_VOLUME_LINES.has(item.category);
-  const main = hero ? CAMPAIGN_POSTER : (studioCover(item.id) || item.image);
+  const main = studioCover(item.id) || item.image;
   const closed = item.id === "cera-brillo" ? ` data-campaign-closed="${CAMPAIGN_POSTER}"` : "";
   return `<figure class="campaign-figure campaign-figure-${placement}" data-campaign-figure="${placement}"
       data-product="${esc(item.id)}" data-cover="${esc(main)}"${closed}${model ? " data-campaign-3d" : ""}>
     <div class="campaign-visual" data-campaign-visual${model ? ` aria-label="${esc(campaignName(item))}"` : ""}>
-      <img class="campaign-poster" src="${esc(main)}" alt="${esc(campaignName(item))}" draggable="false" decoding="async"${hero ? ' fetchpriority="high" width="675" height="608"' : ' loading="lazy"'}>
+      <img class="campaign-poster" src="${esc(main)}" alt="${esc(campaignName(item))}" draggable="false" decoding="async" loading="lazy">
     </div>
-    ${model && !hero ? `<div class="campaign-view-tools">
+    ${model ? `<div class="campaign-view-tools">
       <button type="button" data-campaign-enable>${campaignText("view3d")}</button>
       <div class="campaign-view-controls" hidden>
         <button type="button" data-campaign-pose="cerrado" aria-pressed="false" hidden>${campaignText("closed")}</button>
@@ -101,7 +119,6 @@ function campaignFigure(item, placement) {
         <button type="button" data-campaign-rotate="full">${campaignText("rotate")}</button>
       </div>
     </div>` : ""}
-    ${hero ? `<figcaption><strong>${esc(campaignName(item))}</strong><span>${esc(productField(item, "finish"))} · ${esc(item.size)}</span></figcaption>` : ""}
     <span class="sr-only" data-campaign-view-status role="status"></span>
   </figure>`;
 }
@@ -171,18 +188,41 @@ function viewCampaign() {
   const hero = catalogProductById("cera-brillo");
   const [start, finish] = campaignText("slogan").split("|");
   return `<div class="campaign" data-campaign>
-    <section class="campaign-hero" data-campaign-hero>
+    <section class="campaign-hero campaign-story" data-campaign-hero>
+      <div class="campaign-story-pin">
       <div class="campaign-inner">
-        <div class="campaign-hero-grid">
+        <div class="campaign-story-grid">
           <div class="campaign-hero-copy">
             <p class="campaign-eyebrow">${campaignText("kicker")}</p>
             <h1><span>${start}</span><span>${finish}</span></h1>
-            <p class="campaign-intro">${campaignText("intro")}</p>
-            <div class="campaign-actions"><button type="button" class="campaign-primary" data-campaign-jump="explore">${campaignText("explore")}</button><a class="campaign-link" href="#/catalogo">${t("nav.askCatalog")} <span aria-hidden="true">→</span></a></div>
+            <p class="campaign-intro">${hero ? esc(campaignName(hero)) : campaignText("intro")}</p>
+            <p class="campaign-story-mobile-hint" aria-hidden="true">↓ ${campaignText("scroll")}</p>
+            <a class="campaign-link" href="#/catalogo">${t("nav.askCatalog")} <span aria-hidden="true">→</span></a>
           </div>
-          ${hero ? campaignFigure(hero, "hero") : ""}
+          <figure class="campaign-figure campaign-story-figure" data-campaign-figure="hero" data-product="cera-brillo"
+            data-cover="${storyAsset(CAMPAIGN_STORY[0])}" data-campaign-3d>
+            <div class="campaign-visual" data-campaign-visual>
+              <img class="campaign-poster" src="${storyAsset(CAMPAIGN_STORY[0])}" alt="${hero ? esc(campaignName(hero)) : "Vinicius Molding"}"
+                width="960" height="960" fetchpriority="high" decoding="async">
+            </div>
+            <span class="sr-only" data-campaign-view-status role="status"></span>
+          </figure>
+          <div class="campaign-story-editorial">
+            ${CAMPAIGN_STORY.map((scene, index) => `<article class="campaign-chapter" data-campaign-chapter="${index}" ${index ? "hidden" : ""}>
+              <p class="campaign-eyebrow">${campaignLocalized(scene.label)}</p>
+              <h2>${campaignLocalized(scene.title)}</h2>
+              <p>${campaignLocalized(scene.text)}</p>
+              ${scene.href ? `<a class="campaign-link" href="${scene.href}">${index === 2 ? t("footer.treatment") : campaignText("product")} <span aria-hidden="true">→</span></a>` : ""}
+            </article>`).join("")}
+          </div>
         </div>
-        <button type="button" class="campaign-scroll" data-campaign-jump="explore"><span aria-hidden="true">↓</span> ${campaignText("scroll")}</button>
+        <div class="campaign-story-navigation">
+          <button type="button" class="campaign-scroll" data-story-next><span aria-hidden="true">↓</span> <span data-story-next-label>${campaignText("scroll")}</span></button>
+          <div class="campaign-story-steps" role="group" aria-label="${campaignText("exploreShort")}">
+            ${CAMPAIGN_STORY.map((scene, index) => `<button type="button" data-story-step="${index}" aria-pressed="${index === 0}">${campaignLocalized(scene.label)}</button>`).join("")}
+          </div>
+        </div>
+      </div>
       </div>
     </section>
     <section class="campaign-explore" id="campaign-explore" tabindex="-1" aria-label="${campaignText("explore")}" data-campaign-explorer>${campaignExplorer()}</section>
@@ -220,6 +260,12 @@ function mountCampaign() {
     campaignIntroduced = true;
   }
   const hero = root.querySelector("[data-campaign-hero]");
+  const pin = hero.querySelector(".campaign-story-pin");
+  const poster = hero.querySelector(".campaign-poster");
+  const chapters = [...hero.querySelectorAll("[data-campaign-chapter]")];
+  const storySteps = [...hero.querySelectorAll("[data-story-step]")];
+  const storyNext = hero.querySelector("[data-story-next-label]");
+  const mobileHint = hero.querySelector(".campaign-story-mobile-hint");
   const motion = matchMedia("(prefers-reduced-motion: reduce)");
   const pointer = matchMedia("(hover: hover) and (pointer: fine)");
   const connection = navigator.connection;
@@ -230,6 +276,7 @@ function mountCampaign() {
   let renderer, active, chosen, requested, changeId = 0, scheduled = 0;
   let idle, hardFailure = false;
   let lookX = 0, lookY = 0, drag;
+  let storyChapter = 0;
 
   function showStatus(figure, key) {
     figure.querySelector("[data-campaign-view-status]").textContent = campaignText(key);
@@ -238,7 +285,8 @@ function mountCampaign() {
   function setLive(figure, live) {
     figure.toggleAttribute("data-campaign-live", live);
     const visual = figure.querySelector("[data-campaign-visual]");
-    if (live) visual.tabIndex = 0;
+    if (!live && figure.dataset.campaignFigure === "hero") poster.src = storyAsset(CAMPAIGN_STORY[storyChapter]);
+    if (live && figure.dataset.campaignFigure !== "hero") visual.tabIndex = 0;
     else visual.removeAttribute("tabindex");
     const enable = figure.querySelector("[data-campaign-enable]");
     if (enable) {
@@ -334,25 +382,43 @@ function mountCampaign() {
       !/^(slow-)?2g$/.test(connection?.effectiveType || "") && !(navigator.deviceMemory > 0 && navigator.deviceMemory < 4);
   }
 
+  function storyPosition() {
+    const range = hero.getBoundingClientRect();
+    const top = header.getBoundingClientRect().height;
+    const travel = Math.max(1, range.height - pin.offsetHeight);
+    return { start: window.scrollY + range.top - top, progress: Math.min(1, Math.max(0, (top - range.top) / travel)), travel };
+  }
+
+  function seekStory(index) {
+    const { start, travel } = storyPosition();
+    window.scrollTo({ top: start + travel * CAMPAIGN_STORY[index].at, behavior: motion.matches ? "instant" : "smooth" });
+  }
+
+  function setStoryChapter(index) {
+    if (index === storyChapter) return;
+    storyChapter = index;
+    chapters.forEach((chapter, i) => { chapter.hidden = i !== index; });
+    storySteps.forEach((step, i) => step.setAttribute("aria-pressed", String(i === index)));
+    storyNext.textContent = index === 0 ? campaignText("scroll") :
+      (index === CAMPAIGN_STORY.length - 1 ? campaignText("explore") : campaignLocalized(CAMPAIGN_STORY[index + 1].label));
+    mobileHint.textContent = "↓ " + storyNext.textContent;
+    if (active?.dataset.campaignFigure !== "hero") poster.src = storyAsset(CAMPAIGN_STORY[index]);
+  }
+
   function update() {
     scheduled = 0;
     const height = window.innerHeight;
-    const range = hero.getBoundingClientRect();
-    const progress = Math.min(1, Math.max(0, -range.top / Math.max(1, range.height * 0.79)));
-    if (!motion.matches && pointer.matches) {
-      hero.style.setProperty("--scroll-shift", `${progress * -14}%`);
-      hero.style.setProperty("--scroll-zoom", String(1 + progress * 0.14));
-      hero.style.setProperty("--light-x", `${72 + lookX * 7 - progress * 12}%`);
-    } else {
-      hero.style.removeProperty("--scroll-shift");
-      hero.style.removeProperty("--scroll-zoom");
-      hero.style.removeProperty("--light-x");
-    }
+    const { progress } = storyPosition();
+    setStoryChapter(progress >= 0.91 ? 3 : progress >= 0.58 ? 2 : progress >= 0.27 ? 1 : 0);
+    hero.style.setProperty("--story-progress", String(progress));
+    hero.style.setProperty("--light-x", `${50 + lookX * 4 - progress * 5}%`);
 
     let nearest = null;
     let best = 0;
     if (!document.hidden && !hardFailure) for (const figure of figures) {
-      const enabled = manuallyEnabled.has(figure.dataset.campaignFigure) || automatic();
+      const story = figure.dataset.campaignFigure === "hero";
+      const enabled = manuallyEnabled.has(figure.dataset.campaignFigure) || automatic() ||
+        (story && idle && !motion.matches && !connection?.saveData && !/^(slow-)?2g$/.test(connection?.effectiveType || ""));
       if (!enabled || failed.has(figure)) continue;
       const rect = figure.getBoundingClientRect();
       const visible = Math.min(height, rect.bottom) - Math.max(0, rect.top);
@@ -391,8 +457,17 @@ function mountCampaign() {
     const button = event.target.closest("button");
     if (!button) return;
     const { campaignJump, campaignLine, campaignStep, campaignGoal, campaignPose, campaignRotate } = button.dataset;
-    if (campaignJump) {
-      const section = root.querySelector(`#campaign-${campaignJump}`);
+    if (button.hasAttribute("data-story-step")) {
+      seekStory(Number(button.dataset.storyStep));
+      return;
+    }
+    const storyAdvance = button.hasAttribute("data-story-next");
+    if (storyAdvance && storyChapter < CAMPAIGN_STORY.length - 1) {
+      seekStory(storyChapter + 1);
+      return;
+    }
+    if (campaignJump || storyAdvance) {
+      const section = root.querySelector(`#campaign-${campaignJump || "explore"}`);
       if (VM.menu) {
         VM.menu = false;
         showCampaignMenu(false);
@@ -436,7 +511,7 @@ function mountCampaign() {
 
   function dragStart(event) {
     const visual = event.target.closest("[data-campaign-visual]");
-    if (!active || !visual || !active.contains(visual) || event.button !== 0 || !event.isPrimary) return;
+    if (!active || active.dataset.campaignFigure === "hero" || !visual || !active.contains(visual) || event.button !== 0 || !event.isPrimary) return;
     drag = { figure: active, id: event.pointerId, x: event.clientX, y: event.clientY };
     visual.setPointerCapture(event.pointerId);
   }
